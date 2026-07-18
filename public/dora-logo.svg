@@ -1,0 +1,21 @@
+<svg width="240" height="64" viewBox="0 0 240 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="D.O.R.A. logo">
+  <defs>
+    <linearGradient id="doraRed" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E63946"/>
+      <stop offset="1" stop-color="#9B1B30"/>
+    </linearGradient>
+  </defs>
+  <!-- Stacked bars mark (punk barcode feel) -->
+  <g>
+    <rect x="2" y="10" width="6" height="44" fill="#E63946"/>
+    <rect x="11" y="18" width="4" height="28" fill="#F4A300"/>
+    <rect x="18" y="6" width="3" height="52" fill="#E63946"/>
+    <rect x="24" y="22" width="2" height="20" fill="#C0C0C0"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="40" y="44" font-family="'Arial Black', 'Helvetica', sans-serif" font-weight="900" font-size="38" letter-spacing="2" fill="url(#doraRed)">D.O.R.A.</text>
+  <!-- Underline accent -->
+  <rect x="40" y="50" width="180" height="3" fill="#F4A300"/>
+  <!-- Subtitle -->
+  <text x="41" y="62" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing="3" fill="#C0C0C0">DNES OD RÁNA ABSTINUJEM</text>
+</svg>
