@@ -404,3 +404,27 @@ export const TESTIMONIALS: Testimonial[] = [
     source: " Profil kapely",
   },
 ];
+
+export type SetlistTrack = {
+  id: string;
+  title: string;
+  duration: string;
+  genre: string;
+  era: string;
+  popular?: boolean;
+};
+
+// Representative live setlist — typical concert repertoire.
+export const SETLIST: SetlistTrack[] = [
+  { id: "s1", title: "TCHO SME NAHLAVU?", duration: "3:42", genre: "Funky-Punk", era: "2005", popular: true },
+  { id: "s2", title: "Iný deň", duration: "4:05", genre: "Crossover", era: "2001", popular: true },
+  { id: "s3", title: "Don't Touch Me", duration: "3:18", genre: "Punk Rock", era: "1997" },
+  { id: "s4", title: "I Have A Taste", duration: "2:54", genre: "Rap-Rock", era: "1998" },
+  { id: "s5", title: "Abstinujem", duration: "4:22", genre: "Funky-Punk", era: "2005", popular: true },
+  { id: "s6", title: "Púchovská noc", duration: "3:56", genre: "Crossover", era: "2001" },
+  { id: "s7", title: "Funky pokus", duration: "5:12", genre: "Funk", era: "2024" },
+  { id: "s8", title: "Rebelova", duration: "3:08", genre: "Punk Rock", era: "2005", popular: true },
+  { id: "s9", title: "Spoločne", duration: "4:40", genre: "Rap-Rock", era: "2001" },
+  { id: "s10", title: "Encore: Dnes Od Rána", duration: "6:15", genre: "Funky-Punk", era: "2024", popular: true },
+];
+

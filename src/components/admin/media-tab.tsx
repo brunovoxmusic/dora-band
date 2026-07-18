@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Pencil, Trash2, X, Loader2, Images, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2, Images, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,8 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -65,6 +67,27 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
     setEditing(null);
     setForm(emptyForm);
     setShowForm(true);
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("title", file.name.replace(/\.[^.]+$/, ""));
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Nahrávanie zlyhalo.");
+      toast.success("Obrázok nahratý a pridaný do galérie.");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba pri nahrávaní.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const openEdit = (m: MediaItem) => {
@@ -147,13 +170,31 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
             </button>
           ))}
         </div>
-        <button
-          onClick={openNew}
-          className="inline-flex items-center gap-2 bg-neon-red px-4 py-2 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm transition-all hover:bg-deep-red hover:glow-red"
-        >
-          <Plus className="h-4 w-4" />
-          Pridať médium
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleUpload}
+            className="hidden"
+            aria-label="Nahrať obrázok"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 border border-warm-yellow/40 bg-warm-yellow/10 px-4 py-2 text-sm font-bold uppercase tracking-wide text-warm-yellow transition-all hover:bg-warm-yellow hover:text-ink disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {uploading ? "Nahrávam..." : "Nahrať obrázok"}
+          </button>
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-2 bg-neon-red px-4 py-2 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm transition-all hover:bg-deep-red hover:glow-red"
+          >
+            <Plus className="h-4 w-4" />
+            Pridať médium
+          </button>
+        </div>
       </div>
 
       {loading ? (

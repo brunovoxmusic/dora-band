@@ -11,6 +11,7 @@ import { MusicSection } from "@/components/sections/music-section";
 import { GallerySection } from "@/components/sections/gallery-section";
 import { DiscographySection } from "@/components/sections/discography-section";
 import { GigsSection } from "@/components/sections/gigs-section";
+import { SetlistSection } from "@/components/sections/setlist-section";
 import { TestimonialsSection } from "@/components/sections/testimonials-section";
 import { PressSection } from "@/components/sections/press-section";
 import { NewsletterSection } from "@/components/sections/newsletter-section";
@@ -35,6 +36,7 @@ export default function HomePage() {
         <SectionDivider />
         <DiscographySection />
         <GigsSection />
+        <SetlistSection />
         <SectionDivider />
         <TestimonialsSection />
         <SectionDivider />

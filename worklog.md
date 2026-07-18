@@ -408,6 +408,64 @@ Stage Summary:
 - Could add a "setlist" or "repertoire" section showing sample songs
 - Newsletter admin could support sending test emails
 
+---
+Task ID: 10 (cron-review round 6)
+Agent: Main (Z.ai Code)
+Task: QA review + setlist/repertoire section + image file upload in admin
+
+Work Log:
+- Reviewed worklog: project social-ready from round 5 (13 sections, OG image, scroll progress, social section)
+- QA with agent-browser: homepage 200, no errors, 12 h2 sections present
+- Tackled worklog priority items: setlist section, image file upload
+
+NEW FEATURES ADDED:
+1. Setlist/Repertoire section (#setlist) — typical concert set with 10 tracks
+   - Summary stats: track count, total set duration (auto-calculated), hit count
+   - Genre filters (Všetko/Hity/Funky-Punk/Crossover/Punk Rock/Rap-Rock)
+   - Tracklist with: numbered tracks, Play icon, title, "Hit" flame badge, genre badge, era year, mini waveform (hover), duration
+   - Auto-calculates total duration from MM:SS strings, formats as M:SS
+   - Footer with total count + duration, note about setlist flexibility
+   - Verified: 10 tracks, 41:32 duration, 5 hits, filters work
+2. Image file upload in admin media tab — POST /api/admin/upload
+   - Accepts multipart/form-data (JPEG/PNG/WebP/GIF, max 8MB)
+   - Saves to /public/uploads/ with safe timestamped filename
+   - Auto-creates MediaItem record (appears in gallery + admin list)
+   - Admin UI: "Nahrať obrázok" button (warm-yellow) next to "Pridať médium", hidden file input, upload spinner
+   - Validation: file type, size, auth-guarded
+   - Verified: POST returns 201 with item+url, file saved (28KB), media count 21→22
+
+STYLING IMPROVEMENTS:
+- Setlist: numbered track cards with hover states (border-neon-red, bg shift), genre-colored badges, mini waveforms on hover, tabular-nums for durations
+- Admin upload button: warm-yellow themed (distinct from red "Pridať"), loading spinner state
+
+VERIFICATION (agent-browser):
+- Homepage 200, no console errors, 13 h2 sections ✓
+- Setlist section: "Typický koncertný set" heading present, 10 tracks with durations/genres/eras ✓
+- Setlist filters: Všetko/Hity/Funky-Punk/Crossover/Punk Rock/Rap-Rock buttons ✓
+- Setlist stats: 10 skladieb, 41:32 dĺžka, 5 hity ✓
+- Upload API: POST 201, file saved to /public/uploads/, MediaItem created ✓
+- Admin media tab: "Nahrať obrázok" button present, media count 21→22 after upload ✓
+- Mobile 390px: setlist responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Added setlist/repertoire section (10 tracks, filters, stats) + image file upload (server-side save + MediaItem creation)
+- All features browser-verified, upload produces valid file + DB record
+- Lint clean, dev server stable
+
+## Current Project Status: FEATURE-COMPLETE & PRODUCTION-POLISHED
+14 landing sections (Hero, About, Members, Music, Gallery+search, Discography+waveforms, Gigs+archive+modal, Setlist, Testimonials, Press, FAQ, Social, Newsletter, Contact) + admin dashboard (5 tabs + file upload) + dynamic OG image + scroll progress + JSON-LD + sitemap + CSV export + parallax + glitch + cookie consent.
+
+### Unresolved issues / risks for next phase:
+- Music section still uses placeholder YouTube video IDs — replace with real band videos
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only; could add EN/CZ variants)
+- Admin media tab could use drag-and-drop reordering
+- Newsletter admin could support sending test emails
+- Could add image optimization (sharp) for uploaded images to auto-generate thumbnails
+- Could add a "past concerts" archive page (separate route) with photos per gig
+
+
 
 
 
