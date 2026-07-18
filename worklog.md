@@ -594,6 +594,74 @@ Stage Summary:
 - Could add keyboard shortcuts in admin (e.g., Ctrl+A select all, Delete to remove)
 - Could add media usage tracking (which images are featured/used where)
 
+---
+Task ID: 13 (cron-review round 9)
+Agent: Main (Z.ai Code)
+Task: QA review + keyboard shortcuts in admin + past concerts archive page
+
+Work Log:
+- Reviewed worklog: project accessibility-optimized from round 8 (bulk actions, alt-text)
+- QA with agent-browser: homepage 200, no errors, 13 h2 sections present
+- Tackled worklog priority items: keyboard shortcuts, past concerts archive page
+
+NEW FEATURES ADDED:
+1. Keyboard shortcuts in admin media tab (useKeyboardShortcuts hook)
+   - Ctrl+A: select all media (toast confirmation)
+   - Esc: clear selection / close form / close shortcuts overlay (context-aware)
+   - Delete: bulk-delete selected items
+   - F: bulk-feature selected items
+   - U: bulk-unfeature selected items
+   - N: open "add new medium" form
+   - Shift+?: toggle shortcuts help overlay
+   - Smart: shortcuts ignored when typing in inputs (except Ctrl shortcuts)
+   - Help overlay: modal with all shortcuts, kbd-styled keys, Keyboard icon, descriptions
+   - "?" button in toolbar to open overlay manually
+   - Verified: Ctrl+A selects all 21 items, Esc clears selection, overlay opens/closes
+2. Past concerts archive page (/archiv route)
+   - Server component fetching past gigs (date < now, not cancelled), ordered desc
+   - Grouped by year with year quick-nav anchor links
+   - Hero header: "História koncertov" + total count + year count
+   - ArchiveGigsClient: gig cards with date block, venue/city, time, price, notes
+   - "Celý archív" link added to main gigs section (Archive icon)
+   - Custom metadata (title, description, canonical, OG)
+   - Verified: 200, 4 past gigs in 2 years (2025, 2024), VLM confirmed design
+
+STYLING IMPROVEMENTS:
+- Archive page: stage-grid texture, neon-red glow orb, year headings with gradient divider
+- Year quick-nav: monospace pills, hover neon-red
+- Gig cards: date block (neon-red day, warm-yellow month), "Odohrané" badge, hover states
+- Shortcuts overlay: kbd elements with warm-yellow text, border-charcoal, monospace font
+- "?" button in media toolbar with Keyboard icon
+
+VERIFICATION (agent-browser):
+- Homepage 200, no console errors, 13 h2 sections ✓
+- Archive page: 200, 4 gigs in 2 years, year quick-nav, VLM confirmed design ✓
+- Keyboard shortcuts overlay: opens via "?" button, lists all 7 shortcuts ✓
+- Ctrl+A: selects all 21 media items (aria-pressed=true), bulk toolbar appears ✓
+- Esc: closes shortcuts overlay, clears selection (0 selected) ✓
+- "Celý archív" link in gigs section → navigates to /archiv ✓
+- Mobile 390px: archive page responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Added keyboard shortcuts (7 shortcuts + help overlay) + dedicated past concerts archive page (/archiv)
+- All features browser-verified, shortcuts work context-aware
+- Lint clean, dev server stable
+
+## Current Project Status: POWER-USER ADMIN & FULL ARCHIVE
+14 landing sections + dedicated archive page (/archiv) + admin dashboard (5 tabs + sharp upload + drag-and-drop + bulk actions + alt-text + keyboard shortcuts) + dynamic OG image + scroll progress + JSON-LD + sitemap + CSV export + parallax + glitch + cookie consent + waveforms + setlist + accessible gallery.
+
+### Unresolved issues / risks for next phase:
+- Music section still uses placeholder YouTube video IDs — replace with real band videos
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only; could add EN/CZ variants)
+- Newsletter admin could support sending test emails
+- Could add media usage tracking (which images are featured/used where)
+- Could add a search across all admin entities (global admin search)
+- Could add export of inquiries/gigs to CSV (currently only subscribers)
+- Could add 404 page with branded design
+
+
 
 
 

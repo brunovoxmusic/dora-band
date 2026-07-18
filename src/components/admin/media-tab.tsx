@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Pencil, Trash2, X, Loader2, Images, Star, Upload, GripVertical } from "lucide-react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { Plus, Pencil, Trash2, X, Loader2, Images, Star, Upload, GripVertical, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   DndContext,
   closestCenter,
@@ -205,6 +206,22 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
 
   const filtered = filter === "all" ? items : items.filter((i) => i.category === filter);
   const catLabel = (c: string) => CATEGORIES.find((x) => x.value === c)?.label || c;
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Keyboard shortcuts
+  const shortcuts = useMemo(
+    () => [
+      { key: "a", ctrl: true, handler: () => { toggleSelectAll(); toast.success("Všetky médiá vybrané"); } },
+      { key: "Escape", handler: () => { if (selected.size > 0) { clearSelection(); toast.success("Výber zrušený"); } else if (showForm) { setShowForm(false); } else if (showShortcuts) { setShowShortcuts(false); } } },
+      { key: "Delete", handler: () => { if (selected.size > 0) bulkAction("delete"); } },
+      { key: "f", handler: () => { if (selected.size > 0) bulkAction("feature"); } },
+      { key: "u", handler: () => { if (selected.size > 0) bulkAction("unfeature"); } },
+      { key: "?", shift: true, handler: () => setShowShortcuts((v) => !v) },
+      { key: "n", handler: () => { if (!showForm) openNew(); } },
+    ],
+    [selected, showForm, showShortcuts, filtered]
+  );
+  useKeyboardShortcuts(shortcuts, !showForm);
 
   // Drag-and-drop sensors
   const sensors = useSensors(
@@ -302,8 +319,73 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
             <Plus className="h-4 w-4" />
             Pridať médium
           </button>
+          <button
+            onClick={() => setShowShortcuts(true)}
+            className="inline-flex h-9 w-9 items-center justify-center border border-charcoal text-silver transition-colors hover:border-neon-red hover:text-neon-red"
+            aria-label="Klávesové skratky"
+            title="Klávesové skratky (Shift+?)"
+          >
+            <Keyboard className="h-4 w-4" />
+          </button>
         </div>
       </div>
+
+      {/* Keyboard shortcuts overlay */}
+      {showShortcuts && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/80 p-4 backdrop-blur"
+          onClick={() => setShowShortcuts(false)}
+          role="dialog"
+          aria-label="Klávesové skratky"
+        >
+          <div
+            className="w-full max-w-md border border-charcoal bg-dark-gray p-6 clip-corner-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 font-display text-lg font-bold text-off-white">
+                <Keyboard className="h-5 w-5 text-neon-red" />
+                Klávesové skratky
+              </h3>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="text-silver hover:text-neon-red"
+                aria-label="Zavrieť"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { keys: ["Ctrl", "A"], desc: "Označiť všetky médiá" },
+                { keys: ["Esc"], desc: "Zrušiť výber / zavrieť okno" },
+                { keys: ["Del"], desc: "Zmazať vybrané médiá" },
+                { keys: ["F"], desc: "Označiť vybrané ako Top" },
+                { keys: ["U"], desc: "Odznačiť Top z vybraných" },
+                { keys: ["N"], desc: "Pridať nové médium" },
+                { keys: ["Shift", "?"], desc: "Zobraziť tento panel" },
+              ].map((s) => (
+                <div key={s.desc} className="flex items-center justify-between gap-3 border-b border-charcoal/50 py-2">
+                  <span className="text-sm text-off-white/80">{s.desc}</span>
+                  <div className="flex items-center gap-1">
+                    {s.keys.map((k, i) => (
+                      <span key={i}>
+                        {i > 0 && <span className="mx-1 text-silver/40">+</span>}
+                        <kbd className="inline-flex min-w-[2rem] items-center justify-center border border-charcoal bg-ink px-2 py-1 font-mono-brand text-[10px] font-bold uppercase tracking-wider text-warm-yellow">
+                          {k}
+                        </kbd>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver/60">
+              Skratky sa ignorujú pri písaní v poliach (okrem Ctrl skratiek).
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Bulk-action toolbar (shown when items selected) */}
       {selected.size > 0 && (

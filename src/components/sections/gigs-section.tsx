@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Clock, Ticket, ChevronRight, X, Info, ExternalLink, Music2 } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, ChevronRight, X, Info, ExternalLink, Music2, Archive } from "lucide-react";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/site/reveal";
 import { cn } from "@/lib/utils";
@@ -88,6 +88,13 @@ export function GigsSection() {
               </button>
             ))}
           </div>
+          <a
+            href="/archiv"
+            className="inline-flex items-center gap-1.5 border border-charcoal bg-dark-gray px-3 py-2 text-xs font-bold uppercase tracking-wide text-silver transition-colors hover:border-neon-red hover:text-neon-red"
+          >
+            <Archive className="h-3.5 w-3.5" />
+            Celý archív
+          </a>
         </Reveal>
 
         {/* List */}
