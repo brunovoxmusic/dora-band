@@ -3,6 +3,7 @@ import { Montserrat, Roboto_Condensed, Inter, JetBrains_Mono } from "next/font/g
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { StructuredData } from "@/components/site/structured-data";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -31,8 +32,14 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const SITE_URL = "https://dora.band";
+
 export const metadata: Metadata = {
-  title: "D.O.R.A. — Dnes Od Rána Abstinujem | Funky-Punk z Púchova",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "D.O.R.A. — Dnes Od Rána Abstinujem | Funky-Punk z Púchova",
+    template: "%s | D.O.R.A.",
+  },
   description:
     "Legendárna funky-punková formácia D.O.R.A. z Púchova. Aktívna od 1996. Booking, PR materiály, diskografia, fotky a kontakt pre médiá a partnerov.",
   keywords: [
@@ -45,14 +52,50 @@ export const metadata: Metadata = {
     "kapela",
     "booking",
     "koncert",
+    "Slovensko",
+    "punk rock",
+    "rap-rock",
   ],
   authors: [{ name: "D.O.R.A." }],
+  creator: "D.O.R.A.",
+  publisher: "D.O.R.A.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "D.O.R.A. — Dnes Od Rána Abstinujem",
-    description: "Legendárna funky-punková formácia z Púchova. Aktívna od 1996.",
+    description: "Legendárna funky-punková formácia z Púchova. Aktívna od 1996. Booking, PR materiály, diskografia, fotky.",
     type: "website",
     locale: "sk_SK",
+    siteName: "D.O.R.A.",
+    url: SITE_URL,
+    images: [
+      {
+        url: "/gallery/hero-banner.jpg",
+        width: 1920,
+        height: 1080,
+        alt: "D.O.R.A. naživo na koncertnom pódiu",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "D.O.R.A. — Dnes Od Rána Abstinujem",
+    description: "Legendárna funky-punková formácia z Púchova. Aktívna od 1996.",
+    images: ["/gallery/hero-banner.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  category: "music",
 };
 
 export default function RootLayout({
@@ -65,6 +108,7 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${robotoCondensed.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        <StructuredData />
         {children}
         <Toaster />
         <SonnerToaster />

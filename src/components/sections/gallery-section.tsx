@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { X, ChevronLeft, ChevronRight, Camera, ZoomIn } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Camera, ZoomIn, Search, ArrowUpDown, Images } from "lucide-react";
 import { SectionHeading } from "@/components/site/section-heading";
+import { Reveal } from "@/components/site/reveal";
 import { cn } from "@/lib/utils";
 
 type MediaItem = {
@@ -14,6 +15,7 @@ type MediaItem = {
   category: string;
   caption: string | null;
   credits: string;
+  createdAt: string;
 };
 
 const TABS = [
@@ -21,11 +23,15 @@ const TABS = [
   { value: "portrait", label: "Portrétne / Zákulisné", short: "Portrét" },
 ] as const;
 
+type SortBy = "newest" | "oldest" | "title";
+
 export function GallerySection() {
   const [tab, setTab] = useState<(typeof TABS)[number]["value"]>("concert");
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("newest");
 
   useEffect(() => {
     let cancelled = false;
@@ -45,14 +51,31 @@ export function GallerySection() {
     };
   }, [tab]);
 
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? items.filter(
+          (i) =>
+            i.title.toLowerCase().includes(q) ||
+            (i.caption ?? "").toLowerCase().includes(q) ||
+            i.category.toLowerCase().includes(q)
+        )
+      : items;
+    const sorted = [...filtered];
+    if (sortBy === "newest") sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (sortBy === "oldest") sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    if (sortBy === "title") sorted.sort((a, b) => a.title.localeCompare(b.title, "sk"));
+    return sorted;
+  }, [items, search, sortBy]);
+
   const close = useCallback(() => setLightbox(null), []);
   const next = useCallback(
-    () => setLightbox((i) => (i === null ? i : (i + 1) % items.length)),
-    [items.length]
+    () => setLightbox((i) => (i === null ? i : (i + 1) % filteredItems.length)),
+    [filteredItems.length]
   );
   const prev = useCallback(
-    () => setLightbox((i) => (i === null ? i : (i - 1 + items.length) % items.length)),
-    [items.length]
+    () => setLightbox((i) => (i === null ? i : (i - 1 + filteredItems.length) % filteredItems.length)),
+    [filteredItems.length]
   );
 
   useEffect(() => {
@@ -80,40 +103,93 @@ export function GallerySection() {
           description="Všetky fotografie sú k dispozícii pre mediálnych partnerov, organizátorov a novinárov. Foto: archív D.O.R.A."
         />
 
-        {/* Tabs */}
-        <div className="mt-8 flex flex-wrap gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setTab(t.value)}
-              className={cn(
-                "border px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-all",
-                tab === t.value
-                  ? "border-neon-red bg-neon-red text-white glow-red-sm"
-                  : "border-charcoal bg-dark-gray text-off-white/70 hover:border-off-white/40 hover:text-off-white"
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Toolbar: tabs + search + sort */}
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => setTab(t.value)}
+                className={cn(
+                  "border px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-all",
+                  tab === t.value
+                    ? "border-neon-red bg-neon-red text-white glow-red-sm"
+                    : "border-charcoal bg-dark-gray text-off-white/70 hover:border-off-white/40 hover:text-off-white"
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-silver" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Hľadať..."
+                className="w-36 border border-charcoal bg-dark-gray py-2 pl-8 pr-2 text-xs text-off-white outline-none transition-colors focus:border-neon-red sm:w-44"
+              />
+            </div>
+            {/* Sort */}
+            <div className="relative">
+              <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-silver" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortBy)}
+                className="appearance-none border border-charcoal bg-dark-gray py-2 pl-8 pr-7 text-xs text-off-white outline-none transition-colors focus:border-neon-red"
+                aria-label="Zoradiť podľa"
+              >
+                <option value="newest">Najnovšie</option>
+                <option value="oldest">Najstaršie</option>
+                <option value="title">Abecedne</option>
+              </select>
+            </div>
+          </div>
         </div>
+
+        {/* Count */}
+        {!loading && (
+          <p className="mt-3 flex items-center gap-1.5 font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver/70">
+            <Images className="h-3 w-3 text-neon-red" />
+            {filteredItems.length} {filteredItems.length === 1 ? "fotografia" : "fotografií"}
+            {search && ` pre „${search}"`}
+          </p>
+        )}
 
         {/* Grid */}
         {loading ? (
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="aspect-square animate-pulse bg-charcoal" />
             ))}
           </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {items.map((item, i) => (
+        ) : filteredItems.length === 0 ? (
+          <div className="mt-8 flex flex-col items-center justify-center border border-dashed border-charcoal bg-dark-gray/50 py-16 text-center">
+            <Images className="h-10 w-10 text-silver/40" />
+            <p className="mt-3 text-sm text-silver">
+              {search ? `Žiadne výsledky pre „${search}".` : "Žiadne fotografie v tejto kategórii."}
+            </p>
+            {search && (
               <button
-                key={item.id}
-                onClick={() => setLightbox(i)}
-                className="group relative aspect-square overflow-hidden border border-charcoal bg-dark-gray focus:outline-none focus:ring-2 focus:ring-neon-red"
-                aria-label={`Otvoriť fotografiu: ${item.title}`}
+                onClick={() => setSearch("")}
+                className="mt-3 text-xs font-semibold text-neon-red underline underline-offset-4 hover:text-warm-yellow"
               >
+                Vyčistiť vyhľadávanie
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {filteredItems.map((item, i) => (
+              <Reveal key={item.id} delay={Math.min(i * 30, 300)} direction="up">
+                <button
+                  onClick={() => setLightbox(i)}
+                  className="group relative aspect-square w-full overflow-hidden border border-charcoal bg-dark-gray focus:outline-none focus:ring-2 focus:ring-neon-red"
+                  aria-label={`Otvoriť fotografiu: ${item.title}`}
+                >
                 <Image
                   src={item.thumbnailUrl || item.url}
                   alt={item.title}
@@ -129,18 +205,15 @@ export function GallerySection() {
                   </span>
                   <ZoomIn className="h-4 w-4 text-neon-red" />
                 </div>
-              </button>
+                </button>
+              </Reveal>
             ))}
           </div>
-        )}
-
-        {!loading && items.length === 0 && (
-          <p className="mt-8 text-sm text-silver">Žiadne fotografie v tejto kategórii.</p>
         )}
       </div>
 
       {/* Lightbox */}
-      {lightbox !== null && items[lightbox] && (
+      {lightbox !== null && filteredItems[lightbox] && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/95 p-4 backdrop-blur"
           onClick={close}
@@ -181,14 +254,14 @@ export function GallerySection() {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={items[lightbox].url}
-              alt={items[lightbox].title}
+              src={filteredItems[lightbox].url}
+              alt={filteredItems[lightbox].title}
               className="max-h-[78vh] w-auto border border-charcoal object-contain"
             />
             <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="text-off-white/80">{items[lightbox].caption || items[lightbox].title}</span>
+              <span className="text-off-white/80">{filteredItems[lightbox].caption || filteredItems[lightbox].title}</span>
               <span className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver">
-                {items[lightbox].credits} · {lightbox + 1} / {items.length}
+                {filteredItems[lightbox].credits} · {lightbox + 1} / {filteredItems.length}
               </span>
             </figcaption>
           </figure>

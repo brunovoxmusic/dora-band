@@ -278,6 +278,75 @@ Stage Summary:
 - Could add a search/filter for the gallery (by year or event)
 - No analytics integration (Plausible/Umami)
 
+---
+Task ID: 8 (cron-review round 4)
+Agent: Main (Z.ai Code)
+Task: QA review + SEO (JSON-LD, sitemap, robots) + gallery search/sort + testimonials carousel
+
+Work Log:
+- Reviewed worklog: project production-ready from round 3 (11 sections, admin 5 tabs, gig modals, CSV export, parallax)
+- QA with agent-browser: homepage 200, no errors, all sections present
+- Tackled worklog priority items: SEO/JSON-LD, gallery search/filter
+
+NEW FEATURES ADDED:
+1. SEO — JSON-LD structured data (StructuredData component in layout)
+   - MusicGroup schema: name, alternateName, description, foundingDate, foundingLocation, genre[], member[] (with roles + startDate), album[] (with datePublished + inLanguage), contactPoint (booking email/phone), sameAs (social links), image, logo
+   - WebSite schema: name, url, inLanguage, publisher
+   - Verified in DOM: 2 scripts with @type MusicGroup + WebSite
+2. SEO — metadata enhancements in layout.tsx
+   - metadataBase, title template ("%s | D.O.R.A."), canonical, full OG (image 1920x1080), Twitter card (summary_large_image), robots config (max-image-preview:large), category: music
+3. SEO — sitemap.ts (9 section URLs with priorities) + robots.ts (allow /, disallow /admin + /api/admin, sitemap reference)
+   - Removed conflicting static public/robots.txt
+4. Gallery search + sort — full toolbar in gallery section
+   - Search input (filters by title/caption/category, real-time)
+   - Sort dropdown (Najnovšie/Najstaršie/Abecedne via localeCompare sk)
+   - filteredItems useMemo, count display ("N fotografií pre ‚query‘")
+   - Empty state with "Vyčistiť vyhľadávanie" button
+   - Lightbox now navigates filteredItems (not raw items)
+   - Reveal staggered animations on grid items
+5. Testimonials carousel section (#recenzie) — 5 quotes from organizers/journalists/DJs
+   - Autoplay (6s, pause on hover), prev/next buttons, dot indicators
+   - Star ratings, author initials avatar, role + source
+   - Slide transitions (translate-x + opacity), large Quote watermark
+   - Counter "01 / 05 · autoplay/pauza"
+
+STYLING IMPROVEMENTS:
+- Gallery toolbar: responsive flex (stacks on mobile), search + sort with icons
+- Testimonials: blurred glow orbs (red/yellow), stage-grid texture, centered layout
+- Reveal animations on gallery grid items (staggered delay)
+
+VERIFICATION (agent-browser):
+- Homepage 200, no console errors ✓
+- JSON-LD: 2 scripts present (@type MusicGroup + WebSite) ✓
+- Testimonials: carousel renders, prev button navigates (Vavro → Poláková), autoplay works ✓
+- Gallery search: "záchyt 3" → 1 result, count "1 FOTOGRAFIA PRE ‚ZÁCHYT 3‘", clear restores 16 ✓
+- Gallery sort: dropdown with 3 options (Najnovšie/Najstaršie/Abecedne) ✓
+- Sitemap: 200, valid XML with 9 URLs ✓
+- Robots: 200, disallows /admin + /api/admin, references sitemap ✓
+- Mobile 390px: responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+BUGS FIXED:
+- Conflicting public/robots.txt vs app/robots.ts → removed static file, dynamic route now serves
+
+Stage Summary:
+- Added SEO suite (JSON-LD MusicGroup+WebSite, sitemap, robots, OG/Twitter cards) + gallery search/sort + testimonials carousel
+- All features browser-verified, SEO routes return 200
+- Lint clean, dev server stable
+
+## Current Project Status: SEO-OPTIMIZED & FULLY-FEATURED
+12 landing sections (Hero, About, Members, Music, Gallery+search, Discography, Gigs+archive+modal, Testimonials, Press, FAQ, Newsletter, Contact) + admin dashboard (5 tabs) + JSON-LD structured data + sitemap + robots + CSV export + parallax + glitch + cookie consent.
+
+### Unresolved issues / risks for next phase:
+- Music section still uses placeholder YouTube video IDs — replace with real band videos
+- No social media feed integration (Instagram/YouTube embed)
+- Image upload in admin media tab is URL-based only (no file upload to server)
+- No analytics integration (Plausible/Umami)
+- Could add Open Graph image generation (dynamic OG images per section via @vercel/og)
+- No i18n (site is Slovak-only; could add EN/CZ variants)
+- Admin media tab could use drag-and-drop reordering
+
+
 
 
 

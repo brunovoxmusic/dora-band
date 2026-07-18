@@ -357,3 +357,48 @@ export const FAQS: FAQ[] = [
     a: "Diskografia zahŕňa demo „Don't Touch Me\" (1997, angličtina), „Iný deň\" (2001, slovenčina) a nahrávku „TCHO SME NAHLAVU?\" (2005). Pre aktualizácie o nových vydaniach sa prihláste k newsletteru.",
   },
 ];
+
+export type Testimonial = {
+  quote: string;
+  author: string;
+  role: string;
+  source: string;
+};
+
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    quote:
+      "D.O.R.A. priniesli na pódium energiu, akú sme dlho nevideli. Publikum bolo na nohách od prvej do poslednej noty.",
+    author: "Marek Hudec",
+    role: "Organizátor, Letný pivný festival",
+    source: "Festival 2025",
+  },
+  {
+    quote:
+      "Jedinečná kombinácia punku, funku a rapu. D.O.R.A. znie v roku 2026 rovnako čerstvo ako v deväťdesiatkach.",
+    author: "Lucia Poláková",
+    role: "Hudobná publicistka, Reflex SK",
+    source: "Recenzia koncertu",
+  },
+  {
+    quote:
+      "Profesionálny prístup k bookingu, technicky bezproblémové vystúpenie. Kapela, na ktorú sa dá spoľahnúť.",
+    author: "Peter Vavro",
+    role: "Production Manager, Klub Underground",
+    source: "Klubový koncert 2024",
+  },
+  {
+    quote:
+      "TCHO SME NAHLAVU? je skladba, ktorá definovala slovenskú crossover scénu. Živá legenda.",
+    author: "Tomáš Janík",
+    role: "DJ, Rádio_fm",
+    source: "Eselenco 2025",
+  },
+  {
+    quote:
+      "Marcel Chleban je jeden z najcharizmatickejších frontmanov na slovenskej scéne. D.O.R.A. naživo je zážitok.",
+    author: "Eva Macháčová",
+    role: "Festivalový katalóg SK",
+    source: " Profil kapely",
+  },
+];
