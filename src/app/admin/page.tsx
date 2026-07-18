@@ -2,21 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard } from "lucide-react";
+import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InquiriesTab } from "@/components/admin/inquiries-tab";
 import { GigsTab } from "@/components/admin/gigs-tab";
 import { MediaTab } from "@/components/admin/media-tab";
 import { StatsTab } from "@/components/admin/stats-tab";
+import { SubscribersTab } from "@/components/admin/subscribers-tab";
 
-type Tab = "stats" | "inquiries" | "gigs" | "media";
+type Tab = "stats" | "inquiries" | "gigs" | "media" | "subscribers";
 
 const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[] = [
   { id: "stats", label: "Prehľad", icon: LayoutDashboard },
   { id: "inquiries", label: "Dopyty", icon: Inbox, hasCount: true },
   { id: "gigs", label: "Koncerty", icon: CalendarDays, hasCount: true },
   { id: "media", label: "Médiá", icon: Images, hasCount: true },
+  { id: "subscribers", label: "Newsletter", icon: Mail, hasCount: true },
 ];
 
 export default function AdminPage() {
@@ -24,10 +26,11 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [tab, setTab] = useState<Tab>("stats");
-  const [counts, setCounts] = useState<{ inquiries: number; gigs: number; media: number }>({
+  const [counts, setCounts] = useState<{ inquiries: number; gigs: number; media: number; subscribers: number }>({
     inquiries: 0,
     gigs: 0,
     media: 0,
+    subscribers: 0,
   });
 
   useEffect(() => {
@@ -44,11 +47,13 @@ export default function AdminPage() {
             fetch("/api/admin/inquiries").then((r) => r.json()),
             fetch("/api/admin/gigs").then((r) => r.json()),
             fetch("/api/admin/media").then((r) => r.json()),
-          ]).then(([inq, gigs, media]) => {
+            fetch("/api/admin/subscribers").then((r) => r.json()),
+          ]).then(([inq, gigs, media, subs]) => {
             setCounts({
               inquiries: inq.items?.length ?? 0,
               gigs: gigs.items?.length ?? 0,
               media: media.items?.length ?? 0,
+              subscribers: subs.items?.length ?? 0,
             });
           });
         }
@@ -148,6 +153,7 @@ export default function AdminPage() {
         {tab === "inquiries" && <InquiriesTab onChange={(n) => refreshCount("inquiries", n)} />}
         {tab === "gigs" && <GigsTab onChange={(n) => refreshCount("gigs", n)} />}
         {tab === "media" && <MediaTab onChange={(n) => refreshCount("media", n)} />}
+        {tab === "subscribers" && <SubscribersTab onChange={(n) => refreshCount("subscribers", n)} />}
       </div>
     </div>
   );

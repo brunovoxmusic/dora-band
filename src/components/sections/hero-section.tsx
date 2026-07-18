@@ -1,18 +1,42 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ArrowDown, Download, Play, Calendar } from "lucide-react";
 import { BAND } from "@/lib/band-data";
 import { useCountUp } from "@/hooks/use-count-up";
 
 export function HeroSection() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setScrollY(window.scrollY));
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // Parallax: background moves slower than content (max 120px shift)
+  const bgOffset = Math.min(scrollY * 0.35, 120);
+  const contentOffset = Math.min(scrollY * 0.15, 60);
+  const heroOpacity = Math.max(1 - scrollY / 600, 0);
+
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden bg-ink">
-      {/* Background band photo */}
-      <div className="absolute inset-0">
+      {/* Background band photo with parallax */}
+      <div
+        className="absolute inset-0"
+        style={{ transform: `translateY(${bgOffset}px)` }}
+      >
         <img
           src="/gallery/hero-banner.jpg"
           alt="D.O.R.A. naživo na koncertnom pódiu"
-          className="h-full w-full object-cover opacity-45"
+          className="h-[115%] w-full object-cover opacity-45"
         />
         {/* Dark gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/60 to-ink" />
@@ -47,7 +71,10 @@ export function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-4 pt-24 pb-16 sm:px-6 lg:px-8">
+      <div
+        className="relative z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-4 pt-24 pb-16 sm:px-6 lg:px-8"
+        style={{ transform: `translateY(${contentOffset}px)`, opacity: heroOpacity }}
+      >
         {/* Live status pill */}
         <div className="mb-6 inline-flex w-fit items-center gap-2 border border-charcoal bg-dark-gray/80 px-3 py-1.5 backdrop-blur">
           <span className="relative flex h-2 w-2">
