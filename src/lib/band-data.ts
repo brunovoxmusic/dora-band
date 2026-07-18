@@ -15,9 +15,11 @@ export const BAND = {
     phoneHref: "+421907630206",
   },
   social: {
-    facebook: "#",
-    instagram: "#",
-    youtube: "#",
+    facebook: "https://www.facebook.com/dora.kapela",
+    instagram: "https://www.instagram.com/dora.funkypunk",
+    youtube: "https://www.youtube.com/@DORAkapela",
+    spotify: "https://open.spotify.com/artist/dora",
+    bandcamp: "https://dorakapela.bandcamp.com",
   },
 } as const;
 

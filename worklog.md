@@ -346,6 +346,69 @@ Stage Summary:
 - No i18n (site is Slovak-only; could add EN/CZ variants)
 - Admin media tab could use drag-and-drop reordering
 
+---
+Task ID: 9 (cron-review round 5)
+Agent: Main (Z.ai Code)
+Task: QA review + dynamic OG image + scroll progress bar + social media section + discography waveforms
+
+Work Log:
+- Reviewed worklog: project SEO-optimized from round 4 (12 sections, admin 5 tabs, JSON-LD, sitemap)
+- QA with agent-browser: homepage 200, no errors, 11 h2 sections present
+- Tackled worklog priority items: dynamic OG image, social feed integration
+
+NEW FEATURES ADDED:
+1. Dynamic OG image (src/app/opengraph-image.tsx) — Next.js edge runtime ImageResponse
+   - 1200×630 PNG, branded: barcode strip + "Booking 2026 — otvorený" pill + D.O.R.A. (140px neon-red) + tagline + bio + 4-stat strip
+   - Dark gradient bg, neon-red/warm-yellow accents
+   - Verified: 200, image/png, 427KB, VLM confirmed content matches
+2. Scroll progress indicator bar (ScrollProgress component) — fixed top, z-70
+   - Neon-red→deep-red→warm-yellow gradient, glow shadow, requestAnimationFrame-throttled
+   - Verified: width 43.56% at scrollY=500
+3. Social media section (#social) — 4 platform cards + Bandcamp strip
+   - Facebook (@dora.kapela), Instagram (@dora.funkypunk), YouTube (@DORAkapela), Spotify (D.O.R.A.)
+   - Each card: platform-colored icon, handle, description, hover accent line, clip-corner
+   - Bandcamp support strip with Heart icon + CTA button
+   - Updated band-data social URLs (facebook/instagram/youtube/spotify/bandcamp)
+   - Updated footer social links: added Spotify, hover translate-y, target=_blank
+4. Discography waveforms — Waveform component (14 bars, animated scaleY keyframes)
+   - 3 release cards now show vinyl disc + animated waveform (neon-red or warm-yellow)
+   - Waveform opacity 40%→100% on hover, Reveal staggered animation on cards
+   - Bottom accent line (warm-yellow→neon-red gradient) on hover
+   - Verified: 42 waveform bar elements present in DOM
+
+STYLING IMPROVEMENTS:
+- ScrollProgress: thin gradient bar with glow, 75ms eased transitions
+- Discography: vinyl + waveform combo, hover reveals full waveform, Reveal on scroll
+- Social cards: colored borders/bg per platform, hover accent gradient line
+- Footer social: added Spotify, hover -translate-y-0.5 lift effect
+
+VERIFICATION (agent-browser):
+- Homepage 200, no console errors ✓
+- OG image: 200, image/png, 1200×630, VLM confirmed D.O.R.A. + tagline + pill + stats ✓
+- Scroll progress: width 43.56% at scrollY=500 ✓
+- Social section: 5 links (FB/IG/YT/Spotify/Bandcamp) with handles ✓
+- Discography: 42 waveform bars, vinyl discs, hover accent ✓
+- Mobile 390px: 4 social links render, responsive ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Added dynamic OG image (social sharing) + scroll progress bar + social media section (5 platforms) + discography waveforms
+- All features browser-verified, OG image generates correctly
+- Lint clean, dev server stable
+
+## Current Project Status: SOCIAL-READY & VISUALLY-RICH
+13 landing sections (Hero, About, Members, Music, Gallery+search, Discography+waveforms, Gigs+archive+modal, Testimonials, Press, FAQ, Social, Newsletter, Contact) + admin dashboard (5 tabs) + dynamic OG image + scroll progress + JSON-LD + sitemap + CSV export + parallax + glitch + cookie consent.
+
+### Unresolved issues / risks for next phase:
+- Music section still uses placeholder YouTube video IDs — replace with real band videos
+- Image upload in admin media tab is URL-based only (no file upload to server)
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only; could add EN/CZ variants)
+- Admin media tab could use drag-and-drop reordering
+- Could add a "setlist" or "repertoire" section showing sample songs
+- Newsletter admin could support sending test emails
+
+
 
 
 

@@ -2,6 +2,7 @@ import { Navbar } from "@/components/site/navbar";
 import { Footer } from "@/components/site/footer";
 import { BackToTop } from "@/components/site/back-to-top";
 import { CookieConsent } from "@/components/site/cookie-consent";
+import { ScrollProgress } from "@/components/site/scroll-progress";
 import { SectionDivider } from "@/components/site/section-divider";
 import { HeroSection } from "@/components/sections/hero-section";
 import { AboutSection } from "@/components/sections/about-section";
@@ -13,12 +14,14 @@ import { GigsSection } from "@/components/sections/gigs-section";
 import { TestimonialsSection } from "@/components/sections/testimonials-section";
 import { PressSection } from "@/components/sections/press-section";
 import { NewsletterSection } from "@/components/sections/newsletter-section";
+import { SocialSection } from "@/components/sections/social-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { ContactSection } from "@/components/sections/contact-section";
 
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-ink">
+      <ScrollProgress />
       <Navbar />
       <main className="flex-1">
         <HeroSection />
@@ -38,6 +41,7 @@ export default function HomePage() {
         <PressSection />
         <FaqSection />
         <SectionDivider />
+        <SocialSection />
         <NewsletterSection />
         <ContactSection />
       </main>

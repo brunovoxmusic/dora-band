@@ -3,6 +3,8 @@
 import { Disc, Music2, Languages, Calendar } from "lucide-react";
 import { DISCOGRAPHY, GENRES } from "@/lib/band-data";
 import { SectionHeading } from "@/components/site/section-heading";
+import { Reveal } from "@/components/site/reveal";
+import { Waveform } from "@/components/site/waveform";
 
 export function DiscographySection() {
   return (
@@ -67,20 +69,26 @@ export function DiscographySection() {
               {"// Diskografia"}
             </p>
             <div className="grid gap-4 sm:grid-cols-3">
-              {DISCOGRAPHY.map((r) => (
+              {DISCOGRAPHY.map((r, idx) => (
+                <Reveal key={r.title} delay={idx * 80} direction="up">
                 <article
-                  key={r.title}
-                  className="group relative flex flex-col border border-charcoal bg-ink p-5 transition-all hover:border-warm-yellow/50 clip-corner"
+                  className="group relative flex h-full flex-col border border-charcoal bg-ink p-5 transition-all hover:border-warm-yellow/50 clip-corner"
                 >
-                  {/* Vinyl disc graphic */}
-                  <div className="relative mb-5 flex h-24 w-24 items-center justify-center">
-                    <div className="absolute inset-0 rounded-full bg-charcoal transition-transform duration-700 group-hover:rotate-180">
-                      <div className="absolute inset-2 rounded-full border border-neon-red/30" />
-                      <div className="absolute inset-4 rounded-full border border-charcoal" />
-                      <div className="absolute inset-6 rounded-full border border-neon-red/20" />
+                  {/* Vinyl disc graphic + waveform */}
+                  <div className="relative mb-5 flex items-center justify-between">
+                    <div className="relative flex h-24 w-24 items-center justify-center">
+                      <div className="absolute inset-0 rounded-full bg-charcoal transition-transform duration-700 group-hover:rotate-180">
+                        <div className="absolute inset-2 rounded-full border border-neon-red/30" />
+                        <div className="absolute inset-4 rounded-full border border-charcoal" />
+                        <div className="absolute inset-6 rounded-full border border-neon-red/20" />
+                      </div>
+                      <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-neon-red">
+                        <Disc className="h-4 w-4 text-white" />
+                      </div>
                     </div>
-                    <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-neon-red">
-                      <Disc className="h-4 w-4 text-white" />
+                    {/* Animated waveform (reveals on hover) */}
+                    <div className="opacity-40 transition-opacity duration-300 group-hover:opacity-100">
+                      <Waveform bars={14} color={idx === 1 ? "warm-yellow" : "neon-red"} className="h-10" />
                     </div>
                   </div>
 
@@ -100,7 +108,11 @@ export function DiscographySection() {
                       {r.language}
                     </p>
                   </div>
+
+                  {/* Bottom accent on hover */}
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-warm-yellow to-neon-red transition-transform duration-500 group-hover:scale-x-100" />
                 </article>
+                </Reveal>
               ))}
             </div>
 

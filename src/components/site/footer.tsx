@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, Music2 } from "lucide-react";
 import { BAND } from "@/lib/band-data";
 
 export function Footer() {
@@ -44,12 +44,15 @@ export function Footer() {
                 { Icon: Facebook, href: BAND.social.facebook, label: "Facebook" },
                 { Icon: Instagram, href: BAND.social.instagram, label: "Instagram" },
                 { Icon: Youtube, href: BAND.social.youtube, label: "YouTube" },
+                { Icon: Music2, href: BAND.social.spotify, label: "Spotify" },
               ].map(({ Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
-                  className="inline-flex h-9 w-9 items-center justify-center border border-charcoal text-silver transition-colors hover:border-neon-red hover:text-neon-red"
+                  className="inline-flex h-9 w-9 items-center justify-center border border-charcoal text-silver transition-all hover:border-neon-red hover:text-neon-red hover:-translate-y-0.5"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
