@@ -2,26 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink } from "lucide-react";
+import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InquiriesTab } from "@/components/admin/inquiries-tab";
 import { GigsTab } from "@/components/admin/gigs-tab";
 import { MediaTab } from "@/components/admin/media-tab";
+import { StatsTab } from "@/components/admin/stats-tab";
 
-type Tab = "inquiries" | "gigs" | "media";
+type Tab = "stats" | "inquiries" | "gigs" | "media";
 
-const TABS: { id: Tab; label: string; icon: typeof Inbox }[] = [
-  { id: "inquiries", label: "Dopyty", icon: Inbox },
-  { id: "gigs", label: "Koncerty", icon: CalendarDays },
-  { id: "media", label: "Médiá", icon: Images },
+const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[] = [
+  { id: "stats", label: "Prehľad", icon: LayoutDashboard },
+  { id: "inquiries", label: "Dopyty", icon: Inbox, hasCount: true },
+  { id: "gigs", label: "Koncerty", icon: CalendarDays, hasCount: true },
+  { id: "media", label: "Médiá", icon: Images, hasCount: true },
 ];
 
 export default function AdminPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<{ email: string } | null>(null);
-  const [tab, setTab] = useState<Tab>("inquiries");
+  const [tab, setTab] = useState<Tab>("stats");
   const [counts, setCounts] = useState<{ inquiries: number; gigs: number; media: number }>({
     inquiries: 0,
     gigs: 0,
@@ -127,19 +129,22 @@ export default function AdminPage() {
               >
                 <Icon className="h-4 w-4" />
                 {t.label}
-                <span
-                  className={cn(
-                    "ml-1 rounded-sm px-1.5 py-0.5 font-mono-brand text-[10px]",
-                    isActive ? "bg-white/20 text-white" : "bg-charcoal text-silver"
-                  )}
-                >
-                  {counts[t.id]}
-                </span>
+                {t.hasCount && (
+                  <span
+                    className={cn(
+                      "ml-1 rounded-sm px-1.5 py-0.5 font-mono-brand text-[10px]",
+                      isActive ? "bg-white/20 text-white" : "bg-charcoal text-silver"
+                    )}
+                  >
+                    {counts[t.id as keyof typeof counts] ?? 0}
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
+        {tab === "stats" && <StatsTab />}
         {tab === "inquiries" && <InquiriesTab onChange={(n) => refreshCount("inquiries", n)} />}
         {tab === "gigs" && <GigsTab onChange={(n) => refreshCount("gigs", n)} />}
         {tab === "media" && <MediaTab onChange={(n) => refreshCount("media", n)} />}

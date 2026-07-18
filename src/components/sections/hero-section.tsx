@@ -2,6 +2,7 @@
 
 import { ArrowDown, Download, Play, Calendar } from "lucide-react";
 import { BAND } from "@/lib/band-data";
+import { useCountUp } from "@/hooks/use-count-up";
 
 export function HeroSection() {
   return (
@@ -104,10 +105,7 @@ export function HeroSection() {
             { k: "3", v: "Nahrávky / Demá" },
             { k: "5", v: "Žánrov" },
           ].map((s) => (
-            <div key={s.v} className="bg-ink/90 px-4 py-4 backdrop-blur">
-              <p className="font-display text-2xl font-extrabold text-neon-red">{s.k}</p>
-              <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver">{s.v}</p>
-            </div>
+            <StatCell key={s.v} value={s.k} label={s.v} />
           ))}
         </div>
       </div>
@@ -122,5 +120,15 @@ export function HeroSection() {
         <ArrowDown className="h-4 w-4 animate-bounce" />
       </a>
     </section>
+  );
+}
+
+function StatCell({ value, label }: { value: string; label: string }) {
+  const { ref, display } = useCountUp(value);
+  return (
+    <div ref={ref as React.RefObject<HTMLDivElement>} className="bg-ink/90 px-4 py-4 backdrop-blur transition-colors hover:bg-charcoal/60">
+      <p className="font-display text-2xl font-extrabold text-neon-red tabular-nums sm:text-3xl">{display}</p>
+      <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver">{label}</p>
+    </div>
   );
 }

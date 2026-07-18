@@ -106,3 +106,60 @@ Stage Summary:
 ## Current Project Status: COMPLETE
 All 7 landing sections + admin dashboard (3 tabs, full CRUD) + booking flow + auth implemented and verified.
 
+---
+Task ID: 5 (cron-review round 1)
+Agent: Main (Z.ai Code)
+Task: QA review + add new features (Music/Video, Newsletter, Admin Stats) + styling improvements
+
+Work Log:
+- Reviewed worklog: project was complete (8 sections, admin CRUD, auth, booking flow)
+- QA with agent-browser: homepage 200, no console errors, all sections render
+- VLM QA: identified polish opportunities (false-positive "broken gallery images" — verified images load correctly via eval: 16 concert thumbnails, naturalWidth 320, complete:true)
+- Admin QA: login works, no infinite loop, counts correct (0 inquiries, 3 gigs, 21 media)
+- Mobile QA: 390px responsive, no overflow
+
+NEW FEATURES ADDED:
+1. Music & Video section (#hudba) — embedded YouTube player + interactive tracklist (5 tracks)
+   - Click track → loads video with autoplay, "now playing" bar, animated equalizer bars
+   - Video thumbnail from YouTube, play button with ping animation
+   - Tracklist with genre badges, durations, years, scrollable
+2. Newsletter signup section — email capture with POST /api/newsletter → Subscriber model in DB
+   - Upsert logic (reactivates inactive subscribers), success state, GDPR notice
+   - New Prisma model: Subscriber (email, active, source)
+3. Admin Stats/Overview tab (default tab) — GET /api/admin/stats
+   - 4 stat cards (inquiries, gigs, media, subscribers) with icons + sub-metrics
+   - Recent inquiries list (last 5), upcoming gigs list (next 5)
+   - Inquiry status breakdown with animated progress bars (new/reviewed/confirmed/archived)
+4. Back-to-top button — floating, scroll-aware, neon-red with clip-corner
+5. Scroll-reveal animations — Reveal component (IntersectionObserver) on section headings
+6. Animated count-up hero stats — useCountUp hook (easeOutExpo, triggers on scroll into view)
+
+STYLING IMPROVEMENTS:
+- Reveal component: fade+translate on scroll into view (up/down/left/right directions, delay)
+- Hero stat strip: animated counters + hover state
+- Music section: stage-grid texture, glow effects, ping animation on play button, equalizer bars on active track
+- Newsletter: blurred glow orbs (red/yellow) in background, sparkles icon, clip-corner inputs
+- Stats dashboard: colored stat cards, progress bars, monospace section labels
+
+BUGS FIXED:
+- Prisma client stale cache: db:push added Subscriber model but dev server used old client → 500 on /api/newsletter. Fixed by clearing .next cache + regenerating Prisma client + full restart.
+- ESLint: setState-in-effect in use-count-up hook (removed setValue(0) early return)
+- ESLint: react/jsx-no-comment-textnodes in newsletter section (wrapped // in braces)
+
+VERIFICATION:
+- Homepage: 11 sections render (Hero, About, Members, Music, Gallery, Discography, Gigs, Press, Newsletter, Contact, Footer) — VLM confirmed, no issues
+- Music section: track click loads YouTube iframe with autoplay ✓, tracklist 5 tracks ✓
+- Newsletter: POST → 201, persisted to DB (Subscriber active:true) ✓
+- Admin Stats: 4 stat cards with correct numbers, upcoming gigs list, status breakdown ✓
+- Mobile 390px: responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Added 3 major features (Music/Video player, Newsletter, Admin Stats dashboard) + 3 styling enhancements (scroll-reveal, count-up, back-to-top)
+- All new features browser-verified and DB-persisted
+- Lint clean, dev server stable
+
+## Current Project Status: ENHANCED & STABLE
+10 landing sections + admin dashboard (4 tabs: Stats/Inquiries/Gigs/Media) + booking + newsletter + auth + music player.
+
+

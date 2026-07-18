@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MILESTONES, BAND } from "@/lib/band-data";
 import { SectionHeading } from "@/components/site/section-heading";
+import { Reveal } from "@/components/site/reveal";
 import { cn } from "@/lib/utils";
 
 export function AboutSection() {
@@ -11,12 +12,14 @@ export function AboutSection() {
   return (
     <section id="o-kapele" className="relative scroll-mt-20 border-t border-charcoal bg-ink py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          number="01"
-          eyebrow="O kapele"
-          title="História, identita a poslanie"
-          description="Funky-punková formácia, ktorá spája generácie poslucháčov vášňou pre autentickú hudbu."
-        />
+        <Reveal>
+          <SectionHeading
+            number="01"
+            eyebrow="O kapele"
+            title="História, identita a poslanie"
+            description="Funky-punková formácia, ktorá spája generácie poslucháčov vášňou pre autentickú hudbu."
+          />
+        </Reveal>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-16">
           {/* Bio text */}

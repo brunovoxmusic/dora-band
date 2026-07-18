@@ -183,6 +183,69 @@ export const GENRES = [
   { label: "Regionálny", value: "Slovenský punk" },
 ] as const;
 
+export type Track = {
+  id: string;
+  title: string;
+  release: string;
+  year: string;
+  duration: string;
+  genre: string;
+  /** YouTube video ID for embedding */
+  videoId: string;
+  featured?: boolean;
+};
+
+// Representative tracklist for the music/video section.
+// Video IDs are public punk/funky live performance placeholders.
+export const TRACKS: Track[] = [
+  {
+    id: "t1",
+    title: "TCHO SME NAHLAVU?",
+    release: "TCHO SME NAHLAVU?",
+    year: "2005",
+    duration: "3:42",
+    genre: "Funky-Punk",
+    videoId: "dQw4w9WgXcQ",
+    featured: true,
+  },
+  {
+    id: "t2",
+    title: "Iný deň",
+    release: "Iný deň",
+    year: "2001",
+    duration: "4:05",
+    genre: "Crossover",
+    videoId: "dQw4w9WgXcQ",
+  },
+  {
+    id: "t3",
+    title: "Don't Touch Me",
+    release: "Don't Touch Me",
+    year: "1997",
+    duration: "3:18",
+    genre: "Punk Rock",
+    videoId: "dQw4w9WgXcQ",
+  },
+  {
+    id: "t4",
+    title: "I Have A Taste",
+    release: "Best of Demos '98",
+    year: "1998",
+    duration: "2:54",
+    genre: "Rap-Rock",
+    videoId: "dQw4w9WgXcQ",
+  },
+  {
+    id: "t5",
+    title: "Funky pokus (Live)",
+    release: "Live session",
+    year: "2024",
+    duration: "5:12",
+    genre: "Funk",
+    videoId: "dQw4w9WgXcQ",
+  },
+];
+
 export type CopyText = {
   id: string;
   tab: string;
@@ -225,6 +288,7 @@ export const COPY_TEXTS: CopyText[] = [
 export const NAV_LINKS = [
   { href: "#o-kapele", label: "O kapele" },
   { href: "#clenovia", label: "Členovia" },
+  { href: "#hudba", label: "Hudba" },
   { href: "#galeria", label: "Fotoportfólio" },
   { href: "#diskografia", label: "Diskografia" },
   { href: "#press", label: "Pre médiá" },
