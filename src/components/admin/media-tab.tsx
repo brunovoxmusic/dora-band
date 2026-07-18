@@ -29,6 +29,7 @@ type MediaItem = {
   thumbnailUrl: string | null;
   category: string;
   caption: string | null;
+  altText: string | null;
   credits: string;
   featured: boolean;
   order: number;
@@ -47,6 +48,7 @@ const emptyForm = {
   thumbnailUrl: "",
   category: "concert",
   caption: "",
+  altText: "",
   credits: "Foto: archív D.O.R.A.",
   featured: false,
 };
@@ -60,6 +62,7 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("all");
   const [uploading, setUploading] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const onChangeRef = useRef(onChange);
@@ -116,10 +119,51 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
       thumbnailUrl: m.thumbnailUrl || "",
       category: m.category,
       caption: m.caption || "",
+      altText: m.altText || "",
       credits: m.credits,
       featured: m.featured,
     });
     setShowForm(true);
+  };
+
+  // Bulk selection helpers
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      if (prev.size === filtered.length) return new Set();
+      return new Set(filtered.map((m) => m.id));
+    });
+  };
+
+  const clearSelection = () => setSelected(new Set());
+
+  const bulkAction = async (action: "feature" | "unfeature" | "delete") => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const verb = action === "delete" ? "zmazať" : action === "feature" ? "označiť ako Top" : "odznačiť Top";
+    if (!confirm(`Naozaj ${verb} ${ids.length} médií?`)) return;
+    try {
+      const res = await fetch("/api/admin/media/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      if (!res.ok) throw new Error("Hromadná akcia zlyhala.");
+      const d = await res.json();
+      toast.success(`Akcia spracovaná: ${d.affected} médií.`);
+      clearSelection();
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba.");
+    }
   };
 
   const save = async (e: React.FormEvent) => {
@@ -261,6 +305,50 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
         </div>
       </div>
 
+      {/* Bulk-action toolbar (shown when items selected) */}
+      {selected.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 border border-neon-red/40 bg-neon-red/5 p-3 clip-corner">
+          <span className="flex items-center gap-2 font-mono-brand text-xs uppercase tracking-wider text-neon-red">
+            <Star className="h-3.5 w-3.5" />
+            {selected.size} vybraných
+          </span>
+          <span className="text-silver/40">·</span>
+          <button
+            onClick={toggleSelectAll}
+            className="text-xs font-semibold text-silver underline underline-offset-2 hover:text-off-white"
+          >
+            {selected.size === filtered.length ? "Odznačiť všetko" : "Označiť všetko"}
+          </button>
+          <span className="text-silver/40">·</span>
+          <button
+            onClick={() => bulkAction("feature")}
+            className="inline-flex items-center gap-1.5 border border-warm-yellow/40 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-warm-yellow transition-colors hover:bg-warm-yellow hover:text-ink"
+          >
+            <Star className="h-3 w-3" />
+            Označiť Top
+          </button>
+          <button
+            onClick={() => bulkAction("unfeature")}
+            className="inline-flex items-center gap-1.5 border border-charcoal px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-silver transition-colors hover:border-off-white/40 hover:text-off-white"
+          >
+            Odznačiť Top
+          </button>
+          <button
+            onClick={() => bulkAction("delete")}
+            className="inline-flex items-center gap-1.5 border border-neon-red/40 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neon-red transition-colors hover:bg-neon-red hover:text-white"
+          >
+            <Trash2 className="h-3 w-3" />
+            Zmazať
+          </button>
+          <button
+            onClick={clearSelection}
+            className="ml-auto text-xs font-semibold text-silver hover:text-off-white"
+          >
+            Zrušiť výber
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -288,6 +376,8 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
                     catLabel={catLabel}
                     onEdit={() => openEdit(m)}
                     onDelete={() => remove(m.id)}
+                    isSelected={selected.has(m.id)}
+                    onToggleSelect={() => toggleSelect(m.id)}
                   />
                 ))}
               </div>
@@ -371,6 +461,17 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
                   className="media-input"
                 />
               </FormField>
+              <FormField label="Alt text (prístupnosť / SEO)">
+                <input
+                  value={form.altText}
+                  onChange={(e) => setForm({ ...form, altText: e.target.value })}
+                  className="media-input"
+                  placeholder="napr. Marcel Chleban spieva na koncerte v Púchove"
+                />
+                <span className="mt-1 block text-[10px] text-silver/60">
+                  Popis obrázka pre čítačky obrazovky a vyhľadávače. Odporúčané pre prístupnosť.
+                </span>
+              </FormField>
               <label className="flex items-center gap-2 border border-charcoal bg-ink p-3">
                 <input
                   type="checkbox"
@@ -453,11 +554,15 @@ function SortableMediaCard({
   catLabel,
   onEdit,
   onDelete,
+  isSelected,
+  onToggleSelect,
 }: {
   item: MediaItem;
   catLabel: (c: string) => string;
   onEdit: () => void;
   onDelete: () => void;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -475,15 +580,34 @@ function SortableMediaCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative border bg-dark-gray",
-        isDragging ? "border-neon-red glow-red-sm" : "border-charcoal"
+        "group relative border bg-dark-gray transition-colors",
+        isDragging
+          ? "border-neon-red glow-red-sm"
+          : isSelected
+          ? "border-neon-red/60"
+          : "border-charcoal"
       )}
     >
-      {/* Drag handle */}
+      {/* Selection checkbox (top-left, always visible) */}
+      <button
+        onClick={onToggleSelect}
+        className={cn(
+          "absolute left-1 top-1 z-20 flex h-6 w-6 items-center justify-center border transition-all",
+          isSelected
+            ? "border-neon-red bg-neon-red text-white"
+            : "border-charcoal bg-ink/80 text-transparent hover:border-off-white/60"
+        )}
+        aria-label={isSelected ? "Odznačiť" : "Označiť"}
+        aria-pressed={isSelected}
+      >
+        <Star className="h-3 w-3" />
+      </button>
+
+      {/* Drag handle (top-right, hover reveal) */}
       <button
         {...attributes}
         {...listeners}
-        className="absolute left-1 top-1 z-10 inline-flex h-6 w-6 cursor-grab items-center justify-center bg-ink/80 text-silver opacity-0 transition-opacity hover:text-neon-red group-hover:opacity-100 active:cursor-grabbing"
+        className="absolute right-1 top-1 z-10 inline-flex h-6 w-6 cursor-grab items-center justify-center bg-ink/80 text-silver opacity-0 transition-opacity hover:text-neon-red group-hover:opacity-100 active:cursor-grabbing"
         aria-label="Presunúť"
       >
         <GripVertical className="h-3.5 w-3.5" />
@@ -492,7 +616,7 @@ function SortableMediaCard({
       <div className="relative aspect-square overflow-hidden bg-ink">
         <img
           src={item.thumbnailUrl || item.url}
-          alt={item.title}
+          alt={item.altText || item.title}
           className="h-full w-full object-cover"
           onError={(e) => {
             (e.target as HTMLImageElement).src = "/dora-mark.svg";

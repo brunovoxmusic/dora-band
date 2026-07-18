@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     const title = (form.get("title") as string | null) || "Nahratý obrázok";
     const category = (form.get("category") as string | null) || "concert";
     const credits = (form.get("credits") as string | null) || "Foto: archív D.O.R.A.";
+    const altText = (form.get("altText") as string | null) || null;
 
     if (!file) return NextResponse.json({ error: "Žiadny súbor." }, { status: 422 });
     if (!ALLOWED.includes(file.type)) {
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
         thumbnailUrl,
         category,
         credits,
+        altText: altText?.trim() || null,
         featured: false,
         order: nextOrder,
       },

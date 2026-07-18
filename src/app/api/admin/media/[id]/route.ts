@@ -7,7 +7,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   try {
     const b = await req.json().catch(() => ({}));
-    const { title, url, thumbnailUrl, category, caption, credits, featured } = b;
+    const { title, url, thumbnailUrl, category, caption, altText, credits, featured } = b;
     const item = await db.mediaItem.update({
       where: { id },
       data: {
@@ -16,6 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(thumbnailUrl !== undefined && { thumbnailUrl: thumbnailUrl || null }),
         ...(category !== undefined && { category }),
         ...(caption !== undefined && { caption: caption || null }),
+        ...(altText !== undefined && { altText: altText || null }),
         ...(credits !== undefined && { credits }),
         ...(featured !== undefined && { featured: !!featured }),
       },

@@ -528,6 +528,73 @@ Stage Summary:
 - Could add bulk actions in admin (select multiple media to delete/feature)
 - Could add image alt-text management for accessibility/SEO
 
+---
+Task ID: 12 (cron-review round 8)
+Agent: Main (Z.ai Code)
+Task: QA review + bulk actions in admin media + image alt-text management
+
+Work Log:
+- Reviewed worklog: project had advanced media management from round 7 (sharp optimization, drag-and-drop)
+- QA with agent-browser: homepage 200, no errors, 13 h2 sections present
+- Tackled worklog priority items: bulk actions, alt-text management
+
+NEW FEATURES ADDED:
+1. Bulk actions in admin media (POST /api/admin/media/bulk)
+   - Actions: feature / unfeature / delete multiple items at once
+   - Uses db.mediaItem.deleteMany / updateMany with id:{in:ids}
+   - Returns {ok:true, affected:count}
+   - Admin UI: selection checkboxes on each card (Star icon, top-left, always visible)
+   - Bulk-action toolbar (appears when selection > 0): "N vybraných" counter, Označiť/Odznačiť všetko, Označiť Top, Odznačiť Top, Zmazať, Zrušiť výber
+   - Confirm dialog before destructive actions, toast feedback, optimistic reload
+   - Verified: bulk feature → 2 items featured:true, bulk unfeature → reverted
+2. Image alt-text management (accessibility/SEO)
+   - Added `altText String?` field to MediaItem schema + pushed to DB
+   - Upload route accepts altText form field, creates MediaItem with altText
+   - Admin media PATCH/POST routes handle altText field
+   - Admin media form: new "Alt text (prístupnosť / SEO)" input with placeholder + helper text
+   - openEdit populates altText from item
+   - Public gallery: Image alt + lightbox img alt use `altText || title` fallback
+   - Verified: PATCH sets altText "Koncertný záchyt kapely D.O.R.A. naživo", 17/18 page images have alt text
+
+STYLING IMPROVEMENTS:
+- Bulk toolbar: neon-red/5 bg with neon-red/40 border, clip-corner, counter with Star icon
+- Selection checkbox: Star icon, neon-red bg when selected, transparent when not
+- Cards: border-neon-red/60 when selected (visual feedback)
+- AltText field: helper text "Popis obrázka pre čítačky obrazovky a vyhľadávače"
+
+VERIFICATION (agent-browser + API):
+- Homepage 200, no console errors, 13 h2 sections ✓
+- Bulk API: feature → {ok:true,affected:2}, unfeature → reverted, both verified in DB ✓
+- Admin media tab: 21 selection checkboxes present, bulk toolbar appears on selection ✓
+- Bulk toolbar: "Označiť všetko", "Označiť Top", "Odznačiť Top", "Zrušiť výber" buttons ✓
+- Bulk feature via UI: dialog accepted, featured count 2→3 ✓
+- AltText form field: "ALT TEXT (PRÍSTUPNOSŤ / SEO)" present in edit modal ✓
+- AltText persistence: PATCH returns item with altText, DB confirms ✓
+- Gallery accessibility: 17/18 images have alt text, first img alt="D.O.R.A. naživo na koncertnom pódiu" ✓
+- Mobile 390px: no errors, responsive ✓
+- Lint: 0 errors ✓
+
+BUGS FIXED:
+- Prisma client stale cache after schema change (added `altText` field) → cleared .next + restarted dev server
+
+Stage Summary:
+- Added bulk actions (feature/unfeature/delete multiple media) + alt-text management for accessibility/SEO
+- All features verified via API + browser, bulk actions persist correctly, altText used in gallery
+- Lint clean, dev server stable
+
+## Current Project Status: ACCESSIBILITY-OPTIMIZED & BULK-MANAGEABLE
+14 landing sections + admin dashboard (5 tabs + sharp upload + drag-and-drop + bulk actions + alt-text editing) + dynamic OG image + scroll progress + JSON-LD + sitemap + CSV export + parallax + glitch + cookie consent + waveforms + setlist + accessible gallery.
+
+### Unresolved issues / risks for next phase:
+- Music section still uses placeholder YouTube video IDs — replace with real band videos
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only; could add EN/CZ variants)
+- Newsletter admin could support sending test emails
+- Could add a "past concerts" archive page (separate route) with photos per gig
+- Could add keyboard shortcuts in admin (e.g., Ctrl+A select all, Delete to remove)
+- Could add media usage tracking (which images are featured/used where)
+
+
 
 
 

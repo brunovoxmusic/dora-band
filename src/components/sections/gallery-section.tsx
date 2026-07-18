@@ -14,6 +14,7 @@ type MediaItem = {
   thumbnailUrl: string | null;
   category: string;
   caption: string | null;
+  altText: string | null;
   credits: string;
   createdAt: string;
 };
@@ -192,7 +193,7 @@ export function GallerySection() {
                 >
                 <Image
                   src={item.thumbnailUrl || item.url}
-                  alt={item.title}
+                  alt={item.altText || item.title}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -255,7 +256,7 @@ export function GallerySection() {
           >
             <img
               src={filteredItems[lightbox].url}
-              alt={filteredItems[lightbox].title}
+              alt={filteredItems[lightbox].altText || filteredItems[lightbox].title}
               className="max-h-[78vh] w-auto border border-charcoal object-contain"
             />
             <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">

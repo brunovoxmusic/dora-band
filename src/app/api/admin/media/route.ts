@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (!(await guard(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
   try {
     const b = await req.json().catch(() => ({}));
-    const { title, url, thumbnailUrl, category, caption, credits, featured } = b;
+    const { title, url, thumbnailUrl, category, caption, altText, credits, featured } = b;
     if (!title || !url) {
       return NextResponse.json({ error: "title a url sú povinné." }, { status: 422 });
     }
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
         thumbnailUrl: thumbnailUrl || null,
         category: category || "concert",
         caption: caption || null,
+        altText: altText || null,
         credits: credits || "Foto: archív D.O.R.A.",
         featured: !!featured,
         order: 0,

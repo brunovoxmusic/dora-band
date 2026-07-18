@@ -55,6 +55,7 @@ model MediaItem {
   thumbnailUrl String?
   category    String   @default("concert") // concert | portrait | backstage | promo
   caption     String?
+  altText     String?  // accessibility/SEO alt text
   credits     String   @default("Foto: archív D.O.R.A.")
   featured    Boolean  @default(false)
   order       Int      @default(0)
