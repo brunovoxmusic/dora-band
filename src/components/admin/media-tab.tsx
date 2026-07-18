@@ -1,9 +1,26 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Pencil, Trash2, X, Loader2, Images, Star, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2, Images, Star, Upload, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type MediaItem = {
   id: string;
@@ -14,6 +31,7 @@ type MediaItem = {
   caption: string | null;
   credits: string;
   featured: boolean;
+  order: number;
 };
 
 const CATEGORIES = [
@@ -144,6 +162,52 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
   const filtered = filter === "all" ? items : items.filter((i) => i.category === filter);
   const catLabel = (c: string) => CATEGORIES.find((x) => x.value === c)?.label || c;
 
+  // Drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = filtered.findIndex((i) => i.id === active.id);
+    const newIndex = filtered.findIndex((i) => i.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(filtered, oldIndex, newIndex);
+    // Optimistic local update
+    setItems((prev) => {
+      const map = new Map(prev.map((i) => [i.id, i]));
+      const result: MediaItem[] = [];
+      const seen = new Set<string>();
+      reordered.forEach((m, idx) => {
+        if (map.has(m.id)) {
+          result.push({ ...map.get(m.id)!, order: idx + 1 });
+          seen.add(m.id);
+        }
+      });
+      prev.forEach((m) => {
+        if (!seen.has(m.id)) result.push(m);
+      });
+      return result;
+    });
+
+    // Persist new order
+    try {
+      const payload = reordered.map((m, idx) => ({ id: m.id, order: idx + 1 }));
+      await fetch("/api/admin/media/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: payload }),
+      });
+      toast.success("Poradie médií aktualizované.");
+    } catch {
+      toast.error("Nepodarilo sa uložiť poradie.");
+      load();
+    }
+  };
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -210,53 +274,25 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
         </div>
       ) : (
         <div className="max-h-[70vh] overflow-y-auto scroll-dora pr-1">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            {filtered.map((m) => (
-              <div
-                key={m.id}
-                className="group relative border border-charcoal bg-dark-gray"
-              >
-                <div className="relative aspect-square overflow-hidden bg-ink">
-                  <img
-                    src={m.thumbnailUrl || m.url}
-                    alt={m.title}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/dora-mark.svg";
-                    }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={filtered.map((m) => m.id)} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                {filtered.map((m) => (
+                  <SortableMediaCard
+                    key={m.id}
+                    item={m}
+                    catLabel={catLabel}
+                    onEdit={() => openEdit(m)}
+                    onDelete={() => remove(m.id)}
                   />
-                  {m.featured && (
-                    <span className="absolute left-1 top-1 inline-flex items-center gap-1 bg-warm-yellow px-1.5 py-0.5 font-mono-brand text-[8px] uppercase text-ink">
-                      <Star className="h-2.5 w-2.5" />
-                      Top
-                    </span>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center gap-1 bg-ink/70 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={() => openEdit(m)}
-                      className="inline-flex h-8 w-8 items-center justify-center border border-charcoal bg-dark-gray text-off-white hover:border-neon-red hover:text-neon-red"
-                      aria-label="Upraviť"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => remove(m.id)}
-                      className="inline-flex h-8 w-8 items-center justify-center border border-charcoal bg-dark-gray text-off-white hover:border-neon-red hover:text-neon-red"
-                      aria-label="Zmazať"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-                <div className="p-2">
-                  <p className="truncate text-xs font-semibold text-off-white">{m.title}</p>
-                  <p className="font-mono-brand text-[9px] uppercase tracking-wider text-warm-yellow">
-                    {catLabel(m.category)}
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
@@ -409,5 +445,88 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
       <span className="mb-1 block font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver">{label}</span>
       {children}
     </label>
+  );
+}
+
+function SortableMediaCard({
+  item,
+  catLabel,
+  onEdit,
+  onDelete,
+}: {
+  item: MediaItem;
+  catLabel: (c: string) => string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group relative border bg-dark-gray",
+        isDragging ? "border-neon-red glow-red-sm" : "border-charcoal"
+      )}
+    >
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute left-1 top-1 z-10 inline-flex h-6 w-6 cursor-grab items-center justify-center bg-ink/80 text-silver opacity-0 transition-opacity hover:text-neon-red group-hover:opacity-100 active:cursor-grabbing"
+        aria-label="Presunúť"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="relative aspect-square overflow-hidden bg-ink">
+        <img
+          src={item.thumbnailUrl || item.url}
+          alt={item.title}
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/dora-mark.svg";
+          }}
+        />
+        {item.featured && (
+          <span className="absolute right-1 top-1 inline-flex items-center gap-1 bg-warm-yellow px-1.5 py-0.5 font-mono-brand text-[8px] uppercase text-ink">
+            <Star className="h-2.5 w-2.5" />
+            Top
+          </span>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center gap-1 bg-ink/70 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={onEdit}
+            className="inline-flex h-8 w-8 items-center justify-center border border-charcoal bg-dark-gray text-off-white hover:border-neon-red hover:text-neon-red"
+            aria-label="Upraviť"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="inline-flex h-8 w-8 items-center justify-center border border-charcoal bg-dark-gray text-off-white hover:border-neon-red hover:text-neon-red"
+            aria-label="Zmazať"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="p-2">
+        <p className="truncate text-xs font-semibold text-off-white">{item.title}</p>
+        <p className="font-mono-brand text-[9px] uppercase tracking-wider text-warm-yellow">
+          {catLabel(item.category)}
+        </p>
+      </div>
+    </div>
   );
 }

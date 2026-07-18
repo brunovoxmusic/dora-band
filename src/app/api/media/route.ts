@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   const items = await db.mediaItem.findMany({
     where,
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     take: 100,
   });
 

@@ -465,6 +465,70 @@ Stage Summary:
 - Could add image optimization (sharp) for uploaded images to auto-generate thumbnails
 - Could add a "past concerts" archive page (separate route) with photos per gig
 
+---
+Task ID: 11 (cron-review round 7)
+Agent: Main (Z.ai Code)
+Task: QA review + sharp image optimization on upload + drag-and-drop media reordering
+
+Work Log:
+- Reviewed worklog: project feature-complete from round 6 (14 sections, admin 5 tabs + file upload)
+- QA with agent-browser: homepage 200, no errors, 13 h2 sections present
+- Tackled worklog priority items: image optimization (sharp), drag-and-drop media reordering
+
+NEW FEATURES ADDED:
+1. Image optimization via sharp on upload (POST /api/admin/upload)
+   - Full image: resized to max 1920px wide (withoutEnlargement), JPEG quality 85 progressive
+   - Thumbnail: 600×600 cover crop (centre position), JPEG quality 75 progressive
+   - Auto-generates both files in /public/uploads/ with timestamped names
+   - MediaItem created with separate url + thumbnailUrl fields
+   - Verified: full 1600×1068 JPEG (231KB), thumb 600×600 JPEG (45KB) from 224KB original
+2. Drag-and-drop media reordering (@dnd-kit)
+   - Added `order Int @default(0)` field to MediaItem schema + index
+   - New API: PATCH /api/admin/media/reorder (accepts {items:[{id,order}]}), uses $transaction
+   - Updated admin + public media GET routes: orderBy [{order:asc},{createdAt:desc/asc}]
+   - SortableMediaCard component: useSortable hook, drag handle (GripVertical), transform/transition, isDragging state (border-neon-red + glow)
+   - DndContext + SortableContext (rectSortingStrategy) wrapping the grid
+   - Optimistic local update on drag end, persists to API, toast confirmation
+   - Drag handle: opacity-0 → group-hover:opacity-100, cursor-grab → active:cursor-grabbing
+   - Verified: reorder API returns {ok:true,updated:2}, DB order swapped correctly
+
+STYLING IMPROVEMENTS:
+- Media cards: drag handle (GripVertical) top-left, hover-reveal, glow-red-sm when dragging
+- Upload button distinct warm-yellow theme vs red "Pridať médium"
+- Order field indexing for efficient sorted queries
+
+BUGS FIXED:
+- Prisma client stale cache after schema change (added `order` field) → 500 on upload. Fixed by clearing .next cache + restarting dev server (same pattern as round 1).
+- ESLint unused eslint-disable directive in SortableMediaCard (removed)
+
+VERIFICATION (agent-browser + API):
+- Homepage 200, no console errors, 13 h2 sections ✓
+- Upload API: POST 201, returns item with url + thumbnailUrl, sharp processed both ✓
+- Image dimensions: full 1600×1068, thumb 600×600 (verified via sharp metadata) ✓
+- Reorder API: PATCH returns {ok:true,updated:2}, DB orders swapped (1↔2) ✓
+- Admin media tab: drag handles present ("Presunúť" buttons), 79 media cards render ✓
+- Drag handle visibility: opacity-0 → revealed on hover (VLM confirmed grip icon) ✓
+- Mobile 390px: responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Added sharp image optimization (auto full + thumbnail generation) + drag-and-drop media reordering with @dnd-kit
+- All features verified via API + browser, optimization produces correct dimensions
+- Lint clean, dev server stable
+
+## Current Project Status: ADVANCED MEDIA MANAGEMENT
+14 landing sections + admin dashboard (5 tabs + sharp-optimized file upload + drag-and-drop reordering) + dynamic OG image + scroll progress + JSON-LD + sitemap + CSV export + parallax + glitch + cookie consent + waveforms + setlist.
+
+### Unresolved issues / risks for next phase:
+- Music section still uses placeholder YouTube video IDs — replace with real band videos
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only; could add EN/CZ variants)
+- Newsletter admin could support sending test emails
+- Could add a "past concerts" archive page (separate route) with photos per gig
+- Could add bulk actions in admin (select multiple media to delete/feature)
+- Could add image alt-text management for accessibility/SEO
+
+
 
 
 

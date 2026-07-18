@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import sharp from "sharp";
 
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
@@ -25,31 +26,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Súbor je príliš veľký (max 8 MB)." }, { status: 422 });
     }
 
-    // Generate a safe filename
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeName = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    // Generate safe filenames
+    const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const fullExt = "jpg";
+    const thumbExt = "jpg";
+    const fullName = `upload-${stamp}.${fullExt}`;
+    const thumbName = `upload-${stamp}-thumb.${thumbExt}`;
+
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, safeName);
 
     const bytes = await file.arrayBuffer();
-    await writeFile(filePath, Buffer.from(bytes));
+    const buffer = Buffer.from(bytes);
 
-    const url = `/uploads/${safeName}`;
+    // Optimize full image: max 1920px wide, JPEG quality 85
+    const fullPath = path.join(uploadDir, fullName);
+    await sharp(buffer)
+      .resize({ width: 1920, withoutEnlargement: true })
+      .jpeg({ quality: 85, progressive: true })
+      .toFile(fullPath);
 
-    // Create a MediaItem record so it appears in the admin media list + public gallery
+    // Generate thumbnail: 600x600 cover, JPEG quality 75
+    const thumbPath = path.join(uploadDir, thumbName);
+    await sharp(buffer)
+      .resize({ width: 600, height: 600, fit: "cover", position: "centre" })
+      .jpeg({ quality: 75, progressive: true })
+      .toFile(thumbPath);
+
+    const url = `/uploads/${fullName}`;
+    const thumbnailUrl = `/uploads/${thumbName}`;
+
+    // Compute next order value for this category (append to end)
+    const lastInCategory = await db.mediaItem.findFirst({
+      where: { category },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    const nextOrder = (lastInCategory?.order ?? 0) + 1;
+
     const item = await db.mediaItem.create({
       data: {
         title: title.trim() || "Nahratý obrázok",
         url,
-        thumbnailUrl: url, // same as url; could add sharp processing later
+        thumbnailUrl,
         category,
         credits,
         featured: false,
+        order: nextOrder,
       },
     });
 
-    return NextResponse.json({ ok: true, item, url }, { status: 201 });
+    return NextResponse.json({ ok: true, item, url, thumbnailUrl }, { status: 201 });
   } catch (err) {
     console.error("[upload] error:", err);
     return NextResponse.json({ error: "Serverová chyba pri nahrávaní." }, { status: 500 });

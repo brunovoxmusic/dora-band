@@ -8,7 +8,7 @@ async function guard(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   if (!(await guard(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
-  const items = await db.mediaItem.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
+  const items = await db.mediaItem.findMany({ orderBy: [{ order: "asc" }, { createdAt: "desc" }], take: 200 });
   return NextResponse.json({ items });
 }
 
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
         caption: caption || null,
         credits: credits || "Foto: archív D.O.R.A.",
         featured: !!featured,
+        order: 0,
       },
     });
     return NextResponse.json({ ok: true, item }, { status: 201 });

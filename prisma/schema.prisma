@@ -57,10 +57,12 @@ model MediaItem {
   caption     String?
   credits     String   @default("Foto: archív D.O.R.A.")
   featured    Boolean  @default(false)
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([category])
+  @@index([order])
 }
 
 /// Admin users for the /admin dashboard.
