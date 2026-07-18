@@ -65,7 +65,7 @@ export function HeroSection() {
             Funky-Punk · Crossover · Púchov SK
           </p>
           <h1 className="mt-3 font-display text-5xl font-black leading-[0.95] tracking-tight text-off-white sm:text-7xl lg:text-8xl">
-            <span className="block text-neon-red text-glow-red">D.O.R.A.</span>
+            <span className="glitch block text-neon-red text-glow-red" data-text="D.O.R.A.">D.O.R.A.</span>
             <span className="mt-2 block font-condensed text-2xl font-bold uppercase tracking-wide text-off-white sm:text-4xl lg:text-5xl">
               Dnes Od Rána Abstinujem
             </span>

@@ -162,4 +162,58 @@ Stage Summary:
 ## Current Project Status: ENHANCED & STABLE
 10 landing sections + admin dashboard (4 tabs: Stats/Inquiries/Gigs/Media) + booking + newsletter + auth + music player.
 
+---
+Task ID: 6 (cron-review round 2)
+Agent: Main (Z.ai Code)
+Task: QA review + new features (FAQ, Cookie Consent) + styling polish (glitch hero, member hover reveals, section dividers)
+
+Work Log:
+- Reviewed worklog: project stable from round 1 (10 sections, admin 4 tabs, music/newsletter/stats)
+- QA with agent-browser: homepage 200, no console errors, admin login works (Stats default, counts correct)
+- VLM analysis identified 8 styling polish opportunities (parallax, hover-scale, visualizer, etc.)
+
+NEW FEATURES ADDED:
+1. FAQ section (#faq) — collapsible accordion with 8 questions across 3 categories (Booking/Technika/Všeobecné)
+   - Category filter buttons (Všetko/Booking/Technika/Všeobecné)
+   - Smooth grid-rows accordion animation, first item expanded by default
+   - Category-colored badges, HelpCircle icons, CTA to contact at bottom
+   - Covers: booking process, repertoire length, honorár, technical requirements, photo usage, band history, genres, discography
+2. Cookie consent banner (GDPR compliance) — appears after 1.2s delay
+   - localStorage persistence (dora_cookie_consent_v1), two options (Súhlasím / Iba nevyhnutné)
+   - Cookie icon, dismiss button, fadeInUp animation, max-w-2xl centered
+
+STYLING IMPROVEMENTS:
+1. Glitch text effect on hero title "D.O.R.A." — CSS pseudo-elements with offset warm-yellow/neon-red layers, clip-path top/bottom halves, keyframe animations (glitch-top/glitch-bottom) triggering every 3.5-4s. Punk/rebellious aesthetic.
+2. Animated section dividers — SectionDivider component: thin neon sweep line (divider-sweep keyframe, 8s linear infinite gradient) with centered diamond mark. Placed between 6 major section groups.
+3. Enhanced member cards — expandable bio (grid-rows accordion), avatar scale on hover + rotating border ring, gradient bottom accent line on hover (neon-red→warm-yellow), +/- toggle buttons, glow when expanded.
+4. New CSS utilities: glitch, divider-sweep, fadeInUp, perspective/preserve-3d (3D tilt prep)
+
+VERIFICATION (agent-browser):
+- Homepage 200, no console errors ✓
+- FAQ section renders with 8 questions + 3 category filters ✓
+- FAQ accordion: click expands (expanded=true), answer text visible ✓
+- FAQ category filter: clicking "TECHNIKA" filters to 2 technical questions ✓
+- Cookie consent: appears after delay, accept dismisses + persists ✓
+- Glitch effect: .glitch class present with data-text="D.O.R.A." ✓
+- Member cards: "Otvoriť bio" button expands bio text (Zakladajúci spevák...) ✓
+- Section dividers: present between sections (VLM confirmed) ✓
+- Mobile 390px: responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Added 2 features (FAQ accordion, cookie consent) + 3 styling enhancements (glitch hero, section dividers, member hover reveals)
+- All features browser-verified interactive
+- Lint clean, dev server stable
+
+## Current Project Status: POLISHED & FEATURE-RICH
+11 landing sections (Hero, About, Members, Music, Gallery, Discography, Gigs, Press, FAQ, Newsletter, Contact) + admin dashboard (4 tabs) + cookie consent + glitch effects + animated dividers.
+
+### Unresolved issues / risks for next phase:
+- Newsletter subscriber count shown in admin stats but no admin UI to view/export subscribers list
+- Music section uses placeholder YouTube video IDs — should be replaced with real band videos when available
+- No social media feed integration (could add Instagram/YouTube embed)
+- Could add a "past concerts" archive view (gigs with status=past)
+- Image upload in admin media tab is URL-based only (no file upload)
+
+
 

@@ -244,4 +244,67 @@
   .scroll-dora::-webkit-scrollbar-thumb:hover {
     background: #9B1B30;
   }
+
+  /* ===== Glitch text effect (punk/rebellious) ===== */
+  .glitch {
+    position: relative;
+    display: inline-block;
+  }
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.85;
+  }
+  .glitch::before {
+    color: #F4A300;
+    transform: translate(-2px, 0);
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    animation: glitch-top 4s infinite linear alternate-reverse;
+  }
+  .glitch::after {
+    color: #E63946;
+    transform: translate(2px, 0);
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+    animation: glitch-bottom 3.5s infinite linear alternate-reverse;
+  }
+  @keyframes glitch-top {
+    0%, 92%, 100% { transform: translate(-2px, 0); }
+    93% { transform: translate(-5px, -1px); }
+    95% { transform: translate(3px, 1px); }
+    97% { transform: translate(-2px, 0); }
+  }
+  @keyframes glitch-bottom {
+    0%, 92%, 100% { transform: translate(2px, 0); }
+    94% { transform: translate(5px, 1px); }
+    96% { transform: translate(-3px, -1px); }
+    98% { transform: translate(2px, 0); }
+  }
+
+  /* Fade-in-up for banners / popovers */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Gradient sweep for section dividers */
+  @keyframes sweep {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .divider-sweep {
+    background: linear-gradient(90deg, transparent 0%, #E63946 35%, #F4A300 50%, #E63946 65%, transparent 100%);
+    background-size: 200% 100%;
+    animation: sweep 8s linear infinite;
+  }
+
+  /* 3D tilt prep for member cards */
+  .perspective {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
 }

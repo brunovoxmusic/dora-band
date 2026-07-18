@@ -291,7 +291,7 @@ export const NAV_LINKS = [
   { href: "#hudba", label: "Hudba" },
   { href: "#galeria", label: "Fotoportfólio" },
   { href: "#diskografia", label: "Diskografia" },
-  { href: "#press", label: "Pre médiá" },
+  { href: "#faq", label: "FAQ" },
   { href: "#kontakt", label: "Kontakt" },
 ] as const;
 
@@ -308,3 +308,52 @@ export const INQUIRY_STATUSES = [
   { value: "confirmed", label: "Potvrdená", color: "green" },
   { value: "archived", label: "Archivovaná", color: "silver" },
 ] as const;
+
+export type FAQ = {
+  q: string;
+  a: string;
+  category: "booking" | "technical" | "general";
+};
+
+export const FAQS: FAQ[] = [
+  {
+    category: "booking",
+    q: "Ako rezervovať koncert s D.O.R.A.?",
+    a: "Vyplňte formulár v sekcii Kontakt s informáciami o dátume, mieste a type podujatia. Ozveme sa vám spravidla do 48 hodín s ponukou a technickými požiadavkami. Pre urgentné dopyty volajte priamo na 0907 630 206.",
+  },
+  {
+    category: "booking",
+    q: "Aký je repertoár a dĺžka vystúpenia?",
+    a: "Štandardný set trvá 60–90 minút a zahŕňa skladby z celej diskografie — od klasických funky-punkových hymien až po novšie crossoverové kusy. Repertoár prispôsobujeme typu podujatia a požiadavkám organizátora.",
+  },
+  {
+    category: "booking",
+    q: "Aký je honorár za vystúpenie?",
+    a: "Honorár závisí od typu podujatia (festival, klub, súkromná akcia), miesta a technického zabezpečenia. Konkrétnu ponuku vám pošleme po spracovaní dopytu. Pre letné festivaly ponúkame balíčkové ceny.",
+  },
+  {
+    category: "technical",
+    q: "Aké sú technické požiadavky na vystúpenie?",
+    a: "D.O.R.A. je šesťčlenná formácia (spev, vokály/rap, 2 gitary, basgitara, bicie). Potrebujeme plné ozvučenie pódia, monitorovanie pre všetkých členov, dostatočný priestor na pódiu (min. 8×6 m) a backstage zariadenie. Detailný stageplan a rider je k dispozícii v Press Kite.",
+  },
+  {
+    category: "technical",
+    q: "Môžeme použiť vaše fotografie na propagáciu?",
+    a: "Áno. Všetky fotografie v sekcií Fotoportfólio sú k dispozícii pre mediálnych partnerov a organizátorov bez predchádzajúceho súhlasu, s podmienkou zachovania integrity obsahu a uvedenia zdroja „Foto: archív D.O.R.A.\". Pre špeciálne požiadavky kontaktujte branislav.guzma@gmail.com.",
+  },
+  {
+    category: "general",
+    q: "Kde a kedy vznikla kapela D.O.R.A.?",
+    a: "Kapela vznikla v roku 1996 v meste Púchov na Slovensku. Založili ju Július Flimmel, Jozef Plevák a Branislav Guzma. Názov „Dnes Od Rána Abstinujem\" vymyslel spevák Marcel Chleban. Viac v sekcii O kapele.",
+  },
+  {
+    category: "general",
+    q: "Aké žánre D.O.R.A. hrá?",
+    a: "Primárny žáner je funky-punk, sekundárne crossover, terciárne punk rock. Kapela tiež integruje prvky rap-rocku a rap-metalu. Jedinečná kombinácia punkovej energie, funky groovu a rapových prvkov vytvára ich nezameniteľný zvuk.",
+  },
+  {
+    category: "general",
+    q: "Má kapela nejaké nahrávky na streamovacích platformách?",
+    a: "Diskografia zahŕňa demo „Don't Touch Me\" (1997, angličtina), „Iný deň\" (2001, slovenčina) a nahrávku „TCHO SME NAHLAVU?\" (2005). Pre aktualizácie o nových vydaniach sa prihláste k newsletteru.",
+  },
+];
