@@ -32,9 +32,12 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-ink">
+      <a href="#hlavny-obsah" className="skip-link">
+        Preskočiť na obsah
+      </a>
       <ScrollProgress />
       <Navbar />
-      <main className="flex-1">
+      <main id="hlavny-obsah" className="flex-1">
         <HeroSection content={c} />
         <SectionDivider />
         <AboutSection bioLong={c["band.bioLong"]} />

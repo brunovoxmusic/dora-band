@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
+  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,15 @@ function GenerateTool() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  // Map generation types to CMS keys (null = no direct apply)
+  const TYPE_TO_CMS: Partial<Record<GenType, { key: string; label: string }>> = {
+    bio: { key: "band.bio", label: "Krátky bio" },
+    metaDescription: { key: "seo.metaDescription", label: "SEO meta description" },
+    metaTitle: { key: "seo.metaTitle", label: "SEO meta title" },
+    copytext: { key: "hero.tagline", label: "Hero tagline" },
+  };
 
   const generate = async () => {
     setLoading(true);
@@ -109,6 +119,25 @@ function GenerateTool() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Kopírovanie zlyhalo.");
+    }
+  };
+
+  const applyToCms = async () => {
+    const mapping = TYPE_TO_CMS[type];
+    if (!mapping || !result) return;
+    setApplying(true);
+    try {
+      const res = await fetch("/api/admin/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: [{ key: mapping.key, value: result }] }),
+      });
+      if (!res.ok) throw new Error("Uloženie zlyhalo.");
+      toast.success(`Použité na CMS: ${mapping.label}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba.");
+    } finally {
+      setApplying(false);
     }
   };
 
@@ -167,13 +196,25 @@ function GenerateTool() {
             {"// Výsledok"}
           </p>
           {result && (
-            <button
-              onClick={copy}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neon-red hover:text-warm-yellow"
-            >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? "Skopírované" : "Kopírovať"}
-            </button>
+            <div className="flex items-center gap-3">
+              {TYPE_TO_CMS[type] && (
+                <button
+                  onClick={applyToCms}
+                  disabled={applying}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-warm-yellow hover:text-neon-red disabled:opacity-50"
+                >
+                  {applying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  Použiť na CMS
+                </button>
+              )}
+              <button
+                onClick={copy}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-neon-red hover:text-warm-yellow"
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "Skopírované" : "Kopírovať"}
+              </button>
+            </div>
           )}
         </div>
         <div className="min-h-[16rem] border border-charcoal bg-dark-gray p-4">

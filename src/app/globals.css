@@ -156,6 +156,58 @@
     background-color: #E63946;
     color: #ffffff;
   }
+
+  /* Enhanced focus-visible for keyboard accessibility */
+  :focus-visible {
+    outline: 2px solid #E63946;
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+  /* Remove default outline only when focus-visible is supported */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Skip-to-content link */
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -100%;
+    z-index: 100;
+    background: #E63946;
+    color: #fff;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: top 0.2s ease;
+  }
+  .skip-link:focus {
+    top: 1rem;
+  }
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .glitch::before,
+  .glitch::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .animate-marquee,
+  .animate-live,
+  .animate-pulse {
+    animation: none !important;
+  }
 }
 
 /* ===== D.O.R.A. Custom Utilities ===== */
