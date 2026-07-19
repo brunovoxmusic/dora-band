@@ -18,16 +18,26 @@ import { NewsletterSection } from "@/components/sections/newsletter-section";
 import { SocialSection } from "@/components/sections/social-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { ContactSection } from "@/components/sections/contact-section";
+import { getContentMap } from "@/lib/content";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  // Fetch CMS-editable content (falls back to defaults if not in DB)
+  const c = await getContentMap([
+    "hero.eyebrow", "hero.title", "hero.subtitle", "hero.tagline",
+    "hero.ctaPrimary", "hero.ctaSecondary", "hero.statusPill",
+    "band.bioLong",
+  ]);
+
   return (
     <div className="flex min-h-screen flex-col bg-ink">
       <ScrollProgress />
       <Navbar />
       <main className="flex-1">
-        <HeroSection />
+        <HeroSection content={c} />
         <SectionDivider />
-        <AboutSection />
+        <AboutSection bioLong={c["band.bioLong"]} />
         <SectionDivider />
         <MembersSection />
         <MusicSection />

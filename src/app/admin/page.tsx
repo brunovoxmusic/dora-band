@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail } from "lucide-react";
+import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail, FileText, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InquiriesTab } from "@/components/admin/inquiries-tab";
@@ -10,8 +10,11 @@ import { GigsTab } from "@/components/admin/gigs-tab";
 import { MediaTab } from "@/components/admin/media-tab";
 import { StatsTab } from "@/components/admin/stats-tab";
 import { SubscribersTab } from "@/components/admin/subscribers-tab";
+import { ContentTab } from "@/components/admin/content-tab";
+import { SeoTab } from "@/components/admin/seo-tab";
+import { AiTab } from "@/components/admin/ai-tab";
 
-type Tab = "stats" | "inquiries" | "gigs" | "media" | "subscribers";
+type Tab = "stats" | "inquiries" | "gigs" | "media" | "subscribers" | "content" | "seo" | "ai";
 
 const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[] = [
   { id: "stats", label: "Prehľad", icon: LayoutDashboard },
@@ -19,6 +22,9 @@ const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[]
   { id: "gigs", label: "Koncerty", icon: CalendarDays, hasCount: true },
   { id: "media", label: "Médiá", icon: Images, hasCount: true },
   { id: "subscribers", label: "Newsletter", icon: Mail, hasCount: true },
+  { id: "content", label: "Obsah", icon: FileText },
+  { id: "seo", label: "SEO", icon: Search },
+  { id: "ai", label: "AI nástroje", icon: Sparkles },
 ];
 
 export default function AdminPage() {
@@ -154,6 +160,9 @@ export default function AdminPage() {
         {tab === "gigs" && <GigsTab onChange={(n) => refreshCount("gigs", n)} />}
         {tab === "media" && <MediaTab onChange={(n) => refreshCount("media", n)} />}
         {tab === "subscribers" && <SubscribersTab onChange={(n) => refreshCount("subscribers", n)} />}
+        {tab === "content" && <ContentTab />}
+        {tab === "seo" && <SeoTab />}
+        {tab === "ai" && <AiTab />}
       </div>
     </div>
   );

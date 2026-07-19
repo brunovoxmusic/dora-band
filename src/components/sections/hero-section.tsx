@@ -5,7 +5,10 @@ import { ArrowDown, Download, Play, Calendar } from "lucide-react";
 import { BAND } from "@/lib/band-data";
 import { useCountUp } from "@/hooks/use-count-up";
 
-export function HeroSection() {
+type HeroContent = Record<string, string>;
+
+export function HeroSection({ content }: { content?: HeroContent }) {
+  const c = content ?? {};
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -82,23 +85,23 @@ export function HeroSection() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-neon-red" />
           </span>
           <span className="font-mono-brand text-[10px] uppercase tracking-[0.3em] text-silver">
-            Booking 2026 — otvorený
+            {c["hero.statusPill"] || "Booking 2026 — otvorený"}
           </span>
         </div>
 
         {/* Title block */}
         <div className="max-w-4xl">
           <p className="font-mono-brand text-xs uppercase tracking-[0.4em] text-warm-yellow">
-            Funky-Punk · Crossover · Púchov SK
+            {c["hero.eyebrow"] || "Funky-Punk · Crossover · Púchov SK"}
           </p>
           <h1 className="mt-3 font-display text-5xl font-black leading-[0.95] tracking-tight text-off-white sm:text-7xl lg:text-8xl">
-            <span className="glitch block text-neon-red text-glow-red" data-text="D.O.R.A.">D.O.R.A.</span>
+            <span className="glitch block text-neon-red text-glow-red" data-text={c["hero.title"] || "D.O.R.A."}>{c["hero.title"] || "D.O.R.A."}</span>
             <span className="mt-2 block font-condensed text-2xl font-bold uppercase tracking-wide text-off-white sm:text-4xl lg:text-5xl">
-              Dnes Od Rána Abstinujem
+              {c["hero.subtitle"] || "Dnes Od Rána Abstinujem"}
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-off-white/75 sm:text-xl">
-            {BAND.tagline}{" "}
+            {c["hero.tagline"] || BAND.tagline}{" "}
             <span className="text-off-white/55">
               Kapela aktívna od roku {BAND.founded} — viac ako dve dekády autentickej, energickej a
               spoločensky angažovanej hudby.
@@ -113,14 +116,14 @@ export function HeroSection() {
             className="group inline-flex items-center justify-center gap-2 bg-neon-red px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white clip-corner-lg glow-red transition-all hover:bg-deep-red hover:glow-red"
           >
             <Calendar className="h-4 w-4" />
-            Rezervovať koncert / Booking
+            {c["hero.ctaPrimary"] || "Rezervovať koncert / Booking"}
           </a>
           <a
             href="#press"
             className="group inline-flex items-center justify-center gap-2 border border-charcoal bg-charcoal/40 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-off-white backdrop-blur transition-all hover:border-off-white/60 hover:bg-charcoal/60"
           >
             <Download className="h-4 w-4" />
-            PR Materiály na stiahnutie
+            {c["hero.ctaSecondary"] || "PR Materiály na stiahnutie"}
           </a>
         </div>
 

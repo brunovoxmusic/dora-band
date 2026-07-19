@@ -6,8 +6,9 @@ import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/site/reveal";
 import { cn } from "@/lib/utils";
 
-export function AboutSection() {
+export function AboutSection({ bioLong }: { bioLong?: string }) {
   const [active, setActive] = useState(0);
+  const bio = bioLong || BAND.bioLong;
 
   return (
     <section id="o-kapele" className="relative scroll-mt-20 border-t border-charcoal bg-ink py-20 sm:py-28">
@@ -33,7 +34,7 @@ export function AboutSection() {
               </h3>
             </div>
 
-            <p className="text-base leading-relaxed text-off-white/80 sm:text-lg">{BAND.bioLong}</p>
+            <p className="text-base leading-relaxed text-off-white/80 sm:text-lg">{bio}</p>
 
             <div className="grid grid-cols-3 gap-px border border-charcoal bg-charcoal">
               {[
