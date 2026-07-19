@@ -26,7 +26,11 @@ const empty: FormState = {
   message: "",
 };
 
-export function ContactSection() {
+export function ContactSection({ content }: { content?: Record<string, string> }) {
+  const c = content ?? {};
+  const email = c["contact.email"] || BAND.contact.email;
+  const phone = c["contact.phone"] || BAND.contact.phone;
+  const phoneHref = phone.replace(/[\s\/]/g, "");
   const [form, setForm] = useState<FormState>(empty);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -71,7 +75,7 @@ export function ContactSection() {
           <div className="lg:col-span-2">
             <div className="space-y-4">
               <a
-                href={`mailto:${BAND.contact.email}`}
+                href={`mailto:${email}`}
                 className="group flex items-start gap-4 border border-charcoal bg-ink p-5 transition-all hover:border-neon-red/60 clip-corner"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-neon-red text-white">
@@ -80,13 +84,13 @@ export function ContactSection() {
                 <div className="min-w-0">
                   <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver">E-mail</p>
                   <p className="mt-0.5 break-all text-sm font-semibold text-off-white group-hover:text-neon-red">
-                    {BAND.contact.email}
+                    {email}
                   </p>
                 </div>
               </a>
 
               <a
-                href={`tel:${BAND.contact.phoneHref}`}
+                href={`tel:${phoneHref}`}
                 className="group flex items-start gap-4 border border-charcoal bg-ink p-5 transition-all hover:border-neon-red/60 clip-corner"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-neon-red text-white">
@@ -95,7 +99,7 @@ export function ContactSection() {
                 <div>
                   <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-silver">Telefón</p>
                   <p className="mt-0.5 text-sm font-semibold text-off-white group-hover:text-neon-red">
-                    {BAND.contact.phone}
+                    {phone}
                   </p>
                 </div>
               </a>

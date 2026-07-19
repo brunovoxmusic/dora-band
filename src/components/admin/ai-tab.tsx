@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   Save,
+  Tags,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -39,17 +40,20 @@ type AuditResult = {
 
 type MediaItem = { id: string; title: string; altText: string | null; category: string; thumbnailUrl: string | null; url: string };
 
+type Tool = "generate" | "alttext" | "audit" | "keywords";
+
 export function AiTab() {
-  const [activeTool, setActiveTool] = useState<"generate" | "alttext" | "audit">("generate");
+  const [activeTool, setActiveTool] = useState<Tool>("generate");
 
   return (
     <div>
       {/* Tool tabs */}
-      <div className="mb-4 inline-flex border border-charcoal bg-dark-gray p-1">
+      <div className="mb-4 inline-flex flex-wrap border border-charcoal bg-dark-gray p-1">
         {([
           { id: "generate", label: "Generovanie obsahu", icon: Wand2 },
           { id: "alttext", label: "Alt-text auto-gen", icon: ImageIcon },
           { id: "audit", label: "SEO audit", icon: Search },
+          { id: "keywords", label: "Kľúčové slová", icon: Tags },
         ] as const).map((t) => {
           const Icon = t.icon;
           return (
@@ -71,6 +75,7 @@ export function AiTab() {
       {activeTool === "generate" && <GenerateTool />}
       {activeTool === "alttext" && <AltTextTool />}
       {activeTool === "audit" && <AuditTool />}
+      {activeTool === "keywords" && <KeywordsTool />}
     </div>
   );
 }
@@ -540,6 +545,190 @@ function AuditTool() {
           <Search className="h-8 w-8" />
           <p className="text-xs">Kliknite „Spustiť SEO audit" pre AI analýzu.</p>
         </div>
+      )}
+    </div>
+  );
+}
+
+type KeywordResult = {
+  primary?: string[];
+  secondary?: string[];
+  longTail?: string[];
+  local?: string[];
+  competition?: Array<{ keyword: string; difficulty: string; searchVolume: string }>;
+  error?: string;
+};
+
+function KeywordsTool() {
+  const [result, setResult] = useState<KeywordResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  const run = async () => {
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/ai/keywords", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Zlyhalo.");
+      setResult(d.keywords);
+      toast.success("Kľúčové slová vygenerované.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const allKeywords = result
+    ? [...(result.primary || []), ...(result.secondary || []), ...(result.longTail || []), ...(result.local || [])]
+    : [];
+
+  const copyAll = async () => {
+    try {
+      await navigator.clipboard.writeText(allKeywords.join(", "));
+      setCopiedAll(true);
+      toast.success(`Skopírovaných ${allKeywords.length} kľúčových slov.`);
+      setTimeout(() => setCopiedAll(false), 2000);
+    } catch {
+      toast.error("Kopírovanie zlyhalo.");
+    }
+  };
+
+  const applyToCms = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: [{ key: "seo.keywords", value: allKeywords.join(", ") }] }),
+      });
+      if (!res.ok) throw new Error("Uloženie zlyhalo.");
+      toast.success("Kľúčové slová uložené do CMS (seo.keywords).");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const diffColor: Record<string, string> = {
+    low: "text-green-400 border-green-500/40",
+    medium: "text-warm-yellow border-warm-yellow/40",
+    high: "text-neon-red border-neon-red/40",
+  };
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm text-off-white/80">AI navrhne kľúčové slová z kontextu kapely.</p>
+          <p className="text-xs text-silver">Primárne, sekundárne, long-tail, lokálne + analýza konkurencie.</p>
+        </div>
+        <button
+          onClick={run}
+          disabled={loading}
+          className="inline-flex items-center gap-2 bg-neon-red px-4 py-2 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm hover:bg-deep-red disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Tags className="h-4 w-4" />}
+          {loading ? "Analyzujem..." : result ? "Zopakovať" : "Vygenerovať kľúčové slová"}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex h-48 flex-col items-center justify-center gap-2 text-silver">
+          <Loader2 className="h-6 w-6 animate-spin text-neon-red" />
+          <p className="text-xs">AI analyzuje kľúčové slová...</p>
+        </div>
+      ) : result ? (
+        <div className="space-y-4">
+          {/* Keyword groups */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <KeywordGroup title="Primárne" color="neon-red" keywords={result.primary} />
+            <KeywordGroup title="Sekundárne" color="warm-yellow" keywords={result.secondary} />
+            <KeywordGroup title="Long-tail frázy" color="warm-yellow" keywords={result.longTail} />
+            <KeywordGroup title="Lokálne" color="neon-red" keywords={result.local} />
+          </div>
+
+          {/* Competition analysis */}
+          {result.competition && result.competition.length > 0 && (
+            <div className="border border-charcoal bg-dark-gray p-4">
+              <p className="mb-3 font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+                {"// Analýza konkurencie"}
+              </p>
+              <div className="overflow-x-auto scroll-dora">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-charcoal">
+                      <th className="py-2 pr-4 font-mono-brand text-[10px] uppercase tracking-wider text-silver">Kľúčové slovo</th>
+                      <th className="py-2 pr-4 font-mono-brand text-[10px] uppercase tracking-wider text-silver">Náročnosť</th>
+                      <th className="py-2 font-mono-brand text-[10px] uppercase tracking-wider text-silver">Objem vyhľadávania</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.competition.map((c, i) => (
+                      <tr key={i} className="border-b border-charcoal/50">
+                        <td className="py-2 pr-4 font-semibold text-off-white">{c.keyword}</td>
+                        <td className="py-2 pr-4">
+                          <span className={cn("border px-1.5 py-0.5 font-mono-brand text-[9px] uppercase", diffColor[c.difficulty] || diffColor.medium)}>
+                            {c.difficulty}
+                          </span>
+                        </td>
+                        <td className="py-2 text-silver">{c.searchVolume}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={copyAll}
+              className="inline-flex items-center gap-2 border border-charcoal bg-dark-gray px-4 py-2 text-xs font-bold uppercase tracking-wide text-off-white hover:border-neon-red hover:text-neon-red"
+            >
+              {copiedAll ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedAll ? "Skopírované" : `Kopírovať všetky (${allKeywords.length})`}
+            </button>
+            <button
+              onClick={applyToCms}
+              disabled={loading}
+              className="inline-flex items-center gap-2 bg-warm-yellow/10 border border-warm-yellow/40 px-4 py-2 text-xs font-bold uppercase tracking-wide text-warm-yellow hover:bg-warm-yellow hover:text-ink disabled:opacity-50"
+            >
+              <Save className="h-3.5 w-3.5" />
+              Použiť na CMS (seo.keywords)
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-48 flex-col items-center justify-center gap-2 text-silver/50">
+          <Tags className="h-8 w-8" />
+          <p className="text-xs">Kliknite „Vygenerovať kľúčové slová" pre AI analýzu.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KeywordGroup({ title, color, keywords }: { title: string; color: "neon-red" | "warm-yellow"; keywords?: string[] }) {
+  const cls = color === "neon-red" ? "border-neon-red/40 text-neon-red" : "border-warm-yellow/40 text-warm-yellow";
+  return (
+    <div className="border border-charcoal bg-dark-gray p-4">
+      <p className={cn("mb-2 border-b border-charcoal pb-2 font-mono-brand text-[11px] uppercase tracking-[0.2em]", cls)}>
+        {title}
+      </p>
+      {keywords && keywords.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {keywords.map((k, i) => (
+            <span key={i} className={cn("border bg-ink px-2 py-1 text-xs font-semibold", cls)}>
+              {k}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-silver/50">Žiadne kľúčové slová.</p>
       )}
     </div>
   );

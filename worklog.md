@@ -827,6 +827,56 @@ Full Next.js error handling (404 + error boundary + loading), WCAG accessibility
 - Could add AI-generated OG images per page
 - Could add structured data testing tool integration
 
+---
+Task ID: 16 (continue: CMS wiring + AI keyword research)
+Agent: Main (Z.ai Code)
+Task: Wire contact/social/footer to CMS + add AI keyword research tool
+
+Work Log:
+- Continued from task 15 (production-hardened). Remaining: wire more sections to CMS, add AI keyword tool.
+- Wired 3 more sections to CMS (contact, social, footer) + added 4th AI tool (keyword research)
+
+CMS WIRING (3 sections):
+1. ContactSection — accepts `content` prop, uses c["contact.email"] || BAND fallback, c["contact.phone"] || BAND fallback, derives phoneHref from phone
+2. SocialSection — PLATFORMS refactored from const to getPlatforms(c) function, all 5 platform URLs (facebook/instagram/youtube/spotify/bandcamp) read from CMS with fallback
+3. Footer — accepts `content` prop, email/phone/social URLs/copyright/tagline all from CMS, copyright supports {year} template substitution
+- page.tsx now fetches 16 content keys (was 8) via getContentMap and passes to all 3 sections + Footer
+- All sections gracefully fall back to BAND.* static defaults if no CMS override
+
+NEW AI TOOL:
+4. Keyword research — POST /api/admin/ai/keywords
+   - Analyzes current CMS content (band/hero/seo categories) via getAllContent()
+   - LLM returns structured JSON: primary[], secondary[], longTail[], local[], competition[{keyword,difficulty,searchVolume}]
+   - KeywordsTool UI: 4 keyword groups (color-coded badges), competition table (difficulty color-coded), "Kopírovať všetky" + "Použiť na CMS (seo.keywords)" buttons
+   - Verified: returned primary (D.O.R.A., Dnes Od Rána Abstinujem, funky-punk kapela...), long-tail (D.O.R.A. koncerty 2026...), local (kapela Púchov...), competition analysis
+   - Apply-to-CMS button persists keywords to seo.keywords content key
+
+ADMIN AI TAB: now 4 sub-tools (Generovanie obsahu, Alt-text auto-gen, SEO audit, Kľúčové slová)
+
+VERIFICATION (agent-browser + API):
+- Homepage 200, no errors, 13 h2 sections ✓
+- AI keywords API: returned structured JSON with 4 keyword groups + competition ✓
+- KeywordsTool UI: all 4 groups render, competition table shows, action buttons present ✓
+- Mobile 390px: responsive, no overflow ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- 3 more sections wired to CMS (contact, social, footer) — admin edits now reflect live across the whole site
+- Added AI keyword research tool (4th AI tool) with apply-to-CMS workflow
+- Lint clean, dev server stable
+
+## Current Project Status: FULLY CMS-DRIVEN + 4 AI TOOLS
+All major public sections (hero, about, contact, social, footer) now read from CMS with fallbacks. Admin has 8 tabs including AI nástroje with 4 sub-tools (content gen, alt-text VLM, SEO audit, keyword research). All AI tools support apply-to-CMS workflow.
+
+### Unresolved issues / risks for next phase:
+- Members/discography/FAQ/testimonials sections still use static data (could be wired to CMS)
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only)
+- Could add AI-generated OG images per page
+- Could add CSV export for inquiries + gigs in admin
+- Could add structured data testing tool integration
+
+
 
 
 

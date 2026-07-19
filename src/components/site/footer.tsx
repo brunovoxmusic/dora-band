@@ -1,7 +1,19 @@
 import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, Music2 } from "lucide-react";
 import { BAND } from "@/lib/band-data";
 
-export function Footer() {
+export function Footer({ content }: { content?: Record<string, string> }) {
+  const c = content ?? {};
+  const email = c["contact.email"] || email;
+  const phone = c["contact.phone"] || phone;
+  const phoneHref = phone.replace(/[\s\/]/g, "");
+  const copyright = (c["footer.copyright"] || "© {year} D.O.R.A. — Dnes Od Rána Abstinujem. Všetky práva vyhradené.").replace("{year}", String(new Date().getFullYear()));
+  const tagline = c["footer.tagline"] || "Funky-Punk · Púchov, Slovenská republika";
+  const social = {
+    facebook: c["social.facebook"] || social.facebook,
+    instagram: c["social.instagram"] || social.instagram,
+    youtube: c["social.youtube"] || social.youtube,
+    spotify: c["social.spotify"] || social.spotify,
+  };
   return (
     <footer className="mt-auto border-t border-charcoal bg-ink bg-noise">
       {/* Top ticker / marquee */}
@@ -41,10 +53,10 @@ export function Footer() {
             </p>
             <div className="mt-5 flex items-center gap-2">
               {[
-                { Icon: Facebook, href: BAND.social.facebook, label: "Facebook" },
-                { Icon: Instagram, href: BAND.social.instagram, label: "Instagram" },
-                { Icon: Youtube, href: BAND.social.youtube, label: "YouTube" },
-                { Icon: Music2, href: BAND.social.spotify, label: "Spotify" },
+                { Icon: Facebook, href: social.facebook, label: "Facebook" },
+                { Icon: Instagram, href: social.instagram, label: "Instagram" },
+                { Icon: Youtube, href: social.youtube, label: "YouTube" },
+                { Icon: Music2, href: social.spotify, label: "Spotify" },
               ].map(({ Icon, href, label }) => (
                 <a
                   key={label}
@@ -66,20 +78,20 @@ export function Footer() {
             <ul className="mt-4 space-y-3 text-sm">
               <li>
                 <a
-                  href={`mailto:${BAND.contact.email}`}
+                  href={`mailto:${email}`}
                   className="group flex items-center gap-3 text-off-white/80 transition-colors hover:text-neon-red"
                 >
                   <Mail className="h-4 w-4 text-neon-red" />
-                  <span className="break-all">{BAND.contact.email}</span>
+                  <span className="break-all">{email}</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={`tel:${BAND.contact.phoneHref}`}
+                  href={`tel:${phoneHref}`}
                   className="group flex items-center gap-3 text-off-white/80 transition-colors hover:text-neon-red"
                 >
                   <Phone className="h-4 w-4 text-neon-red" />
-                  <span>{BAND.contact.phone}</span>
+                  <span>{phone}</span>
                 </a>
               </li>
               <li className="flex items-center gap-3 text-off-white/80">
@@ -113,8 +125,8 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-charcoal pt-6 text-xs text-silver/60 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} D.O.R.A. — Dnes Od Rána Abstinujem. Všetky práva vyhradené.</p>
-          <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em]">Foto: archív D.O.R.A.</p>
+          <p>{copyright}</p>
+          <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em]">{tagline}</p>
         </div>
       </div>
     </footer>

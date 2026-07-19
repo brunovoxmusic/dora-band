@@ -28,6 +28,9 @@ export default async function HomePage() {
     "hero.eyebrow", "hero.title", "hero.subtitle", "hero.tagline",
     "hero.ctaPrimary", "hero.ctaSecondary", "hero.statusPill",
     "band.bioLong",
+    "contact.email", "contact.phone",
+    "social.facebook", "social.instagram", "social.youtube", "social.spotify", "social.bandcamp",
+    "footer.copyright", "footer.tagline",
   ]);
 
   return (
@@ -56,11 +59,11 @@ export default async function HomePage() {
         <PressSection />
         <FaqSection />
         <SectionDivider />
-        <SocialSection />
+        <SocialSection content={c} />
         <NewsletterSection />
-        <ContactSection />
+        <ContactSection content={c} />
       </main>
-      <Footer />
+      <Footer content={c} />
       <BackToTop />
       <CookieConsent />
     </div>

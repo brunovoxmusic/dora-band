@@ -4,50 +4,66 @@ import { Facebook, Instagram, Youtube, Music2, ExternalLink, Heart } from "lucid
 import { BAND } from "@/lib/band-data";
 import { Reveal } from "@/components/site/reveal";
 
-const PLATFORMS = [
-  {
-    name: "Facebook",
-    handle: "@dora.kapela",
-    desc: "Novinky, eventy a komunita",
-    href: BAND.social.facebook,
-    icon: Facebook,
-    color: "#E63946",
-    bg: "bg-neon-red/10",
-    border: "border-neon-red/40",
-  },
-  {
-    name: "Instagram",
-    handle: "@dora.funkypunk",
-    desc: "Fotky a stories z koncertov",
-    href: BAND.social.instagram,
-    icon: Instagram,
-    color: "#F4A300",
-    bg: "bg-warm-yellow/10",
-    border: "border-warm-yellow/40",
-  },
-  {
-    name: "YouTube",
-    handle: "@DORAkapela",
-    desc: "Videoklipy a živé záznamy",
-    href: BAND.social.youtube,
-    icon: Youtube,
-    color: "#E63946",
-    bg: "bg-neon-red/10",
-    border: "border-neon-red/40",
-  },
-  {
-    name: "Spotify",
-    handle: "D.O.R.A.",
-    desc: "Streamujte našu hudbu",
-    href: BAND.social.spotify,
-    icon: Music2,
-    color: "#F4A300",
-    bg: "bg-warm-yellow/10",
-    border: "border-warm-yellow/40",
-  },
-];
+type Platform = {
+  name: string;
+  handle: string;
+  desc: string;
+  href: string;
+  icon: typeof Facebook;
+  color: string;
+  bg: string;
+  border: string;
+};
 
-export function SocialSection() {
+function getPlatforms(c: Record<string, string>): Platform[] {
+  return [
+    {
+      name: "Facebook",
+      handle: "@dora.kapela",
+      desc: "Novinky, eventy a komunita",
+      href: c["social.facebook"] || BAND.social.facebook,
+      icon: Facebook,
+      color: "#E63946",
+      bg: "bg-neon-red/10",
+      border: "border-neon-red/40",
+    },
+    {
+      name: "Instagram",
+      handle: "@dora.funkypunk",
+      desc: "Fotky a stories z koncertov",
+      href: c["social.instagram"] || BAND.social.instagram,
+      icon: Instagram,
+      color: "#F4A300",
+      bg: "bg-warm-yellow/10",
+      border: "border-warm-yellow/40",
+    },
+    {
+      name: "YouTube",
+      handle: "@DORAkapela",
+      desc: "Videoklipy a živé záznamy",
+      href: c["social.youtube"] || BAND.social.youtube,
+      icon: Youtube,
+      color: "#E63946",
+      bg: "bg-neon-red/10",
+      border: "border-neon-red/40",
+    },
+    {
+      name: "Spotify",
+      handle: "D.O.R.A.",
+      desc: "Streamujte našu hudbu",
+      href: c["social.spotify"] || BAND.social.spotify,
+      icon: Music2,
+      color: "#F4A300",
+      bg: "bg-warm-yellow/10",
+      border: "border-warm-yellow/40",
+    },
+  ];
+}
+
+export function SocialSection({ content }: { content?: Record<string, string> }) {
+  const c = content ?? {};
+  const platforms = getPlatforms(c);
+  const bandcampUrl = c["social.bandcamp"] || BAND.social.bandcamp;
   return (
     <section className="relative overflow-hidden border-t border-charcoal bg-ink py-16 sm:py-20">
       <div className="pointer-events-none absolute inset-0 bg-stage-grid opacity-20" />
@@ -70,7 +86,7 @@ export function SocialSection() {
         </Reveal>
 
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {PLATFORMS.map((p, i) => {
+          {platforms.map((p, i) => {
             const Icon = p.icon;
             return (
               <Reveal key={p.name} delay={i * 80} direction="up">
@@ -104,7 +120,7 @@ export function SocialSection() {
         {/* Bandcamp extra strip */}
         <Reveal delay={300}>
           <a
-            href={BAND.social.bandcamp}
+            href={bandcampUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="group mt-3 flex flex-col items-center justify-between gap-3 border border-charcoal bg-dark-gray p-4 transition-colors hover:border-warm-yellow/40 sm:flex-row"
