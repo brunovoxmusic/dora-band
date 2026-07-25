@@ -65,12 +65,18 @@ const CACHE_TTL_MS = 30_000; // 30s
 
 async function loadCache(): Promise<Record<string, string>> {
   if (cache && Date.now() - cacheTs < CACHE_TTL_MS) return cache;
-  const rows = await db.siteContent.findMany({ select: { key: true, value: true } });
-  const map: Record<string, string> = {};
-  for (const r of rows) map[r.key] = r.value;
-  cache = map;
-  cacheTs = Date.now();
-  return map;
+  try {
+    const rows = await db.siteContent.findMany({ select: { key: true, value: true } });
+    const map: Record<string, string> = {};
+    for (const r of rows) map[r.key] = r.value;
+    cache = map;
+    cacheTs = Date.now();
+    return map;
+  } catch (e) {
+    console.warn("[content] DB fetch failed, using defaults:", e instanceof Error ? e.message : e);
+    // Return empty map so callers fall back to CONTENT_DEFAULTS
+    return {};
+  }
 }
 
 /** Invalidate the in-memory cache (call after writes). */

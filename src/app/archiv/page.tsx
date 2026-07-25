@@ -19,13 +19,32 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+type GigRow = {
+  id: string;
+  title: string;
+  date: Date;
+  venue: string;
+  city: string;
+  country: string;
+  ticketUrl: string | null;
+  ticketPrice: string | null;
+  status: string;
+  notes: string | null;
+};
+
 export default async function ArchivePage() {
   const now = new Date();
-  const pastGigs = await db.gig.findMany({
-    where: { date: { lt: now }, status: { not: "cancelled" } },
-    orderBy: { date: "desc" },
-    take: 100,
-  });
+  let pastGigs: GigRow[] = [];
+
+  try {
+    pastGigs = await db.gig.findMany({
+      where: { date: { lt: now }, status: { not: "cancelled" } },
+      orderBy: { date: "desc" },
+      take: 100,
+    });
+  } catch (e) {
+    console.warn("[archiv] Gigs fetch failed, showing empty archive:", e instanceof Error ? e.message : e);
+  }
 
   // Group by year
   const byYear = pastGigs.reduce(

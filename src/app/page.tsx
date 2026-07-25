@@ -19,28 +19,65 @@ import { SocialSection } from "@/components/sections/social-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { ContactSection } from "@/components/sections/contact-section";
 import { getContentMap } from "@/lib/content";
+import { CONTENT_DEFAULTS } from "@/lib/content";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+// Type for hero slide images
+type HeroSlide = {
+  id: string;
+  url: string;
+  altText: string | null;
+  title: string;
+};
+
 export default async function HomePage() {
-  // Fetch CMS-editable content (falls back to defaults if not in DB)
-  const [c, heroSlides] = await Promise.all([
-    getContentMap([
+  // Fetch CMS-editable content + hero slides.
+  // Wrapped in try/catch so the page renders even if the database is not yet
+  // initialized (e.g. first Vercel deploy before db:push/seed).
+  let c: Record<string, string> = {};
+  let heroSlides: HeroSlide[] = [];
+
+  try {
+    const contentKeys = [
       "hero.eyebrow", "hero.title", "hero.subtitle", "hero.tagline",
       "hero.ctaPrimary", "hero.ctaSecondary", "hero.statusPill",
       "band.bioLong",
       "contact.email", "contact.phone",
       "social.facebook", "social.instagram", "social.youtube", "social.spotify", "social.bandcamp",
       "footer.copyright", "footer.tagline",
-    ]),
-    db.mediaItem.findMany({
-      where: { heroBackground: true },
-      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-      select: { id: true, url: true, altText: true, title: true },
-      take: 20,
-    }),
-  ]);
+    ];
+
+    // Fill with defaults first (guarantees content even if DB is empty)
+    for (const key of contentKeys) {
+      if (key in CONTENT_DEFAULTS) {
+        c[key] = CONTENT_DEFAULTS[key].value;
+      }
+    }
+
+    // Then try to fetch DB overrides
+    try {
+      const dbContent = await getContentMap(contentKeys);
+      c = { ...c, ...dbContent };
+    } catch (e) {
+      console.warn("[homepage] CMS content fetch failed, using defaults:", e instanceof Error ? e.message : e);
+    }
+
+    // Try to fetch hero background slides
+    try {
+      heroSlides = await db.mediaItem.findMany({
+        where: { heroBackground: true },
+        orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+        select: { id: true, url: true, altText: true, title: true },
+        take: 20,
+      });
+    } catch (e) {
+      console.warn("[homepage] Hero slides fetch failed, using static fallback:", e instanceof Error ? e.message : e);
+    }
+  } catch (err) {
+    console.error("[homepage] Unexpected error, rendering with defaults:", err);
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-ink">
