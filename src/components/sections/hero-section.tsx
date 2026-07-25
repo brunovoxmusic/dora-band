@@ -4,10 +4,24 @@ import { useState, useEffect } from "react";
 import { ArrowDown, Download, Play, Calendar } from "lucide-react";
 import { BAND } from "@/lib/band-data";
 import { useCountUp } from "@/hooks/use-count-up";
+import { HeroSlideshow } from "@/components/site/hero-slideshow";
 
 type HeroContent = Record<string, string>;
 
-export function HeroSection({ content }: { content?: HeroContent }) {
+type HeroSlide = {
+  id: string;
+  url: string;
+  altText: string | null;
+  title: string;
+};
+
+export function HeroSection({
+  content,
+  heroSlides = [],
+}: {
+  content?: HeroContent;
+  heroSlides?: HeroSlide[];
+}) {
   const c = content ?? {};
   const [scrollY, setScrollY] = useState(0);
 
@@ -31,16 +45,14 @@ export function HeroSection({ content }: { content?: HeroContent }) {
 
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden bg-ink">
-      {/* Background band photo with parallax */}
+      {/* Background slideshow (or static fallback) with parallax */}
       <div
         className="absolute inset-0"
         style={{ transform: `translateY(${bgOffset}px)` }}
       >
-        <img
-          src="/gallery/hero-banner.jpg"
-          alt="D.O.R.A. naživo na koncertnom pódiu"
-          className="h-[115%] w-full object-cover opacity-45"
-        />
+        <div className="h-[115%] w-full overflow-hidden">
+          <HeroSlideshow slides={heroSlides} staticFallback="/gallery/hero-banner.jpg" />
+        </div>
         {/* Dark gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/60 to-ink" />
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/40 to-transparent" />

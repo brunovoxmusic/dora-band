@@ -19,18 +19,27 @@ import { SocialSection } from "@/components/sections/social-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { ContactSection } from "@/components/sections/contact-section";
 import { getContentMap } from "@/lib/content";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   // Fetch CMS-editable content (falls back to defaults if not in DB)
-  const c = await getContentMap([
-    "hero.eyebrow", "hero.title", "hero.subtitle", "hero.tagline",
-    "hero.ctaPrimary", "hero.ctaSecondary", "hero.statusPill",
-    "band.bioLong",
-    "contact.email", "contact.phone",
-    "social.facebook", "social.instagram", "social.youtube", "social.spotify", "social.bandcamp",
-    "footer.copyright", "footer.tagline",
+  const [c, heroSlides] = await Promise.all([
+    getContentMap([
+      "hero.eyebrow", "hero.title", "hero.subtitle", "hero.tagline",
+      "hero.ctaPrimary", "hero.ctaSecondary", "hero.statusPill",
+      "band.bioLong",
+      "contact.email", "contact.phone",
+      "social.facebook", "social.instagram", "social.youtube", "social.spotify", "social.bandcamp",
+      "footer.copyright", "footer.tagline",
+    ]),
+    db.mediaItem.findMany({
+      where: { heroBackground: true },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+      select: { id: true, url: true, altText: true, title: true },
+      take: 20,
+    }),
   ]);
 
   return (
@@ -41,7 +50,7 @@ export default async function HomePage() {
       <ScrollProgress />
       <Navbar />
       <main id="hlavny-obsah" className="flex-1">
-        <HeroSection content={c} />
+        <HeroSection content={c} heroSlides={heroSlides} />
         <SectionDivider />
         <AboutSection bioLong={c["band.bioLong"]} />
         <SectionDivider />

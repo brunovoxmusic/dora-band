@@ -876,6 +876,63 @@ All major public sections (hero, about, contact, social, footer) now read from C
 - Could add CSV export for inquiries + gigs in admin
 - Could add structured data testing tool integration
 
+---
+Task ID: 17 (user-requested: Hero background slideshow)
+Agent: Main (Z.ai Code)
+Task: Hero section dynamic background slideshow — admin marks photos, fade+zoom effect
+
+Work Log:
+- User requested: in admin/media, mark photos that fade+zoom as Hero section background
+- Added heroBackground field, admin UI toggle, HeroSlideshow component with Ken Burns effect
+
+SCHEMA: Added `heroBackground Boolean @default(false)` to MediaItem + index
+
+API:
+- PATCH /api/admin/media/[id] — handles heroBackground field
+- POST /api/admin/media/bulk — new actions: "heroBackground" / "heroUnset"
+- GET /api/hero-background — public, returns heroBackground=true items (id/url/altText/title)
+- page.tsx fetches heroSlides via db.mediaItem.findMany({where:{heroBackground:true}}) in parallel with content
+
+ADMIN UI (media-tab):
+- SortableMediaCard: "Hero" badge (neon-red, bottom-left) on marked cards
+- Per-card toggle button (ImageIcon) in hover overlay — calls PATCH /api/admin/media/[id] with heroBackground
+- Bulk toolbar: "Hero pozadie" + "Odobrať z Hero" buttons (new bulk actions)
+- Verified: 21 toggle buttons, 3 Hero badges visible
+
+HERO SLIDESHOW (hero-slideshow.tsx):
+- Crossfade between images (1500ms opacity transition)
+- Ken Burns zoom effect: scale 1 → 1.12 over slide duration (7s, configurable)
+- Slide indicators (dots, bottom center, clickable)
+- Respects prefers-reduced-motion (disables zoom + cycling)
+- Falls back to static /gallery/hero-banner.jpg if no slides marked
+- Integrated into HeroSection (replaced static img), parallax wrapper preserved
+- Verified: 3 slides cycling, opacity transitions working (0/0.42/0.027 observed), zoom class active
+
+VERIFICATION (agent-browser + API):
+- Homepage: slideshow renders 3 marked photos (concert-03/04/05), crossfade + zoom active ✓
+- Slide indicators: 3 dots present ✓
+- Admin media: 3 "Hero" badges on marked cards ✓
+- Per-card toggle: PATCH API works, count 3→4→3 ✓
+- Bulk action: heroBackground/heroUnset in API ✓
+- Mobile 390px: no errors ✓
+- Lint: 0 errors ✓
+
+Stage Summary:
+- Hero section now has dynamic fade+zoom (Ken Burns) background slideshow driven by admin media selection
+- Admin can mark/unmark photos as hero backgrounds (per-card toggle + bulk action)
+- Falls back to static image if none marked, respects reduced-motion preference
+
+## Current Project Status: DYNAMIC HERO SLIDESHOW
+Hero background is now a CMS-managed slideshow with fade+zoom effect. Admin marks photos in media tab (per-card or bulk), they cycle with Ken Burns zoom on the live site.
+
+### Unresolved issues / risks for next phase:
+- Members/discography/FAQ/testimonials sections still use static data (could be wired to CMS)
+- No analytics integration (Plausible/Umami)
+- No i18n (site is Slovak-only)
+- Could add AI-generated OG images per page
+- Could add CSV export for inquiries + gigs in admin
+
+
 
 
 

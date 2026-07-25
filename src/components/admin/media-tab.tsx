@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { Plus, Pencil, Trash2, X, Loader2, Images, Star, Upload, GripVertical, Keyboard } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2, Images, Image as ImageIcon, Star, Upload, GripVertical, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -33,6 +33,7 @@ type MediaItem = {
   altText: string | null;
   credits: string;
   featured: boolean;
+  heroBackground: boolean;
   order: number;
 };
 
@@ -137,6 +138,21 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
     });
   };
 
+  const toggleHero = async (id: string, current: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/media/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heroBackground: !current }),
+      });
+      if (!res.ok) throw new Error("Aktualizácia zlyhala.");
+      setItems((arr) => arr.map((i) => (i.id === id ? { ...i, heroBackground: !current } : i)));
+      toast.success(!current ? "Pridané do Hero pozadia." : "Odobrané z Hero pozadia.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba.");
+    }
+  };
+
   const toggleSelectAll = () => {
     setSelected((prev) => {
       if (prev.size === filtered.length) return new Set();
@@ -146,7 +162,7 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
 
   const clearSelection = () => setSelected(new Set());
 
-  const bulkAction = async (action: "feature" | "unfeature" | "delete") => {
+  const bulkAction = async (action: "feature" | "unfeature" | "heroBackground" | "heroUnset" | "delete") => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
     const verb = action === "delete" ? "zmazať" : action === "feature" ? "označiť ako Top" : "odznačiť Top";
@@ -415,6 +431,20 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
           >
             Odznačiť Top
           </button>
+          <span className="text-silver/40">·</span>
+          <button
+            onClick={() => bulkAction("heroBackground")}
+            className="inline-flex items-center gap-1.5 border border-neon-red/40 bg-neon-red/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neon-red transition-colors hover:bg-neon-red hover:text-white"
+          >
+            <ImageIcon className="h-3 w-3" />
+            Hero pozadie
+          </button>
+          <button
+            onClick={() => bulkAction("heroUnset")}
+            className="inline-flex items-center gap-1.5 border border-charcoal px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-silver transition-colors hover:border-off-white/40 hover:text-off-white"
+          >
+            Odobrať z Hero
+          </button>
           <button
             onClick={() => bulkAction("delete")}
             className="inline-flex items-center gap-1.5 border border-neon-red/40 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neon-red transition-colors hover:bg-neon-red hover:text-white"
@@ -460,6 +490,7 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
                     onDelete={() => remove(m.id)}
                     isSelected={selected.has(m.id)}
                     onToggleSelect={() => toggleSelect(m.id)}
+                    onToggleHero={() => toggleHero(m.id, m.heroBackground)}
                   />
                 ))}
               </div>
@@ -638,6 +669,7 @@ function SortableMediaCard({
   onDelete,
   isSelected,
   onToggleSelect,
+  onToggleHero,
 }: {
   item: MediaItem;
   catLabel: (c: string) => string;
@@ -645,6 +677,7 @@ function SortableMediaCard({
   onDelete: () => void;
   isSelected: boolean;
   onToggleSelect: () => void;
+  onToggleHero: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
@@ -710,6 +743,12 @@ function SortableMediaCard({
             Top
           </span>
         )}
+        {item.heroBackground && (
+          <span className="absolute bottom-1 left-1 inline-flex items-center gap-1 bg-neon-red px-1.5 py-0.5 font-mono-brand text-[8px] uppercase text-white glow-red-sm">
+            <ImageIcon className="h-2.5 w-2.5" />
+            Hero
+          </span>
+        )}
         <div className="absolute inset-0 flex items-center justify-center gap-1 bg-ink/70 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={onEdit}
@@ -717,6 +756,19 @@ function SortableMediaCard({
             aria-label="Upraviť"
           >
             <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={onToggleHero}
+            className={cn(
+              "inline-flex h-8 w-8 items-center justify-center border",
+              item.heroBackground
+                ? "border-neon-red bg-neon-red text-white"
+                : "border-charcoal bg-dark-gray text-off-white hover:border-neon-red hover:text-neon-red"
+            )}
+            aria-label={item.heroBackground ? "Odobrať z Hero pozadia" : "Pridať do Hero pozadia"}
+            title={item.heroBackground ? "Odobrať z Hero pozadia" : "Pridať do Hero pozadia"}
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={onDelete}
