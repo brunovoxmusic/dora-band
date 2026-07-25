@@ -11,7 +11,6 @@ type RevealProps = {
   direction?: "up" | "down" | "left" | "right" | "none";
   /** Only animate once (default true) */
   once?: boolean;
-  as?: keyof React.JSX.IntrinsicElements;
 };
 
 /**
@@ -24,9 +23,8 @@ export function Reveal({
   delay = 0,
   direction = "up",
   once = true,
-  as: Tag = "div",
 }: RevealProps) {
-  const ref = useRef<HTMLElement | null>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -56,8 +54,8 @@ export function Reveal({
   }[direction];
 
   return (
-    <Tag
-      ref={ref as never}
+    <div
+      ref={ref}
       className={cn(
         "transition-all duration-700 ease-out will-change-transform",
         visible ? "translate-x-0 translate-y-0 opacity-100" : cn(hiddenOffset, "opacity-0"),
@@ -66,6 +64,6 @@ export function Reveal({
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
-    </Tag>
+    </div>
   );
 }

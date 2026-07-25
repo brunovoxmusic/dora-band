@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 type Gig = {
   id: string;
   title: string;
-  date: string;
+  date: Date;
   venue: string;
   city: string;
   country: string;
@@ -16,9 +16,9 @@ type Gig = {
   notes: string | null;
 };
 
-function formatDate(iso: string) {
+function formatDate(date: Date) {
   try {
-    const d = new Date(iso);
+    const d = new Date(date);
     return {
       day: d.toLocaleDateString("sk-SK", { day: "2-digit" }),
       month: d.toLocaleDateString("sk-SK", { month: "short" }).replace(".", ""),

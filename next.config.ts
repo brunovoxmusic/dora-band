@@ -1,12 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  /* config options here */
+  // Vercel handles the build output automatically — no standalone needed.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  reactStrictMode: false,
+  // Sharp is used for image processing (upload thumbnails).
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
+  // External server-side packages (sharp needs native bindings)
+  serverExternalPackages: ["sharp"],
 };
 
 export default nextConfig;

@@ -3,16 +3,16 @@ import { BAND } from "@/lib/band-data";
 
 export function Footer({ content }: { content?: Record<string, string> }) {
   const c = content ?? {};
-  const email = c["contact.email"] || email;
-  const phone = c["contact.phone"] || phone;
+  const email = c["contact.email"] || BAND.contact.email;
+  const phone = c["contact.phone"] || BAND.contact.phone;
   const phoneHref = phone.replace(/[\s\/]/g, "");
   const copyright = (c["footer.copyright"] || "© {year} D.O.R.A. — Dnes Od Rána Abstinujem. Všetky práva vyhradené.").replace("{year}", String(new Date().getFullYear()));
   const tagline = c["footer.tagline"] || "Funky-Punk · Púchov, Slovenská republika";
   const social = {
-    facebook: c["social.facebook"] || social.facebook,
-    instagram: c["social.instagram"] || social.instagram,
-    youtube: c["social.youtube"] || social.youtube,
-    spotify: c["social.spotify"] || social.spotify,
+    facebook: c["social.facebook"] || BAND.social.facebook,
+    instagram: c["social.instagram"] || BAND.social.instagram,
+    youtube: c["social.youtube"] || BAND.social.youtube,
+    spotify: c["social.spotify"] || BAND.social.spotify,
   };
   return (
     <footer className="mt-auto border-t border-charcoal bg-ink bg-noise">

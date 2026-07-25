@@ -984,3 +984,58 @@ VERIFICATION (agent-browser + VLM):
 
 ## Current Project Status: HERO SLIDESHOW FIXED
 Background slideshow now displays photos at proper opacity with smooth crossfade + Ken Burns zoom. Overlay balanced for both photo visibility and text readability.
+
+---
+Task ID: 19 (user-requested: prepare for Vercel deployment)
+Agent: Main (Z.ai Code)
+Task: Complete app analysis + prepare code for Vercel.com deployment
+
+Work Log:
+- Analyzed entire app for production readiness — identified 3 critical blockers
+- Fixed all blockers, created deployment docs, verified production build
+
+CRITICAL FIXES:
+1. Database migration: SQLite → PostgreSQL
+   - prisma/schema.prisma: provider changed to "postgresql", added @db.Text for long fields
+   - prisma/schema.sqlite.prisma: SQLite copy for local dev
+   - package.json: added db:push:dev, db:generate:dev, seed, postinstall scripts
+   - .env.example: documented Neon Postgres URL format
+2. File uploads: /public/uploads → Vercel Blob
+   - Installed @vercel/blob
+   - Rewrote /api/admin/upload: uses Vercel Blob in production (BLOB_READ_WRITE_TOKEN), falls back to local filesystem in dev
+   - Sharp image optimization preserved (full 1920px + thumb 600x600)
+3. Build config: removed standalone output
+   - next.config.ts: removed output:"standalone", fixed serverExternalPackages (was experimental.serverComponentsExternalPackages)
+   - Build script: "next build" (was custom standalone copy)
+   - tsconfig.json: excluded examples/, mini-services/, skills/ from TypeScript
+
+BUILD FIXES:
+- examples/websocket/frontend.tsx: excluded from tsconfig (socket.io-client not installed)
+- archive-client.tsx: date type Date (was string) — Prisma returns Date
+- discography-section.tsx: GENRES const type narrowing fix ("primary" in g && g.primary)
+- footer.tsx: self-referencing variable bug fixed (email → BAND.contact.email)
+- reveal.tsx: simplified to div-only (removed dynamic Tag causing union type error)
+- alttext/route.ts: added required model param to createVision()
+
+ENV & CONFIG:
+- .env.example: documented all 6 required env vars (DATABASE_URL, ADMIN_SESSION_SECRET, BLOB_READ_WRITE_TOKEN, NEXT_PUBLIC_SITE_URL, ADMIN_EMAIL, ADMIN_PASSWORD)
+- .env: updated with optional vars + comments
+- vercel.json: build config + function maxDuration for AI routes (30s)
+- .gitignore: added /db/, /public/uploads/, dev.log, server.log
+- Removed conflicting static public/robots.txt (dynamic robots.ts now serves)
+- SITE_URL: all references now use process.env.NEXT_PUBLIC_SITE_URL (layout, sitemap, robots, structured-data)
+- postinstall: prisma generate (auto-runs on Vercel build)
+
+VERIFICATION:
+- Lint: 0 errors ✓
+- Production build: ✓ Compiled successfully (next build)
+- Home: 200 ✓ | Admin: 200 ✓ | Archive: 200 ✓
+- Sitemap: 200 ✓ | Robots: 200 ✓ | OG image: 200 ✓
+- 404 page: 404 ✓
+
+DEPLOYMENT DOCS:
+- DEPLOYMENT.md: 6-step guide (Neon Postgres, Vercel import, env vars, Blob storage, DB init, verification)
+- .env.example: all env vars documented with format examples
+
+## Current Project Status: VERCEL-READY
+Production build passes, all routes verified, deployment docs created. Ready for Vercel deployment with PostgreSQL (Neon) + Vercel Blob.

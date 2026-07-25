@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -19,7 +19,7 @@ model BookingInquiry {
   eventDate     String
   eventLocation String
   eventType     String
-  message       String   @db.Text
+  message       String   
   status        String   @default("new") // new | reviewed | confirmed | archived
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -39,7 +39,7 @@ model Gig {
   ticketUrl   String?
   ticketPrice String?
   status      String   @default("upcoming") // upcoming | soldout | cancelled | past
-  notes       String?  @db.Text
+  notes       String?  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -55,7 +55,7 @@ model MediaItem {
   thumbnailUrl   String?
   category       String   @default("concert") // concert | portrait | backstage | promo
   caption        String?
-  altText        String?  @db.Text // accessibility/SEO alt text
+  altText        String?   // accessibility/SEO alt text
   credits        String   @default("Foto: archív D.O.R.A.")
   featured       Boolean  @default(false)
   heroBackground Boolean  @default(false) // used as Hero section slideshow background
@@ -94,7 +94,7 @@ model Subscriber {
 model SiteContent {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   @db.Text
+  value     String   
   category  String   @default("general") // general | hero | band | contact | footer | social
   updatedAt DateTime @updatedAt
 
@@ -106,8 +106,8 @@ model SeoMeta {
   id          String   @id @default(cuid())
   path        String   @unique // "/" | "/archiv" | "#hudba" etc.
   title       String?
-  description String?  @db.Text
-  keywords    String?  @db.Text
+  description String?  
+  keywords    String?  
   ogImage     String?
   noindex     Boolean  @default(false)
   updatedAt   DateTime @updatedAt

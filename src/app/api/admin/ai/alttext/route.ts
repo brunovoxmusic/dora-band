@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
 
     const zai = await ZAI.create();
     const response = await zai.chat.completions.createVision({
+      model: "glm-4v-plus",
       messages: [
         {
           role: "user",

@@ -36,6 +36,16 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local database (SQLite dev)
+/db/
+
+# local uploads (dev fallback for file uploads)
+/public/uploads/
+
+# dev logs
+dev.log
+server.log
+
 
 # typescript
 *.tsbuildinfo

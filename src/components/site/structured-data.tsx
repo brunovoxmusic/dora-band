@@ -1,6 +1,6 @@
 import { BAND, MEMBERS, DISCOGRAPHY, GENRES } from "@/lib/band-data";
 
-const SITE_URL = "https://dora.band";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://dora.band";
 
 /**
  * JSON-LD structured data for SEO — helps Google understand this is a music band.

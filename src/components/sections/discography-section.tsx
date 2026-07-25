@@ -31,13 +31,13 @@ export function DiscographySection() {
                 <div
                   key={g.label}
                   className={`flex items-center justify-between border px-4 py-3 font-mono-brand text-sm ${
-                    g.primary
+                    "primary" in g && g.primary
                       ? "border-neon-red bg-neon-red/10 text-off-white glow-red-sm"
                       : "border-charcoal bg-ink text-off-white/80"
                   }`}
                 >
                   <span className="text-[11px] uppercase tracking-[0.2em] text-silver">{g.label}</span>
-                  <span className={g.primary ? "font-bold text-neon-red" : "text-off-white"}>{g.value}</span>
+                  <span className={"primary" in g && g.primary ? "font-bold text-neon-red" : "text-off-white"}>{g.value}</span>
                 </div>
               ))}
             </div>
