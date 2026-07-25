@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Slide = {
   id: string;
@@ -12,10 +12,14 @@ type Slide = {
 /**
  * Hero background slideshow with crossfade + Ken Burns zoom effect.
  *
- * - Crossfade between images (opacity transition)
- * - Slow zoom on each image (scale 1 → 1.12 over the slide duration)
- * - Respects prefers-reduced-motion (disables zoom, instant fade)
- * - Falls back to a single static image if only one slide
+ * How it works:
+ * - All slide images are always rendered (stacked, absolute positioned)
+ * - The active slide has opacity-100, others have opacity-0
+ * - CSS transition on opacity creates the crossfade
+ * - A CSS keyframe animation on the active image creates the slow zoom
+ * - The key is: re-mount the img when it becomes active so the animation restarts
+ * - Respects prefers-reduced-motion (no zoom, no cycling)
+ * - Falls back to a single static image if no slides
  */
 export function HeroSlideshow({
   slides,
@@ -31,7 +35,6 @@ export function HeroSlideshow({
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    // Defer to avoid synchronous setState in effect body
     const raf = requestAnimationFrame(() => setReduced(mq.matches));
     const onChange = () => setReduced(mq.matches);
     mq.addEventListener?.("change", onChange);
@@ -41,8 +44,8 @@ export function HeroSlideshow({
     };
   }, []);
 
-  // Only cycle if more than 1 slide and motion not reduced
   const cycle = slides.length > 1 && !reduced;
+
   useEffect(() => {
     if (!cycle) return;
     const t = setInterval(() => {
@@ -51,14 +54,14 @@ export function HeroSlideshow({
     return () => clearInterval(t);
   }, [cycle, slides.length, intervalMs]);
 
-  // If no slides, show the static fallback
+  // No slides → static fallback
   if (slides.length === 0) {
     return (
       <div className="absolute inset-0">
         <img
           src={staticFallback}
           alt="D.O.R.A. naživo na koncertnom pódiu"
-          className="h-full w-full object-cover opacity-45"
+          className="h-full w-full object-cover"
         />
       </div>
     );
@@ -71,35 +74,35 @@ export function HeroSlideshow({
         return (
           <div
             key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-[1500ms] ease-in-out ${
-              isActive ? "opacity-45" : "opacity-0"
+            className={`absolute inset-0 transition-opacity duration-[1800ms] ease-in-out ${
+              isActive ? "opacity-100" : "opacity-0"
             }`}
             aria-hidden={!isActive}
           >
+            {/*
+              Re-mount the img when it becomes active so the zoom animation restarts.
+              key={isActive ? 'active' : 'idle'} forces React to unmount/remount.
+            */}
             <img
+              key={isActive ? "active" : "idle"}
               src={slide.url}
               alt={slide.altText || slide.title || "D.O.R.A. na koncertnom pódiu"}
               className={`h-full w-full object-cover ${
-                reduced
-                  ? ""
-                  : isActive
-                  ? "animate-hero-zoom"
-                  : ""
+                isActive && !reduced ? "hero-kenburns" : ""
               }`}
-              style={reduced ? undefined : { transformOrigin: "center center" }}
             />
           </div>
         );
       })}
 
-      {/* Slide indicators (bottom) */}
+      {/* Slide indicators */}
       {cycle && (
-        <div className="absolute bottom-20 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+        <div className="absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`h-1 transition-all ${
+              className={`h-1.5 transition-all duration-300 ${
                 i === active ? "w-8 bg-neon-red" : "w-1.5 bg-silver/40 hover:bg-silver"
               }`}
               aria-label={`Slide ${i + 1}`}
@@ -109,16 +112,18 @@ export function HeroSlideshow({
         </div>
       )}
 
-      <style jsx>{`
-        @keyframes hero-zoom {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.12); }
+      <style>{`
+        @keyframes hero-kenburns {
+          0% { transform: scale(1) translate(0, 0); }
+          100% { transform: scale(1.15) translate(-1.5%, -1.5%); }
         }
-        .animate-hero-zoom {
-          animation: hero-zoom ${intervalMs}ms ease-out forwards;
+        .hero-kenburns {
+          animation: hero-kenburns ${intervalMs + 1800}ms ease-out forwards;
+          transform-origin: center center;
+          will-change: transform;
         }
         @media (prefers-reduced-motion: reduce) {
-          .animate-hero-zoom {
+          .hero-kenburns {
             animation: none !important;
           }
         }

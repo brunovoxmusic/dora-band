@@ -48,16 +48,15 @@ export function HeroSection({
       {/* Background slideshow (or static fallback) with parallax */}
       <div
         className="absolute inset-0"
-        style={{ transform: `translateY(${bgOffset}px)` }}
+        style={{ transform: `translateY(${bgOffset}px)`, height: "120%" }}
       >
-        <div className="h-[115%] w-full overflow-hidden">
-          <HeroSlideshow slides={heroSlides} staticFallback="/gallery/hero-banner.jpg" />
-        </div>
-        {/* Dark gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/60 to-ink" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/40 to-transparent" />
+        <HeroSlideshow slides={heroSlides} staticFallback="/gallery/hero-banner.jpg" />
+        {/* Dark gradient overlay — bottom heavy for text readability, top lighter to show photo */}
+        <div className="absolute inset-0 bg-gradient-to-b from-ink/50 via-ink/40 to-ink" />
+        {/* Left-to-right gradient for text contrast on the left side */}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
         {/* Stage grid texture */}
-        <div className="absolute inset-0 bg-stage-grid opacity-40" />
+        <div className="absolute inset-0 bg-stage-grid opacity-30" />
       </div>
 
       {/* Neon-red geometric lines (brand manual accent) */}

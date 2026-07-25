@@ -946,3 +946,41 @@ Hero background is now a CMS-managed slideshow with fade+zoom effect. Admin mark
 
 
 
+
+---
+Task ID: 18 (user-requested: fix Hero slideshow)
+Agent: Main (Z.ai Code)
+Task: Fix Hero section background slideshow not working correctly
+
+Work Log:
+- Analyzed hero-slideshow.tsx + hero-section.tsx via code review + VLM screenshot analysis
+- Identified 4 bugs:
+  1. Slide container had opacity-45 (was meant for static img, not slideshow) — active slide barely visible
+  2. Ken Burns zoom used styled-jsx scoped class `animate-hero-zoom` which didn't apply to dynamically-added className
+  3. `h-[115%]` wrapper + nested `absolute inset-0` caused positioning issues
+  4. Double gradient overlay (from-ink/70 + from-ink) over-darkened already-45% image
+
+FIXES:
+1. HeroSlideshow rewritten:
+   - Active slide: opacity-100 (was opacity-45), inactive: opacity-0 — proper crossfade
+   - Ken Burns: uses plain `<style>` (not styled-jsx) with global `.hero-kenburns` class
+   - Re-mounts img via `key={isActive ? 'active' : 'idle'}` so zoom animation restarts on each activation
+   - Zoom: scale 1→1.15 + translate(-1.5%,-1.5%) for natural pan effect
+   - Crossfade duration: 1800ms (was 1500ms) for smoother transition
+2. HeroSection fixed:
+   - Removed broken `h-[115%]` wrapper — slideshow now directly in parallax container with height: 120% inline
+   - Gradient overlay rebalanced: from-ink/50 via-ink/40 to-ink (was from-ink/70 — too dark)
+   - Left gradient: from-ink/80 via-ink/20 to-transparent (was from-ink — 100% black)
+   - Stage grid opacity reduced to 30%
+
+VERIFICATION (agent-browser + VLM):
+- Active slide opacity: 0.98 (was 0.45) — image now clearly visible ✓
+- Ken Burns zoom: `hero-kenburns` class active, animation running ✓
+- Crossfade cycling: slide 0→2 after 8s, smooth opacity transitions ✓
+- VLM: "background photo clearly visible (singer + bass), overlay balanced, text readable" ✓
+- Slide indicators: 3 dots present, clickable ✓
+- Mobile 390px: 3 imgs, 1 visible, no errors ✓
+- Lint: 0 errors ✓
+
+## Current Project Status: HERO SLIDESHOW FIXED
+Background slideshow now displays photos at proper opacity with smooth crossfade + Ken Burns zoom. Overlay balanced for both photo visibility and text readability.
