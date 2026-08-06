@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import styles from "./hero-slideshow.module.css";
 
 type Slide = {
@@ -15,66 +16,83 @@ type Props = {
   staticFallback: string;
 };
 
-const FALLBACK_SLIDE: Slide = {
-  id: "fallback",
-  url: "/gallery/hero-banner.jpg",
-  altText: "D.O.R.A. naživo na koncertnom pódiu",
-  title: "D.O.R.A.",
-};
-
 /**
- * Hero background slideshow with crossfade + Ken Burns zoom.
+ * Hero background slideshow — production-safe implementation.
  *
- * Architektúra podľa expertného review:
- * - CSS Module pre @keyframes a triedy (nie globals.css, nie inline <style>)
- * - Všetky slidy renderované naraz (absolute positioned, opacity crossfade)
- * - className pre animáciu (nie inline style.animation)
- * - key na img → React remount → animácia reštartuje
- * - setInterval s [images.length] deps
- * - Fallback keď DB je prázdna
+ * Architecture:
+ * - CSS Module for ALL styles and @keyframes (no inline <style>, no dangerouslySetInnerHTML)
+ * - next/image with fill for Vercel image optimization
+ * - All slides rendered simultaneously (absolute positioned, opacity crossfade)
+ * - .zoom CSS class on active slide only (no inline style.animation)
+ * - No React key remount hack — CSS class toggle restarts animation naturally
+ * - setInterval with [images.length] deps
+ * - Fallback slide when DB is empty
+ * - Debug logs (temporary)
  */
 export function HeroSlideshow({ slides, staticFallback }: Props) {
-  // Vždy máme aspoň jeden obrázok — fallback keď DB je prázdna
+  // Always have at least one image — fallback when DB is empty
   const images = useMemo<Slide[]>(() => {
-    if (slides && slides.length > 0) return slides;
-    return [{ ...FALLBACK_SLIDE, url: staticFallback }];
+    if (slides && slides.length > 0) {
+      console.log("[HeroSlideshow] slides from DB:", slides.length, slides.map(s => s.url.slice(-30)));
+      return slides;
+    }
+    console.log("[HeroSlideshow] no slides from DB, using fallback:", staticFallback);
+    return [{
+      id: "fallback",
+      url: staticFallback,
+      altText: "D.O.R.A. naživo na koncertnom pódiu",
+      title: "D.O.R.A.",
+    }];
   }, [slides, staticFallback]);
 
   const [active, setActive] = useState(0);
 
-  // Debug log — vidíme v server logoch aj v prehliadači
-  useEffect(() => {
-    console.log("[HeroSlideshow] mounted, images count:", images.length);
-  }, [images.length]);
+  // Clamp active index if images array changes (hydration safety)
+  const safeActive = active >= images.length ? 0 : active;
 
+  // Cycling — setInterval, restarts if images.length changes
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (images.length <= 1) {
+      console.log("[HeroSlideshow] single image, no cycling");
+      return;
+    }
 
+    console.log("[HeroSlideshow] starting interval, images:", images.length);
     const id = window.setInterval(() => {
-      setActive((i) => (i + 1) % images.length);
+      setActive((prev) => {
+        const next = (prev + 1) % images.length;
+        console.log("[HeroSlideshow] cycling:", prev, "→", next);
+        return next;
+      });
     }, 6500);
 
-    return () => window.clearInterval(id);
+    return () => {
+      console.log("[HeroSlideshow] cleaning up interval");
+      window.clearInterval(id);
+    };
   }, [images.length]);
 
   return (
     <div className={styles.wrapper}>
+      {/* Temporary debug badge */}
+      <div className={styles.debugBadge}>
+        slides: {images.length} | active: {safeActive}
+      </div>
+
       {images.map((slide, index) => {
-        const isActive = active === index;
+        const isActive = safeActive === index;
         return (
           <div
             key={slide.id}
             className={`${styles.slide} ${isActive ? styles.active : ""}`}
             aria-hidden={!isActive}
           >
-            {/*
-              key na img sa mení keď sa slide stane aktívnym.
-              React remountne element → CSS animácia (.zoom) sa spustí od začiatku.
-            */}
-            <img
-              key={`${slide.id}-${isActive ? "on" : "off"}`}
+            <Image
               src={slide.url}
               alt={slide.altText || slide.title || "D.O.R.A. naživo na koncertnom pódiu"}
+              fill
+              priority={index === 0}
+              sizes="100vw"
               className={`${styles.image} ${isActive ? styles.zoom : ""}`}
             />
           </div>
@@ -89,7 +107,7 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
               key={i}
               onClick={() => setActive(i)}
               className={`${styles.indicator} ${
-                i === active ? styles.indicatorActive : ""
+                i === safeActive ? styles.indicatorActive : ""
               }`}
               aria-label={`Slide ${i + 1}`}
             />

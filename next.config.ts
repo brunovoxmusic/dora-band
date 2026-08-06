@@ -1,15 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Vercel handles the build output automatically — no standalone needed.
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Sharp is used for image processing (upload thumbnails).
   images: {
     formats: ["image/avif", "image/webp"],
+    // Allow images from Vercel Blob storage and localhost (dev uploads)
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "blob.vercel-storage.com",
+      },
+    ],
   },
-  // External server-side packages (sharp needs native bindings)
   serverExternalPackages: ["sharp"],
 };
 
