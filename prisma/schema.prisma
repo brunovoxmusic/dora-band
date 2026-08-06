@@ -111,3 +111,133 @@ model SeoMeta {
   noindex     Boolean  @default(false)
   updatedAt   DateTime @updatedAt
 }
+
+// =====================================================
+// PHASE 2-4: AI BAND MANAGEMENT OS — NEW MODELS
+// =====================================================
+
+/// CRM contacts — fans, promoters, venues, festivals, media, sponsors.
+model Contact {
+  id            String   @id @default(cuid())
+  type          String   @default("fan") // fan | promoter | venue | festival | media | sponsor
+  name          String
+  email         String?
+  phone         String?
+  organization  String?
+  website       String?
+  city          String?
+  country       String   @default("SK")
+  notes         String?
+  aiScore       Float    @default(0)
+  tags          String[]
+  status        String   @default("active") // active | cold | blacklist
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  communications Communication[]
+  bookings      Booking[]
+
+  @@index([type])
+  @@index([aiScore])
+  @@index([status])
+}
+
+/// Communication log — emails, calls, meetings, notes.
+model Communication {
+  id          String   @id @default(cuid())
+  contactId   String
+  type        String   @default("email") // email | phone | meeting | note
+  direction   String   @default("outbound") // inbound | outbound
+  subject     String?
+  body        String
+  aiGenerated Boolean  @default(false)
+  aiTone      String?
+  createdAt   DateTime @default(now())
+
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([createdAt])
+}
+
+/// Booking pipeline — tracks negotiation status per gig/contact.
+model Booking {
+  id            String   @id @default(cuid())
+  contactId     String?
+  gigId         String?
+  status        String   @default("lead") // lead | contacted | negotiated | confirmed | cancelled
+  aiMatchScore  Float?
+  aiAnalysis    String?
+  proposedFee   String?
+  actualFee     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([contactId])
+}
+
+/// AI-generated and manual tasks with deadlines.
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String   @default("medium") // low | medium | high | urgent
+  status      String   @default("todo") // todo | in-progress | done | cancelled
+  gigId       String?
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([priority])
+}
+
+/// Automation log — tracks AI agent executions.
+model AutomationLog {
+  id          String   @id @default(cuid())
+  agentType   String   // content | booking | email | task | social | analytics | orchestrator
+  trigger     String   // gig_created | inquiry_received | manual | scheduled
+  input       String
+  output      String?
+  status      String   @default("success") // success | error
+  createdAt   DateTime @default(now())
+
+  @@index([agentType])
+  @@index([createdAt])
+}
+
+/// Fan segments for targeted campaigns.
+model FanSegment {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  criteria    String   @db.Text // JSON with filter criteria
+  subscriberIds String[] @default([])
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Marketing campaigns (newsletter, social).
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("newsletter") // newsletter | social | email
+  subject     String?
+  body        String   @db.Text
+  status      String   @default("draft") // draft | scheduled | sent
+  segmentId   String?
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+}
