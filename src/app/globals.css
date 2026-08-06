@@ -361,24 +361,24 @@
   }
 }
 
-/* ===== Hero Ken Burns zoom — GLOBAL (outside @layer for production reliability) ===== */
-@keyframes heroKenBurns {
-  0% {
-    transform: scale(1) translate(0, 0);
+/* ===== Hero Ken Burns zoom — GLOBAL @keyframes + class (works in production) ===== */
+@keyframes kenBurns {
+  from {
+    transform: scale(1);
   }
-  100% {
-    transform: scale(1.15) translate(-1.5%, -1%);
+  to {
+    transform: scale(1.25);
   }
 }
 
-.hero-kenburns {
-  animation: heroKenBurns 9s ease-out forwards;
+.heroZoom {
+  animation: kenBurns 6500ms linear forwards;
   transform-origin: center center;
   will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-kenburns {
+  .heroZoom {
     animation: none !important;
   }
 }

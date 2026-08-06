@@ -4,11 +4,6 @@
   overflow: hidden;
 }
 
-/*
- * Each slide is a wrapper div that gets the zoom animation.
- * The img inside is static — we animate the WRAPPER, not the img.
- * This avoids conflicts with next/image internal styles.
- */
 .slide {
   position: absolute;
   inset: 0;
@@ -21,36 +16,18 @@
   opacity: 1;
 }
 
-/* Zoom animation on the SLIDE WRAPPER (not the img) */
-.zoom {
-  animation: kenBurns 6500ms linear forwards;
-}
-
-@keyframes kenBurns {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.25);
-  }
-}
-
 /*
- * The img inside the slide wrapper.
- * next/image with fill sets position:absolute on the img,
- * so the wrapper provides the scaling context.
+ * Zoom class — references GLOBAL @keyframes kenBurns from globals.css.
+ * We can't use :global() inside animation shorthand in CSS Modules.
+ * Instead, we use the global class name directly via :global().
+ * The .heroZoom class is defined in globals.css alongside @keyframes kenBurns.
  */
+.zoom {
+  composes: heroZoom from global;
+}
+
 .image {
   object-fit: cover;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .zoom {
-    animation: none !important;
-  }
-  .slide {
-    transition: none !important;
-  }
 }
 
 /* Slide indicators */
