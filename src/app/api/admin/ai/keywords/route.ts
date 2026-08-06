@@ -30,7 +30,13 @@ export async function POST(req: NextRequest) {
 KONTEXT:
 ${contextLines}`;
 
-    const zai = await ZAI.create();
+    let zai;
+    try {
+      zai = await ZAI.create();
+    } catch (createErr) {
+      console.error("[ai] ZAI.create() failed:", createErr);
+      return NextResponse.json({ error: "AI služba nie je nakonfigurovaná. Chýba .z-ai-config súbor.", details: createErr instanceof Error ? createErr.message : String(createErr) }, { status: 503 });
+    }
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "assistant", content: "Si SEO špecialista. Vraciaš iba platný JSON bez markdown." },

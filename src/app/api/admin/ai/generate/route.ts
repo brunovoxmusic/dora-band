@@ -45,7 +45,21 @@ export async function POST(req: NextRequest) {
 
     const prompt = buildPrompt(type as GenType, instruction || "", context);
 
-    const zai = await ZAI.create();
+    let zai;
+    try {
+      zai = await ZAI.create();
+    } catch (createErr) {
+      console.error("[ai/generate] ZAI.create() failed:", createErr);
+      return NextResponse.json(
+        {
+          error:
+            "AI služba nie je nakonfigurovaná. Chýba .z-ai-config súbor. Na Verceli pridajte súbor do project root alebo nastavte env premenné pre z-ai-web-dev-sdk.",
+          details: createErr instanceof Error ? createErr.message : String(createErr),
+        },
+        { status: 503 }
+      );
+    }
+
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "assistant", content: SYSTEM_PROMPT },

@@ -34,7 +34,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Súbor obrázku nebol nájdený na disku." }, { status: 404 });
     }
 
-    const zai = await ZAI.create();
+    let zai;
+    try {
+      zai = await ZAI.create();
+    } catch (createErr) {
+      console.error("[ai] ZAI.create() failed:", createErr);
+      return NextResponse.json({ error: "AI služba nie je nakonfigurovaná. Chýba .z-ai-config súbor.", details: createErr instanceof Error ? createErr.message : String(createErr) }, { status: 503 });
+    }
     const response = await zai.chat.completions.createVision({
       model: "glm-4v-plus",
       messages: [
