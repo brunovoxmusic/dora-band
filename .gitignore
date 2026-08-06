@@ -67,3 +67,9 @@ tool-results/
 # Local SQLite DB (dev only — do not commit)
 db/custom.db
 db/custom.db-journal
+
+# Uploaded user files (transient)
+upload/
+
+# Dev startup script (local only)
+start-dev.sh

@@ -125,21 +125,46 @@ src/
 ## Features
 
 - **14 landing sekcií**: Hero (slideshow), About+Timeline, Members, Music+Video, Gallery+Search, Discography+Waveforms, Gigs+Modal, Setlist, Testimonials, Press Kit, FAQ, Social, Newsletter, Contact
-- **Admin dashboard (8 tabov)**: Prehľad, Dopyty, Koncerty, Médiá, Newsletter, Obsah (CMS), SEO, AI nástroje
+- **Admin dashboard (13 tabov)**: Prehľad, Dopyty, Koncerty, CRM, Pipeline, Úlohy, AI Agenti, Médiá, Newsletter, Obsah (CMS), SEO, AI nástroje, Nastavenia
+- **Site Settings**: Maintenance mode (s admin bypass), Live announcement banner (5 typov, dismissible), Section visibility toggles (14 sekcií)
 - **AI nástroje**: Generovanie obsahu, Alt-text auto-gen (VLM), SEO audit, Keyword research
-- **CMS**: 25+ editovateľných content kľúčov, per-path SEO meta
+- **CMS**: 60+ editovateľných content kľúčov (vrátane settings.*), per-path SEO meta
 - **Media management**: Sharp optimalizácia, drag-and-drop reordering, bulk actions, hero background slideshow
 - **SEO**: JSON-LD structured data, dynamic sitemap/robots, OG image, meta tags
 - **Accessibility**: Skip-to-content, focus-visible, reduced-motion, alt-text management
 - **Error handling**: 404 page, error boundary, loading skeleton
+
+## Local Development (SQLite)
+
+Pre lokálny dev môžeš použiť SQLite namiesto PostgreSQL:
+
+1. Nastav v `.env`:
+   ```
+   DATABASE_URL="file:/home/z/my-project/db/custom.db"
+   ```
+
+2. Push schému + vygeneruj klienta (používa `prisma/schema.sqlite.prisma`):
+   ```bash
+   bun run db:push:dev      # = prisma db push --schema=prisma/schema.sqlite.prisma
+   bun run db:generate:dev  # = prisma generate --schema=prisma/schema.sqlite.prisma
+   ```
+
+3. Seed admin usera:
+   ```bash
+   bun run seed
+   ```
+
+**Dôležité:** Pred nasadením na Vercel sa uisti, že:
+- `DATABASE_URL` na Verceli je `postgresql://...` (Neon)
+- Štandardný `bun run db:push` (bez `:dev`) používa `schema.prisma` (PostgreSQL)
 
 ## Tech Stack
 
 - Next.js 16 (App Router, Turbopack)
 - TypeScript 5
 - Tailwind CSS 4 + shadcn/ui
-- Prisma ORM (PostgreSQL)
-- z-ai-web-dev-sdk (LLM + VLM)
+- Prisma ORM (PostgreSQL on Vercel, SQLite for local dev)
+- Vercel AI SDK + Groq (LLM + VLM)
 - @dnd-kit (drag-and-drop)
 - sharp (image processing)
 - @vercel/blob (file storage)

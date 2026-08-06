@@ -1,8 +1,11 @@
-// D.O.R.A. band website — Prisma schema
-// PostgreSQL datasource (Vercel/Neon compatible).
+// D.O.R.A. band website — Prisma schema (SQLite for LOCAL DEVELOPMENT ONLY)
+// Production (Vercel) uses prisma/schema.prisma (PostgreSQL).
+// Local dev: switch via `bun run db:push:dev` (uses this file).
+// DATABASE_URL=file:/home/z/my-project/db/custom.db for local dev.
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"
 }
 
 datasource db {
@@ -10,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Booking inquiries submitted via the public contact form (Section G).
+/// Booking inquiries submitted via the public contact form.
 model BookingInquiry {
   id            String   @id @default(cuid())
   organizer     String
@@ -19,8 +22,8 @@ model BookingInquiry {
   eventDate     String
   eventLocation String
   eventType     String
-  message       String   
-  status        String   @default("new") // new | reviewed | confirmed | archived
+  message       String
+  status        String   @default("new")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -38,8 +41,8 @@ model Gig {
   country     String   @default("SK")
   ticketUrl   String?
   ticketPrice String?
-  status      String   @default("upcoming") // upcoming | soldout | cancelled | past
-  notes       String?  
+  status      String   @default("upcoming")
+  notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -53,12 +56,12 @@ model MediaItem {
   title          String
   url            String
   thumbnailUrl   String?
-  category       String   @default("concert") // concert | portrait | backstage | promo
+  category       String   @default("concert")
   caption        String?
-  altText        String?   // accessibility/SEO alt text
+  altText        String?
   credits        String   @default("Foto: archív D.O.R.A.")
   featured       Boolean  @default(false)
-  heroBackground Boolean  @default(false) // used as Hero section slideshow background
+  heroBackground Boolean  @default(false)
   order          Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -89,26 +92,156 @@ model Subscriber {
   updatedAt DateTime @updatedAt
 }
 
-/// Editable site content (CMS key-value store).
-/// Keys follow a dotted convention, e.g. "hero.title", "band.bioLong", "footer.copyright".
+/// Editable site content (CMS key-value store) — also stores settings.* keys.
 model SiteContent {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   
-  category  String   @default("general") // general | hero | band | contact | footer | social
+  value     String
+  category  String   @default("general")
   updatedAt DateTime @updatedAt
 
   @@index([category])
 }
 
-/// Per-path SEO metadata (overrides defaults generated from content).
+/// Per-path SEO metadata.
 model SeoMeta {
   id          String   @id @default(cuid())
-  path        String   @unique // "/" | "/archiv" | "#hudba" etc.
+  path        String   @unique
   title       String?
-  description String?  
-  keywords    String?  
+  description String?
+  keywords    String?
   ogImage     String?
   noindex     Boolean  @default(false)
   updatedAt   DateTime @updatedAt
+}
+
+// =====================================================
+// PHASE 2-4: AI BAND MANAGEMENT OS — MODELS
+// (SQLite-compatible: no @db.Text, no String[] arrays)
+// =====================================================
+
+/// CRM contacts — fans, promoters, venues, festivals, media, sponsors.
+model Contact {
+  id            String   @id @default(cuid())
+  type          String   @default("fan")
+  name          String
+  email         String?
+  phone         String?
+  organization  String?
+  website       String?
+  city          String?
+  country       String   @default("SK")
+  notes         String?
+  aiScore       Float    @default(0)
+  tags          String   @default("[]") // JSON-encoded array of strings
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  communications Communication[]
+  bookings      Booking[]
+
+  @@index([type])
+  @@index([aiScore])
+  @@index([status])
+}
+
+/// Communication log — emails, calls, meetings, notes.
+model Communication {
+  id          String   @id @default(cuid())
+  contactId   String
+  type        String   @default("email")
+  direction   String   @default("outbound")
+  subject     String?
+  body        String
+  aiGenerated Boolean  @default(false)
+  aiTone      String?
+  createdAt   DateTime @default(now())
+
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([createdAt])
+}
+
+/// Booking pipeline — tracks negotiation status per gig/contact.
+model Booking {
+  id            String   @id @default(cuid())
+  contactId     String?
+  gigId         String?
+  status        String   @default("lead")
+  aiMatchScore  Float?
+  aiAnalysis    String?
+  proposedFee   String?
+  actualFee     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([contactId])
+}
+
+/// AI-generated and manual tasks with deadlines.
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String   @default("medium")
+  status      String   @default("todo")
+  gigId       String?
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([priority])
+}
+
+/// Automation log — tracks AI agent executions.
+model AutomationLog {
+  id          String   @id @default(cuid())
+  agentType   String
+  trigger     String
+  input       String
+  output      String?
+  status      String   @default("success")
+  createdAt   DateTime @default(now())
+
+  @@index([agentType])
+  @@index([createdAt])
+}
+
+/// Fan segments for targeted campaigns.
+model FanSegment {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  criteria      String
+  subscriberIds String   @default("[]") // JSON-encoded array of subscriber IDs
+  aiGenerated   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// Marketing campaigns (newsletter, social).
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("newsletter")
+  subject     String?
+  body        String
+  status      String   @default("draft")
+  segmentId   String?
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
 }
