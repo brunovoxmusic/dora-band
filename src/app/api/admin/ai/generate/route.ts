@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, text, type, prompt });
   } catch (err) {
     console.error("[ai/generate] error:", err);
-    return NextResponse.json({ error: "AI generovanie zlyhalo." }, { status: 500 });
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: `AI generovanie zlyhalo: ${errorMsg}` },
+      { status: 500 }
+    );
   }
 }

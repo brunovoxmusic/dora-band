@@ -4,30 +4,24 @@
   overflow: hidden;
 }
 
+/*
+ * Each slide is a wrapper div that gets the zoom animation.
+ * The img inside is static — we animate the WRAPPER, not the img.
+ * This avoids conflicts with next/image internal styles.
+ */
 .slide {
   position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 1500ms ease-in-out;
+  overflow: hidden;
 }
 
 .active {
   opacity: 1;
 }
 
-.image {
-  object-fit: cover;
-  transform: scale(1);
-  will-change: transform;
-}
-
-/*
- * Zoom animation on active slide only.
- * When .zoom class is added, animation starts from scale(1).
- * When class is removed (slide becomes inactive), animation stops.
- * When re-added (next cycle), browser restarts from beginning.
- * No React key remount hack needed.
- */
+/* Zoom animation on the SLIDE WRAPPER (not the img) */
 .zoom {
   animation: kenBurns 6500ms linear forwards;
 }
@@ -39,6 +33,15 @@
   to {
     transform: scale(1.25);
   }
+}
+
+/*
+ * The img inside the slide wrapper.
+ * next/image with fill sets position:absolute on the img,
+ * so the wrapper provides the scaling context.
+ */
+.image {
+  object-fit: cover;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -74,19 +77,4 @@
 .indicatorActive {
   width: 32px;
   background-color: #E63946;
-}
-
-/* Debug badge — temporary, remove after confirming fix */
-.debugBadge {
-  position: absolute;
-  top: 80px;
-  right: 16px;
-  z-index: 20;
-  background: rgba(230, 57, 70, 0.9);
-  color: white;
-  padding: 4px 8px;
-  font-family: monospace;
-  font-size: 10px;
-  border-radius: 2px;
-  pointer-events: none;
 }
