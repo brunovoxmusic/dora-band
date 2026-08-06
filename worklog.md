@@ -1164,3 +1164,95 @@ Site-wide maintenance/banner/section controls fully wired into public frontend w
 - Could add AI-suggested banner messages (e.g., "new gig confirmed" → auto-generate banner text)
 - Could add maintenance mode analytics (track visitor count during downtime)
 - Could add email notification when maintenance starts/ends (to subscribers)
+
+---
+Task ID: 21 (critical fix: PostgreSQL schema restoration for Vercel production)
+Agent: Main (Z.ai Code)
+Task: Fix Vercel production 500 errors — restore PostgreSQL as default schema
+
+PROBLEM:
+- Task 20 changed prisma/schema.prisma from PostgreSQL to SQLite for local dev
+- Vercel production DATABASE_URL is postgresql:// (Neon Postgres)
+- SQLite provider rejected postgres:// URL → PrismaClientInitializationError
+- ALL admin APIs returned 500 on production (gigs, inquiries, stats, media,
+  subscribers, seo, settings, bookings, tasks, contacts)
+- Browser showed "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
+
+FIX:
+1. prisma/schema.prisma — restored to PostgreSQL (provider="postgresql"):
+   - All 14 models (Phase 1-4): BookingInquiry, Gig, MediaItem, AdminUser,
+     Subscriber, SiteContent, SeoMeta, Contact, Communication, Booking,
+     Task, AutomationLog, FanSegment, Campaign
+   - Contact.tags: String @default("[]") @db.Text (JSON-encoded array)
+   - FanSegment.subscriberIds: String @default("[]") @db.Text
+   - @db.Text added for long fields (description, body, input, output, criteria)
+
+2. prisma/schema.sqlite.prisma — complete SQLite schema for LOCAL DEV:
+   - Same 14 models as PostgreSQL version
+   - No @db.Text (SQLite doesn't support)
+   - tags/subscriberIds as String (JSON-encoded)
+   - output = "../node_modules/@prisma/client" (so both schemas generate to same location)
+
+3. package.json scripts updated:
+   - db:push (default) → uses schema.prisma (PostgreSQL) — for production
+   - db:push:dev → uses schema.sqlite.prisma — for local SQLite dev
+   - db:generate:dev → generates SQLite client for local dev
+   - db:push:pg → alias for db:push (PostgreSQL)
+
+4. api/admin/contacts/[id]/route.ts — PATCH route fixed:
+   - Was spreading raw body {...b} which would send tags as array → Prisma reject
+   - Now extracts tags, converts to JSON.stringify(parseTags(tags)) before update
+   - Returns item with tags decoded back to array for client
+
+5. .env.example — documented both options:
+   - Production: DATABASE_URL=postgresql://... (Neon)
+   - Local dev: DATABASE_URL=file:./db/custom.db + use db:push:dev
+
+6. DEPLOYMENT.md — added "Local Development (SQLite)" section:
+   - Instructions for switching to SQLite locally
+   - Updated features list (13 admin tabs, site settings, 60+ content keys)
+   - Updated tech stack (PostgreSQL on Vercel, SQLite for local dev)
+
+VERIFICATION:
+- bun run db:push → Neon Postgres synced successfully (7.21s)
+- bun run db:generate → Prisma client generated for PostgreSQL
+- Dev server restarted with Neon DATABASE_URL
+- All admin APIs return 200 OK with real Neon data:
+  - admin/gigs: 200 (1035 bytes, 3 gigs)
+  - admin/inquiries: 200 (369 bytes, 1 inquiry)
+  - admin/stats: 200 (928 bytes)
+  - admin/media: 200 (10045 bytes, 21 media items)
+  - admin/subscribers: 200 (12 bytes, 0 subscribers)
+  - admin/seo: 200 (175 bytes)
+  - admin/settings: 200 (4327 bytes, 33 settings keys)
+  - admin/bookings: 200 (12 bytes)
+  - admin/tasks: 200 (12 bytes)
+  - admin/contacts: 200 (462 bytes)
+- Prisma queries use PostgreSQL syntax: "public"."BookingInquiry" (not main.)
+- Public APIs: /api/gigs 200, /api/settings 200, home page 200 (399KB)
+- Lint: 0 errors
+- No 500 errors in dev log
+- agent-browser: admin login works, all tabs load with real data
+
+GIT:
+- Commit: c94e435 fix: restore PostgreSQL as default schema (Vercel production fix)
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+- Vercel will auto-deploy from main branch
+
+Stage Summary:
+- Critical production bug fixed: PostgreSQL schema restored as default
+- Local dev still works via db:push:dev (SQLite schema)
+- All 14 models present in both schemas (PostgreSQL + SQLite)
+- tags/subscriberIds properly JSON-encoded for both databases
+- Vercel production should auto-redeploy and all 500 errors should resolve
+
+## Current Project Status: PRODUCTION FIXED
+Vercel production was completely broken (all admin APIs 500) due to SQLite schema
+mismatch with PostgreSQL DATABASE_URL. Fixed by restoring PostgreSQL as default
+schema.prisma. Local dev preserved via separate schema.sqlite.prisma.
+
+### Unresolved issues / risks for next phase:
+- Vercel auto-deploy may take 1-2 minutes to rebuild after push
+- User should verify production at https://dora-band.vercel.app after deploy completes
+- If Neon database doesn't have all settings.* keys seeded, defaults will be used
+  (this is expected behavior — settings are created on first admin PUT)
