@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import ZAI from "z-ai-web-dev-sdk";
+import { ensureZaiConfig } from "@/lib/zai-config";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Súbor obrázku nebol nájdený na disku." }, { status: 404 });
     }
 
+    await ensureZaiConfig();
     let zai;
     try {
       zai = await ZAI.create();

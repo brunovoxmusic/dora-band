@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getAllContent } from "@/lib/content";
 import { db } from "@/lib/db";
 import ZAI from "z-ai-web-dev-sdk";
+import { ensureZaiConfig } from "@/lib/zai-config";
 
 /**
  * AI SEO audit.
@@ -52,6 +53,7 @@ Analyzuj najmä: meta title dĺžku (ideálne 50-60 znakov), meta description (1
 ÚDAJE O STRÁNKE:
 ${JSON.stringify(report, null, 2)}`;
 
+    await ensureZaiConfig();
     let zai;
     try {
       zai = await ZAI.create();

@@ -361,24 +361,70 @@
   }
 }
 
-/* ===== Hero Ken Burns zoom — GLOBAL @keyframes + class (works in production) ===== */
-@keyframes kenBurns {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.25);
-  }
+/* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) ===== */
+.hero-slideshow-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 
-.heroZoom {
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1500ms ease-in-out;
+  overflow: hidden;
+}
+
+.hero-slide-active {
+  opacity: 1;
+}
+
+.hero-slide-zoom {
   animation: kenBurns 6500ms linear forwards;
   transform-origin: center center;
   will-change: transform;
 }
 
+.hero-slide-image {
+  object-fit: cover;
+}
+
+@keyframes kenBurns {
+  from { transform: scale(1); }
+  to { transform: scale(1.25); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .heroZoom {
+  .hero-slide-zoom {
     animation: none !important;
   }
+  .hero-slide {
+    transition: none !important;
+  }
+}
+
+.hero-slide-indicators {
+  position: absolute;
+  bottom: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.hero-slide-indicator {
+  height: 6px;
+  width: 6px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 300ms ease;
+  background-color: rgba(192, 192, 192, 0.4);
+}
+
+.hero-slide-indicator-active {
+  width: 32px;
+  background-color: #E63946;
 }

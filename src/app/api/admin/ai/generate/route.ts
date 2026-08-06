@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getAllContent } from "@/lib/content";
 import ZAI from "z-ai-web-dev-sdk";
+import { ensureZaiConfig } from "@/lib/zai-config";
 
 type GenType = "bio" | "faq" | "copytext" | "metaDescription" | "metaTitle" | "socialPost" | "pressRelease";
 
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = buildPrompt(type as GenType, instruction || "", context);
 
+    await ensureZaiConfig();
     let zai;
     try {
       zai = await ZAI.create();

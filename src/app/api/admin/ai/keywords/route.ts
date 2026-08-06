@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getAllContent } from "@/lib/content";
 import ZAI from "z-ai-web-dev-sdk";
+import { ensureZaiConfig } from "@/lib/zai-config";
 
 /**
  * AI keyword research.
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
 KONTEXT:
 ${contextLines}`;
 
+    await ensureZaiConfig();
     let zai;
     try {
       zai = await ZAI.create();

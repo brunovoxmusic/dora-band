@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import styles from "./hero-slideshow.module.css";
 
 type Slide = {
   id: string;
@@ -19,14 +18,12 @@ type Props = {
 /**
  * Hero background slideshow — production-safe.
  *
- * KEY FIX: Zoom animation is applied to the SLIDE WRAPPER DIV,
- * not to the <img> element. This avoids conflicts with next/image
- * internal inline styles (position, transform, object-fit).
+ * Uses PLAIN CSS classes defined in globals.css (NOT CSS Module).
+ * This eliminates ALL CSS Module hashing/scoping issues in production.
  *
- * - CSS Module for all styles + @keyframes
- * - next/image with fill, sizes=100vw, priority for first
+ * - @keyframes kenBurns + .hero-slide-zoom in globals.css
  * - All slides rendered simultaneously (absolute, opacity crossfade)
- * - .zoom class on active slide WRAPPER → Ken Burns animation
+ * - .hero-slide-zoom class on active slide wrapper → Ken Burns animation
  * - setInterval with [images.length] deps
  * - Fallback when DB empty
  */
@@ -46,22 +43,20 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
 
   useEffect(() => {
     if (images.length <= 1) return;
-
     const id = window.setInterval(() => {
       setActive((prev) => (prev + 1) % images.length);
     }, 6500);
-
     return () => window.clearInterval(id);
   }, [images.length]);
 
   return (
-    <div className={styles.wrapper}>
+    <div className="hero-slideshow-wrapper">
       {images.map((slide, index) => {
         const isActive = safeActive === index;
         return (
           <div
             key={slide.id}
-            className={`${styles.slide} ${isActive ? styles.active : ""} ${isActive ? styles.zoom : ""}`}
+            className={`hero-slide${isActive ? " hero-slide-active" : ""}${isActive ? " hero-slide-zoom" : ""}`}
             aria-hidden={!isActive}
           >
             <Image
@@ -70,19 +65,19 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
               fill
               priority={index === 0}
               sizes="100vw"
-              className={styles.image}
+              className="hero-slide-image"
             />
           </div>
         );
       })}
 
       {images.length > 1 && (
-        <div className={styles.indicators}>
+        <div className="hero-slide-indicators">
           {images.map((_, i) => (
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`${styles.indicator} ${i === safeActive ? styles.indicatorActive : ""}`}
+              className={`hero-slide-indicator${i === safeActive ? " hero-slide-indicator-active" : ""}`}
               aria-label={`Slide ${i + 1}`}
             />
           ))}
