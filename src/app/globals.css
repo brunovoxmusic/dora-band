@@ -359,21 +359,22 @@
   .preserve-3d {
     transform-style: preserve-3d;
   }
+}
 
-  /* ===== Hero Ken Burns zoom ===== */
-  @keyframes heroKenBurns {
-    0% {
-      transform: scale(1) translate(0, 0);
-    }
-    100% {
-      transform: scale(1.15) translate(-1.5%, -1%);
-    }
+/* ===== Hero Ken Burns zoom — GLOBAL (outside @layer for production reliability) ===== */
+@keyframes heroKenBurns {
+  0% {
+    transform: scale(1) translate(0, 0);
   }
-  .hero-kenburns {
-    animation: heroKenBurns 9s ease-out forwards;
-    transform-origin: center center;
-    will-change: transform;
+  100% {
+    transform: scale(1.15) translate(-1.5%, -1%);
   }
+}
+
+.hero-kenburns {
+  animation: heroKenBurns 9s ease-out forwards;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {

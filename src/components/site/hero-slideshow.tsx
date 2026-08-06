@@ -12,11 +12,11 @@ type Slide = {
 /**
  * Hero background slideshow with crossfade + Ken Burns zoom.
  *
- * - All slides stacked absolutely; active fades in, others fade out
- * - Active image gets `.hero-kenburns` class (globals.css) for gentle zoom-in
- * - `key` on img includes active index → React remounts → animation restarts
- * - Cycles through ALL marked slides in an infinite loop
- * - Respects prefers-reduced-motion
+ * - All slides stacked absolutely; active = opacity-100, others = opacity-0
+ * - Active image gets `.hero-kenburns` class (globals.css) for 9s zoom-in
+ * - `key` on img changes when active → React remounts → animation restarts
+ * - Cycles ALL marked slides in infinite loop every `intervalMs`
+ * - Respects prefers-reduced-motion (checked synchronously, no state needed)
  */
 export function HeroSlideshow({
   slides,
@@ -28,31 +28,29 @@ export function HeroSlideshow({
   intervalMs?: number;
 }) {
   const [active, setActive] = useState(0);
-  const [reduced, setReduced] = useState(false);
 
-  // Detect reduced motion
+  // Cycling — set up ONCE on mount. No state dependency = no re-arm issues.
+  // Reduced motion is checked synchronously inside the effect (no state = no re-render).
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const raf = requestAnimationFrame(() => setReduced(mq.matches));
-    const handler = () => setReduced(mq.matches);
-    mq.addEventListener("change", handler);
-    return () => {
-      cancelAnimationFrame(raf);
-      mq.removeEventListener("change", handler);
-    };
-  }, []);
+    if (!slides || slides.length <= 1) return;
 
-  // Cycle: setInterval set up ONCE, uses functional setState (no stale closure)
-  const shouldCycle = slides.length > 1 && !reduced;
+    // Check reduced motion synchronously
+    if (typeof window !== "undefined") {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (mq.matches) return;
+    }
 
-  useEffect(() => {
-    if (!shouldCycle) return;
     const timer = setInterval(() => {
       setActive((prev) => (prev + 1) % slides.length);
     }, intervalMs);
+
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Check reduced motion for rendering (no state, just a function)
+  const reduced =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // No slides → static fallback
   if (!slides || slides.length === 0) {
@@ -67,6 +65,8 @@ export function HeroSlideshow({
     );
   }
 
+  const shouldCycle = slides.length > 1 && !reduced;
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       {slides.map((slide, i) => {
@@ -79,11 +79,14 @@ export function HeroSlideshow({
             }`}
             aria-hidden={!isActive}
           >
-            {/* key changes when slide becomes active → img remounts → zoom animation restarts */}
+            {/*
+              key changes when slide becomes active/unactive → React remounts img
+              → CSS animation (hero-kenburns) restarts from scale(1) each time
+            */}
             <img
-              key={`${slide.id}-${i === active ? "on" : "off"}`}
+              key={`${slide.id}-${isActive ? "on" : "off"}`}
               src={slide.url}
-              alt={slide.altText || slide.title || "D.O.R.A. na koncertnom pódiu"}
+              alt={slide.altText || slide.title || "D.O.R.A. naživo na koncertnom pódiu"}
               className={`h-full w-full object-cover ${isActive && !reduced ? "hero-kenburns" : ""}`}
             />
           </div>
