@@ -1,15 +1,19 @@
-import { writeFile, readFile } from "fs/promises";
+import { writeFileSync, existsSync } from "fs";
 import path from "path";
 
 /**
- * Ensures .z-ai-config exists in the current working directory.
- * Vercel serverless functions don't include dotfiles in the bundle,
- * so we write the config at runtime from an embedded constant or env var.
+ * Writes .z-ai-config synchronously at MODULE LOAD TIME (not request time).
  *
- * The config content is stored in ZAI_CONFIG env var OR embedded directly.
+ * Vercel serverless functions don't include dotfiles in the bundle.
+ * The z-ai-web-dev-sdk looks for .z-ai-config in:
+ *   1. process.cwd() (=/var/task/ on Vercel — writable during execution)
+ *   2. os.homedir()
+ *   3. /etc/
+ *
+ * We write synchronously at module level so the file exists BEFORE
+ * any ZAI.create() call. This runs once per cold start.
  */
 
-// Embedded config — matches /etc/.z-ai-config
 const EMBEDDED_CONFIG = JSON.stringify({
   baseUrl: "https://internal-api.z.ai/v1",
   apiKey: "Z.ai",
@@ -18,30 +22,28 @@ const EMBEDDED_CONFIG = JSON.stringify({
   userId: "c91fe2fa-a0aa-4e11-9192-d330889cd0c1",
 });
 
-let configWritten = false;
+// Write IMMEDIATELY at module load (synchronous, before any exports are used)
+const configContent = process.env.ZAI_CONFIG || EMBEDDED_CONFIG;
+const configPath = path.join(process.cwd(), ".z-ai-config");
 
-export async function ensureZaiConfig() {
-  if (configWritten) return;
-
-  // Try env var first, fall back to embedded config
-  const configContent = process.env.ZAI_CONFIG || EMBEDDED_CONFIG;
-
-  // Write to CWD (where z-ai-web-dev-sdk looks first)
-  const configPath = path.join(process.cwd(), ".z-ai-config");
-
-  try {
-    await writeFile(configPath, configContent, "utf-8");
-    configWritten = true;
-    console.log("[z-ai] Config written to:", configPath);
-  } catch (err) {
-    // If we can't write to CWD, try /tmp (always writable on Vercel)
-    try {
-      const tmpPath = "/tmp/.z-ai-config";
-      await writeFile(tmpPath, configContent, "utf-8");
-      configWritten = true;
-      console.log("[z-ai] Config written to /tmp/.z-ai-config");
-    } catch (err2) {
-      console.error("[z-ai] Failed to write config:", err2);
-    }
+try {
+  if (!existsSync(configPath)) {
+    writeFileSync(configPath, configContent, "utf-8");
+    console.log("[z-ai] Config written to CWD:", configPath);
   }
+} catch (e) {
+  // CWD might be read-only, try /tmp
+  try {
+    writeFileSync("/tmp/.z-ai-config", configContent, "utf-8");
+    // Also set HOME to /tmp so SDK finds it there
+    process.env.HOME = "/tmp";
+    console.log("[z-ai] Config written to /tmp, HOME set to /tmp");
+  } catch (e2) {
+    console.error("[z-ai] Failed to write config:", e2);
+  }
+}
+
+// Also export an async version for explicit calls (backward compat)
+export async function ensureZaiConfig() {
+  // Already written at module load — this is a no-op
 }
