@@ -5,6 +5,7 @@
     "": {
       "name": "nextjs_tailwind_shadcn_ts",
       "dependencies": {
+        "@ai-sdk/groq": "^4.0.24",
         "@ai-sdk/openai": "^4.0.32",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -90,6 +91,8 @@
   },
   "packages": {
     "@ai-sdk/gateway": ["@ai-sdk/gateway@4.0.43", "", { "dependencies": { "@ai-sdk/provider": "4.0.6", "@ai-sdk/provider-utils": "5.0.23", "@vercel/oidc": "3.2.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-7KqJR7+8zKwxuZY7/G12QWRV8MDUMgrAUmR/Al99zN6OGB3KQe1Q9i2lAB8uyTBsxgdZjB07vH+ky+RG5m1aiA=="],
+
+    "@ai-sdk/groq": ["@ai-sdk/groq@4.0.24", "", { "dependencies": { "@ai-sdk/provider": "4.0.6", "@ai-sdk/provider-utils": "5.0.23" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-b4Ef0lkEfeKi2PdurFQlgPTwuCH0Ww4vyobl7izGqorFtHhJ7aErNii6vLSs31aTybOHrnAG9rXT7MMWIwmvsg=="],
 
     "@ai-sdk/openai": ["@ai-sdk/openai@4.0.32", "", { "dependencies": { "@ai-sdk/provider": "4.0.6", "@ai-sdk/provider-utils": "5.0.23" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-1u4cj+yvxnpGFcdUZYvz6I6f8mk3t/m1m9uZRWV1NsWQNH210KcqAkcqMfiPedSr69/0vpgP4WRXr+O565cvJQ=="],
 
