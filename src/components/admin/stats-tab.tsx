@@ -22,6 +22,10 @@ type Stats = {
     subscribers: number;
     newInquiries: number;
     upcomingGigs: number;
+    contacts?: number;
+    tasks?: number;
+    activeBookings?: number;
+    automations?: number;
   };
   recentInquiries: Array<{
     id: string;
@@ -39,7 +43,29 @@ type Stats = {
     city: string;
     venue: string;
   }>;
+  recentTasks?: Array<{
+    id: string;
+    title: string;
+    dueDate: string | null;
+    priority: string;
+    aiGenerated: boolean;
+  }>;
+  recentAutomations?: Array<{
+    id: string;
+    agentType: string;
+    trigger: string;
+    status: string;
+    createdAt: string;
+  }>;
   statusBreakdown: Record<string, number>;
+};
+
+type Suggestion = {
+  type: string;
+  priority: "high" | "medium" | "low";
+  title: string;
+  description: string;
+  action: string;
 };
 
 const statusLabel: Record<string, string> = {
@@ -57,16 +83,18 @@ const statusColor: Record<string, string> = {
 
 export function StatsTab() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.counts) setStats(d);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch("/api/admin/stats").then(r => r.json()),
+      fetch("/api/admin/ai/suggestions").then(r => r.json()).catch(() => ({ items: [] })),
+    ]).then(([statsData, sugData]) => {
+      if (statsData.counts) setStats(statsData);
+      setSuggestions(sugData.items || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -247,6 +275,55 @@ export function StatsTab() {
           <span>Aktualizované: {new Date().toLocaleString("sk-SK")}</span>
         </div>
       </div>
+
+      {/* AI Suggestions — proaktívne návrhy */}
+      {suggestions.length > 0 && (
+        <div className="border border-neon-red/30 bg-neon-red/5 p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Activity className="h-4 w-4 text-neon-red" />
+            <span className="font-mono-brand text-[11px] uppercase tracking-[0.2em] text-neon-red">
+              {"// AI Návrhy — proaktívne odporúčania"}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {suggestions.map((s, i) => (
+              <div key={i} className="flex items-start gap-3 border border-charcoal/50 bg-ink p-3">
+                <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", s.priority === "high" ? "bg-neon-red" : s.priority === "medium" ? "bg-warm-yellow" : "bg-silver")} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-off-white">{s.title}</p>
+                  <p className="mt-0.5 text-xs text-off-white/60">{s.description}</p>
+                  <span className="mt-1 inline-block font-mono-brand text-[9px] uppercase tracking-wider text-warm-yellow">{s.action}</span>
+                </div>
+                <span className="shrink-0 font-mono-brand text-[9px] uppercase text-silver/40">{s.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent AI automations */}
+      {stats.recentAutomations && stats.recentAutomations.length > 0 && (
+        <div className="border border-charcoal bg-dark-gray p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Activity className="h-4 w-4 text-warm-yellow" />
+            <span className="font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+              {"// Posledné AI automatizácie"}
+            </span>
+          </div>
+          <div className="divide-y divide-charcoal/50">
+            {stats.recentAutomations.map((a) => (
+              <div key={a.id} className="flex items-center gap-3 py-2">
+                <span className={cn("h-2 w-2 shrink-0 rounded-full", a.status === "success" ? "bg-green-400" : "bg-neon-red")} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-off-white">{a.agentType}</p>
+                  <p className="font-mono-brand text-[9px] uppercase text-silver">{a.trigger}</p>
+                </div>
+                <span className="font-mono-brand text-[9px] text-silver">{new Date(a.createdAt).toLocaleString("sk-SK")}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

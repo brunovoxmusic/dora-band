@@ -40,6 +40,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Trigger AI inquiry agent (async, non-blocking)
+    import("@/lib/agents/orchestrator")
+      .then(({ orchestrator }) => orchestrator("inquiry_received", inquiry))
+      .catch((e) => console.error("[orchestrator] inquiry_received trigger failed:", e));
+
     return NextResponse.json({ ok: true, id: inquiry.id }, { status: 201 });
   } catch (err) {
     console.error("[booking] error:", err);
