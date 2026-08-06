@@ -55,7 +55,7 @@ export function useAIContent() {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
 
-      // Read streaming response
+      // Read streaming response (plain text stream from toTextStreamResponse)
       const reader = res.body?.getReader();
       if (!reader) throw new Error("Stream nie je dostupný.");
 
@@ -66,22 +66,10 @@ export function useAIContent() {
         const { done, value } = await reader.read();
         if (done) break;
 
+        // Plain text stream — just append chunks directly
         const chunk = decoder.decode(value, { stream: true });
-
-        // Parse AI SDK data stream protocol
-        // Format: "0:text\n" where 0 is the data type
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("0:")) {
-            try {
-              const text = JSON.parse(line.slice(2));
-              accumulated += text;
-              setOutput(accumulated);
-            } catch {
-              // Not valid JSON, skip
-            }
-          }
-        }
+        accumulated += chunk;
+        setOutput(accumulated);
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {

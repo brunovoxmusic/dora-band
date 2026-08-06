@@ -1,42 +1,11 @@
 "use client";
 
-import { useChat as useAIChat } from "ai/react";
-import { useCallback } from "react";
-
 /**
- * Reusable useChat hook — wraps Vercel AI SDK's useChat.
+ * useChat hook is now inline in AIChat.tsx using @ai-sdk/react directly.
+ * This file is kept for backward compatibility but re-exports from AIChat.
  *
- * Features:
- * - Streaming responses from /api/chat
- * - Message history management
- * - Loading/error states
- * - Automatic scroll handling
- *
- * Usage:
- *   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat();
+ * In AI SDK v7, useChat has a different API (sendMessage, parts, status).
+ * The old useChat hook wrapper is no longer needed.
  */
 
-export function useChat() {
-  const aiChat = useAIChat({
-    api: "/api/chat",
-    onError: (error) => {
-      console.error("[useChat] error:", error);
-    },
-  });
-
-  // Clear conversation
-  const clearChat = useCallback(() => {
-    aiChat.setMessages([]);
-  }, [aiChat]);
-
-  return {
-    messages: aiChat.messages,
-    input: aiChat.input,
-    handleInputChange: aiChat.handleInputChange,
-    handleSubmit: aiChat.handleSubmit,
-    isLoading: aiChat.isLoading,
-    error: aiChat.error,
-    stop: aiChat.stop,
-    clearChat,
-  };
-}
+export { useChat } from "@ai-sdk/react";

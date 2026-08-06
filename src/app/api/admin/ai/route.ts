@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       prompt: userParts.join("\n\n"),
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("[api/admin/ai] error:", error);
     const message = error instanceof Error ? error.message : "Neznáma chyba";
