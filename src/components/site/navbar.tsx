@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 import { NAV_LINKS } from "@/lib/band-data";
 import { cn } from "@/lib/utils";
 
-export function Navbar() {
+export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -18,8 +18,9 @@ export function Navbar() {
 
   return (
     <header
+      style={{ top: bannerOffset }}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        "fixed inset-x-0 z-50 transition-all duration-300",
         scrolled
           ? "bg-ink/85 backdrop-blur-xl border-b border-charcoal/80"
           : "bg-transparent border-b border-transparent"

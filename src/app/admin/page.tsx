@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail, FileText, Search, Sparkles, Users, CheckSquare, Zap, TrendingUp } from "lucide-react";
+import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail, FileText, Search, Sparkles, Users, CheckSquare, Zap, TrendingUp, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InquiriesTab } from "@/components/admin/inquiries-tab";
@@ -17,8 +17,9 @@ import { CrmTab } from "@/components/admin/crm-tab";
 import { TasksTab } from "@/components/admin/tasks-tab";
 import { AutomationsTab } from "@/components/admin/automations-tab";
 import { BookingTab } from "@/components/admin/booking-tab";
+import { SettingsTab } from "@/components/admin/settings-tab";
 
-type Tab = "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations" | "booking" | "media" | "subscribers" | "content" | "seo" | "ai";
+type Tab = "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations" | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "settings";
 
 const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[] = [
   { id: "stats", label: "Prehľad", icon: LayoutDashboard },
@@ -33,6 +34,7 @@ const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[]
   { id: "content", label: "Obsah", icon: FileText },
   { id: "seo", label: "SEO", icon: Search },
   { id: "ai", label: "AI nástroje", icon: Sparkles },
+  { id: "settings", label: "Nastavenia", icon: Settings },
 ];
 
 export default function AdminPage() {
@@ -175,6 +177,7 @@ export default function AdminPage() {
         {tab === "content" && <ContentTab />}
         {tab === "seo" && <SeoTab />}
         {tab === "ai" && <AiTab />}
+        {tab === "settings" && <SettingsTab />}
       </div>
     </div>
   );

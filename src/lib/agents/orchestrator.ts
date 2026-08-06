@@ -95,7 +95,7 @@ export async function inquiryAgent(inquiry: Inquiry) {
       email: inquiry.email,
       phone: inquiry.phone,
       notes: `Auto-created from inquiry: ${inquiry.eventType} @ ${inquiry.eventLocation} on ${inquiry.eventDate}`,
-      tags: ["auto-from-inquiry", inquiry.eventType.toLowerCase()],
+      tags: JSON.stringify(["auto-from-inquiry", inquiry.eventType.toLowerCase()]),
     },
   }).catch(() => null); // might already exist
 

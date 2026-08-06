@@ -61,3 +61,9 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Tool results (transient)
+tool-results/
+
+# Local SQLite DB (dev only — do not commit)
+db/custom.db
+db/custom.db-journal

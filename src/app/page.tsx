@@ -18,9 +18,13 @@ import { NewsletterSection } from "@/components/sections/newsletter-section";
 import { SocialSection } from "@/components/sections/social-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { ContactSection } from "@/components/sections/contact-section";
-import { getContentMap } from "@/lib/content";
-import { CONTENT_DEFAULTS } from "@/lib/content";
+import { SiteBanner, type BannerConfig } from "@/components/site/site-banner";
+import { MaintenanceScreen } from "@/components/site/maintenance-screen";
+import { getContentMap, CONTENT_DEFAULTS } from "@/lib/content";
 import { db } from "@/lib/db";
+import { getAllSettingsStructured } from "@/lib/settings";
+import { getSession } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +37,13 @@ type HeroSlide = {
 };
 
 export default async function HomePage() {
-  // Fetch CMS-editable content + hero slides.
+  // Fetch CMS-editable content + hero slides + site settings.
   // Wrapped in try/catch so the page renders even if the database is not yet
   // initialized (e.g. first Vercel deploy before db:push/seed).
   let c: Record<string, string> = {};
   let heroSlides: HeroSlide[] = [];
+  let settings: Awaited<ReturnType<typeof getAllSettingsStructured>> | null = null;
+  let isAdmin = false;
 
   try {
     const contentKeys = [
@@ -76,9 +82,67 @@ export default async function HomePage() {
     } catch (e) {
       console.warn("[homepage] Hero slides fetch failed, using static fallback:", e instanceof Error ? e.message : e);
     }
+
+    // Try to fetch site settings (maintenance, banner, sections)
+    try {
+      settings = await getAllSettingsStructured();
+    } catch (e) {
+      console.warn("[homepage] Settings fetch failed:", e instanceof Error ? e.message : e);
+    }
+
+    // Check admin session (allows bypass of maintenance mode)
+    try {
+      const h = await headers();
+      const req = { headers: h } as unknown as Request;
+      const session = await getSession(req);
+      if (session) isAdmin = true;
+    } catch (e) {
+      console.warn("[homepage] Session check failed:", e instanceof Error ? e.message : e);
+    }
   } catch (err) {
     console.error("[homepage] Unexpected error, rendering with defaults:", err);
   }
+
+  // === MAINTENANCE MODE CHECK ===
+  // Render maintenance screen if:
+  //  - maintenance.isActive is true, AND
+  //  - viewer is not admin (or admin bypass is disabled)
+  //  - URL doesn't have ?preview=1 (allows admin to preview normal page)
+  const previewOverride = false; // would need searchParams — handled by middleware later
+
+  if (
+    settings?.maintenance.isActive &&
+    !previewOverride &&
+    !(isAdmin && settings.maintenance.allowAdminBypass)
+  ) {
+    return (
+      <MaintenanceScreen
+        maintenance={settings.maintenance}
+        adminBypass={isAdmin}
+        now={new Date()}
+      />
+    );
+  }
+
+  // Admin previewing maintenance mode: show normal page + a sticky warning
+  const showMaintenanceBadge =
+    settings?.maintenance.isActive && isAdmin && settings.maintenance.allowAdminBypass;
+
+  // Build banner config (server-side — passed as prop to client component)
+  const banner: BannerConfig = settings
+    ? {
+        isActive: settings.banner.isActive,
+        message: settings.banner.message,
+        type: settings.banner.type,
+        dismissible: settings.banner.dismissible,
+        link: settings.banner.link,
+        linkLabel: settings.banner.linkLabel,
+      }
+    : { isActive: false, message: "", type: "info", dismissible: true, link: "", linkLabel: "" };
+
+  // Section visibility
+  const vis = settings?.sections ?? null;
+  const showSection = (id: keyof NonNullable<typeof vis>): boolean => vis ? vis[id] : true;
 
   return (
     <div className="flex min-h-screen flex-col bg-ink">
@@ -86,29 +150,66 @@ export default async function HomePage() {
         Preskočiť na obsah
       </a>
       <ScrollProgress />
-      <Navbar />
+      {/* Banner is fixed at top — when active, navbar should still render
+          underneath. The SiteBanner component is fixed and z-55; navbar z-50.
+          Both are visible simultaneously when banner is short. */}
+      <SiteBanner banner={banner} />
+      {/* Banner is fixed top-0 z-55 (~40px tall when active). When active,
+          push the navbar down by 40px so they stack cleanly. */}
+      <Navbar bannerOffset={banner.isActive ? 40 : 0} />
+
+      {/* Admin preview badge while maintenance is on */}
+      {showMaintenanceBadge && (
+        <div className="fixed bottom-4 right-4 z-[70] inline-flex items-center gap-2 border border-warm-yellow bg-warm-yellow/10 px-3 py-2 backdrop-blur-md">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-warm-yellow" />
+          <span className="font-mono-brand text-[10px] uppercase tracking-wider text-warm-yellow">
+            Údržba aktívna — vy vidíte web ako admin
+          </span>
+        </div>
+      )}
+
       <main id="hlavny-obsah" className="flex-1">
-        <HeroSection content={c} heroSlides={heroSlides} />
-        <SectionDivider />
-        <AboutSection bioLong={c["band.bioLong"]} />
-        <SectionDivider />
-        <MembersSection />
-        <MusicSection />
-        <SectionDivider />
-        <GallerySection />
-        <SectionDivider />
-        <DiscographySection />
-        <GigsSection />
-        <SetlistSection />
-        <SectionDivider />
-        <TestimonialsSection />
-        <SectionDivider />
-        <PressSection />
-        <FaqSection />
-        <SectionDivider />
-        <SocialSection content={c} />
-        <NewsletterSection />
-        <ContactSection content={c} />
+        {showSection("hero") && (
+          <>
+            <HeroSection content={c} heroSlides={heroSlides} />
+            <SectionDivider />
+          </>
+        )}
+        {showSection("about") && (
+          <>
+            <AboutSection bioLong={c["band.bioLong"]} />
+            <SectionDivider />
+          </>
+        )}
+        {showSection("members") && <MembersSection />}
+        {showSection("music") && <MusicSection />}
+        {showSection("gallery") && (
+          <>
+            <SectionDivider />
+            <GallerySection />
+            <SectionDivider />
+          </>
+        )}
+        {showSection("discography") && <DiscographySection />}
+        {showSection("gigs") && <GigsSection />}
+        {showSection("setlist") && <SetlistSection />}
+        {showSection("testimonials") && (
+          <>
+            <SectionDivider />
+            <TestimonialsSection />
+            <SectionDivider />
+          </>
+        )}
+        {showSection("press") && <PressSection />}
+        {showSection("faq") && <FaqSection />}
+        {showSection("social") && (
+          <>
+            <SectionDivider />
+            <SocialSection content={c} />
+          </>
+        )}
+        {showSection("newsletter") && <NewsletterSection />}
+        {showSection("contact") && <ContactSection content={c} />}
       </main>
       <Footer content={c} />
       <BackToTop />
