@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, Loader2, ArrowLeft, ShieldAlert } from "lucide-react";
+import { Lock, Mail, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@dora.band");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -133,14 +133,6 @@ export default function AdminLoginPage() {
               {loading ? "Prihlasujem..." : "Prihlásiť sa"}
             </button>
           </form>
-
-          <div className="mt-6 flex items-start gap-2 border border-dashed border-charcoal bg-ink/60 p-3 text-xs text-off-white/60">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warm-yellow" />
-            <p>
-              Demo prístup: <span className="font-mono-brand text-warm-yellow">admin@dora.band</span> /{" "}
-              <span className="font-mono-brand text-warm-yellow">dora2026</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>
