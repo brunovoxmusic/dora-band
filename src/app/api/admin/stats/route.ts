@@ -5,13 +5,17 @@ import { getSession } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   if (!(await getSession(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
 
-  const [inquiries, gigs, media, subscribers, newInquiries, upcomingGigs] = await Promise.all([
+  const [inquiries, gigs, media, subscribers, newInquiries, upcomingGigs, contacts, tasks, activeBookings, automations] = await Promise.all([
     db.bookingInquiry.count(),
     db.gig.count(),
     db.mediaItem.count(),
     db.subscriber.count({ where: { active: true } }),
     db.bookingInquiry.count({ where: { status: "new" } }),
     db.gig.count({ where: { status: "upcoming", date: { gte: new Date() } } }),
+    db.contact.count(),
+    db.task.count({ where: { status: { not: "done" } } }),
+    db.booking.count({ where: { status: { notIn: ["cancelled", "confirmed"] } } }),
+    db.automationLog.count(),
   ]);
 
   const recentInquiries = await db.bookingInquiry.findMany({
@@ -35,16 +39,32 @@ export async function GET(req: NextRequest) {
     select: { id: true, title: true, date: true, city: true, venue: true },
   });
 
-  // Inquiry status breakdown for the chart
   const statusBreakdown = await db.bookingInquiry.groupBy({
     by: ["status"],
     _count: true,
   });
 
+  // Recent tasks
+  const recentTasks = await db.task.findMany({
+    where: { status: { not: "done" } },
+    orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
+    take: 5,
+    select: { id: true, title: true, dueDate: true, priority: true, aiGenerated: true },
+  });
+
+  // Recent automations
+  const recentAutomations = await db.automationLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    select: { id: true, agentType: true, trigger: true, status: true, createdAt: true },
+  });
+
   return NextResponse.json({
-    counts: { inquiries, gigs, media, subscribers, newInquiries, upcomingGigs },
+    counts: { inquiries, gigs, media, subscribers, newInquiries, upcomingGigs, contacts, tasks, activeBookings, automations },
     recentInquiries,
     upcomingGigs: upcomingGigsList,
+    recentTasks,
+    recentAutomations,
     statusBreakdown: statusBreakdown.reduce(
       (acc, s) => ({ ...acc, [s.status]: s._count }),
       {} as Record<string, number>

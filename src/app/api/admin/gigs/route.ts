@@ -36,6 +36,12 @@ export async function POST(req: NextRequest) {
         notes: notes || null,
       },
     });
+
+    // Trigger AI orchestrator (async, non-blocking)
+    import("@/lib/agents/orchestrator")
+      .then(({ orchestrator }) => orchestrator("gig_created", item))
+      .catch((e) => console.error("[orchestrator] gig_created trigger failed:", e));
+
     return NextResponse.json({ ok: true, item }, { status: 201 });
   } catch (err) {
     console.error("[admin/gigs POST]", err);

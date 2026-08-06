@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail, FileText, Search, Sparkles, Users, CheckSquare, Zap } from "lucide-react";
+import { Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink, LayoutDashboard, Mail, FileText, Search, Sparkles, Users, CheckSquare, Zap, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { InquiriesTab } from "@/components/admin/inquiries-tab";
@@ -16,14 +16,16 @@ import { AiTab } from "@/components/admin/ai-tab";
 import { CrmTab } from "@/components/admin/crm-tab";
 import { TasksTab } from "@/components/admin/tasks-tab";
 import { AutomationsTab } from "@/components/admin/automations-tab";
+import { BookingTab } from "@/components/admin/booking-tab";
 
-type Tab = "stats" | "inquiries" | "gigs" | "media" | "subscribers" | "content" | "seo" | "ai" | "crm" | "tasks" | "automations";
+type Tab = "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations" | "booking" | "media" | "subscribers" | "content" | "seo" | "ai";
 
 const TABS: { id: Tab; label: string; icon: typeof Inbox; hasCount?: boolean }[] = [
   { id: "stats", label: "Prehľad", icon: LayoutDashboard },
   { id: "inquiries", label: "Dopyty", icon: Inbox, hasCount: true },
   { id: "gigs", label: "Koncerty", icon: CalendarDays, hasCount: true },
   { id: "crm", label: "CRM", icon: Users },
+  { id: "booking", label: "Pipeline", icon: TrendingUp },
   { id: "tasks", label: "Úlohy", icon: CheckSquare },
   { id: "automations", label: "AI Agenti", icon: Zap },
   { id: "media", label: "Médiá", icon: Images, hasCount: true },
@@ -165,6 +167,7 @@ export default function AdminPage() {
         {tab === "inquiries" && <InquiriesTab onChange={(n) => refreshCount("inquiries", n)} />}
         {tab === "gigs" && <GigsTab onChange={(n) => refreshCount("gigs", n)} />}
         {tab === "crm" && <CrmTab />}
+        {tab === "booking" && <BookingTab />}
         {tab === "tasks" && <TasksTab />}
         {tab === "automations" && <AutomationsTab />}
         {tab === "media" && <MediaTab onChange={(n) => refreshCount("media", n)} />}
