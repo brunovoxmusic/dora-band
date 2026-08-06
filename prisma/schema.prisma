@@ -1,13 +1,12 @@
-// D.O.R.A. band website — Prisma schema
-// This file auto-switches between SQLite (dev) and PostgreSQL (production/Vercel)
-// based on the DATABASE_URL format.
+// D.O.R.A. band website — Prisma schema (PostgreSQL for Vercel/Neon)
+// Use this on Vercel: DATABASE_URL must be postgresql://...
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
