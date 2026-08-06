@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import styles from "./hero-slideshow.module.css";
 
 type Slide = {
   id: string;
@@ -9,162 +10,92 @@ type Slide = {
   title: string;
 };
 
-const SLIDE_INTERVAL = 5000;
-const FADE_MS = 1500;
-const ZOOM_TARGET = 1.25;
-const ANIM_DURATION = SLIDE_INTERVAL + FADE_MS; // 6500ms
-
-// Unique keyframe name to avoid collisions
-const KEYFRAME_NAME = "doraHeroZoom";
-
-/**
- * Hero background slideshow — COMPLETELY REWRITTEN for 100% reliability.
- *
- * Previous versions failed because:
- * 1. CSS in globals.css could be tree-shaken by Tailwind v4
- * 2. data-active attribute selector didn't sync with React remounts
- * 3. External CSS class .hero-kenburns wasn't always applied
- *
- * This version fixes ALL issues by:
- * - Using INLINE style.animation (no external CSS dependency)
- * - Using key prop to remount img → animation always restarts
- * - @keyframes defined in inline <style> tag (guaranteed in DOM)
- * - All opacity via inline style (no Tailwind class dependency)
- * - Even static fallback gets zoom animation
- */
-export function HeroSlideshow({
-  slides,
-  staticFallback,
-}: {
+type Props = {
   slides: Slide[];
   staticFallback: string;
-  intervalMs?: number;
-}) {
+};
+
+const FALLBACK_SLIDE: Slide = {
+  id: "fallback",
+  url: "/gallery/hero-banner.jpg",
+  altText: "D.O.R.A. naživo na koncertnom pódiu",
+  title: "D.O.R.A.",
+};
+
+/**
+ * Hero background slideshow with crossfade + Ken Burns zoom.
+ *
+ * Architektúra podľa expertného review:
+ * - CSS Module pre @keyframes a triedy (nie globals.css, nie inline <style>)
+ * - Všetky slidy renderované naraz (absolute positioned, opacity crossfade)
+ * - className pre animáciu (nie inline style.animation)
+ * - key na img → React remount → animácia reštartuje
+ * - setInterval s [images.length] deps
+ * - Fallback keď DB je prázdna
+ */
+export function HeroSlideshow({ slides, staticFallback }: Props) {
+  // Vždy máme aspoň jeden obrázok — fallback keď DB je prázdna
+  const images = useMemo<Slide[]>(() => {
+    if (slides && slides.length > 0) return slides;
+    return [{ ...FALLBACK_SLIDE, url: staticFallback }];
+  }, [slides, staticFallback]);
+
   const [active, setActive] = useState(0);
 
-  // Set up cycling interval — runs once on mount
+  // Debug log — vidíme v server logoch aj v prehliadači
   useEffect(() => {
-    if (!slides || slides.length <= 1) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    console.log("[HeroSlideshow] mounted, images count:", images.length);
+  }, [images.length]);
 
-    const timer = setInterval(() => {
-      setActive((prev) => (prev + 1) % slides.length);
-    }, SLIDE_INTERVAL);
+  useEffect(() => {
+    if (images.length <= 1) return;
 
-    return () => clearInterval(timer);
-  }, [slides]);
+    const id = window.setInterval(() => {
+      setActive((i) => (i + 1) % images.length);
+    }, 6500);
 
-  const reduced =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // Inline keyframes — guaranteed to be in the DOM
-  const keyframesCSS = `
-    <style>
-      @keyframes ${KEYFRAME_NAME} {
-        0% { transform: scale(1) translate(0%, 0%); }
-        100% { transform: scale(${ZOOM_TARGET}) translate(-2%, -1.5%); }
-      }
-    </style>
-  `;
-
-  // No slides → static fallback with zoom
-  if (!slides || slides.length === 0) {
-    return (
-      <>
-        <div className="absolute inset-0 overflow-hidden">
-          <img
-            src={staticFallback}
-            alt="D.O.R.A. naživo na koncertnom pódiu"
-            className="h-full w-full object-cover"
-            style={{
-              transformOrigin: "center center",
-              willChange: "transform",
-              animation: reduced ? "none" : `${KEYFRAME_NAME} ${ANIM_DURATION}ms ease-out forwards`,
-            }}
-          />
-        </div>
-        <div dangerouslySetInnerHTML={{ __html: keyframesCSS }} />
-      </>
-    );
-  }
+    return () => window.clearInterval(id);
+  }, [images.length]);
 
   return (
-    <>
-      <div className="absolute inset-0 overflow-hidden">
-        {slides.map((slide, i) => {
-          const isActive = i === active;
-          return (
-            <div
-              key={slide.id}
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: isActive ? 1 : 0,
-                transition: `opacity ${FADE_MS}ms ease-in-out`,
-                pointerEvents: "none",
-              }}
-              aria-hidden={!isActive}
-            >
-              {/*
-                key includes active state → when slide becomes active,
-                React creates a NEW img element with the animation in inline style.
-                The new element starts the animation from scale(1) immediately.
-              */}
-              <img
-                key={`${slide.id}-${isActive ? "on" : "off"}`}
-                src={slide.url}
-                alt={slide.altText || slide.title || "D.O.R.A. naživo na koncertnom pódiu"}
-                className="h-full w-full object-cover"
-                style={
-                  isActive && !reduced
-                    ? {
-                        transformOrigin: "center center",
-                        willChange: "transform",
-                        animation: `${KEYFRAME_NAME} ${ANIM_DURATION}ms ease-out forwards`,
-                      }
-                    : {
-                        transformOrigin: "center center",
-                      }
-                }
-              />
-            </div>
-          );
-        })}
-
-        {/* Slide indicators */}
-        {slides.length > 1 && !reduced && (
+    <div className={styles.wrapper}>
+      {images.map((slide, index) => {
+        const isActive = active === index;
+        return (
           <div
-            style={{
-              position: "absolute",
-              bottom: "96px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              display: "flex",
-              gap: "8px",
-              zIndex: 10,
-            }}
+            key={slide.id}
+            className={`${styles.slide} ${isActive ? styles.active : ""}`}
+            aria-hidden={!isActive}
           >
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActive(i)}
-                style={{
-                  width: i === active ? "32px" : "6px",
-                  height: "6px",
-                  backgroundColor: i === active ? "#E63946" : "rgba(192,192,192,0.4)",
-                  transition: "all 300ms ease",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-                aria-label={`Slide ${i + 1}`}
-              />
-            ))}
+            {/*
+              key na img sa mení keď sa slide stane aktívnym.
+              React remountne element → CSS animácia (.zoom) sa spustí od začiatku.
+            */}
+            <img
+              key={`${slide.id}-${isActive ? "on" : "off"}`}
+              src={slide.url}
+              alt={slide.altText || slide.title || "D.O.R.A. naživo na koncertnom pódiu"}
+              className={`${styles.image} ${isActive ? styles.zoom : ""}`}
+            />
           </div>
-        )}
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: keyframesCSS }} />
-    </>
+        );
+      })}
+
+      {/* Slide indicators */}
+      {images.length > 1 && (
+        <div className={styles.indicators}>
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              className={`${styles.indicator} ${
+                i === active ? styles.indicatorActive : ""
+              }`}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

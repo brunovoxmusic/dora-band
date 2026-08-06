@@ -45,17 +45,12 @@ export function HeroSection({
 
   return (
     <section id="top" className="relative min-h-[100svh] overflow-hidden bg-ink">
-      {/* Background slideshow (or static fallback) with parallax */}
-      <div
-        className="absolute inset-0"
-        style={{ transform: `translateY(${bgOffset}px)`, height: "120%" }}
-      >
+      {/* Background slideshow — absolute inset-0, no height hack */}
+      <div className="absolute inset-0 overflow-hidden">
         <HeroSlideshow slides={heroSlides} staticFallback="/gallery/hero-banner.jpg" />
-        {/* Dark gradient overlay — bottom heavy for text readability, top lighter to show photo */}
+        {/* Dark gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-ink/50 via-ink/40 to-ink" />
-        {/* Left-to-right gradient for text contrast on the left side */}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
-        {/* Stage grid texture */}
         <div className="absolute inset-0 bg-stage-grid opacity-30" />
       </div>
 

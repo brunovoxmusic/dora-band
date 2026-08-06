@@ -72,6 +72,7 @@ export default async function HomePage() {
         select: { id: true, url: true, altText: true, title: true },
         take: 20,
       });
+      console.log("[homepage] Hero slides fetched:", heroSlides.length, heroSlides.map(s => s.url.slice(-30)));
     } catch (e) {
       console.warn("[homepage] Hero slides fetch failed, using static fallback:", e instanceof Error ? e.message : e);
     }
