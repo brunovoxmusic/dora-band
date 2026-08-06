@@ -57,10 +57,15 @@ export async function getSession(req?: Request): Promise<{ uid: string; email: s
 }
 
 export async function authenticate(email: string, password: string) {
-  const user = await db.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } });
-  if (!user) return null;
-  if (user.password !== password) return null;
-  return user;
+  try {
+    const user = await db.adminUser.findUnique({ where: { email: email.toLowerCase().trim() } });
+    if (!user) return null;
+    if (user.password !== password) return null;
+    return user;
+  } catch (err) {
+    console.error("[auth] DB error during authenticate:", err);
+    throw new Error("Databáza nie je dostupná. Skontrolujte DATABASE_URL a inicializáciu DB (db:push + seed).");
+  }
 }
 
 export const SESSION_COOKIE = COOKIE_NAME;

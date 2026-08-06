@@ -7,16 +7,32 @@ export async function POST(req: NextRequest) {
     if (!email || !password) {
       return NextResponse.json({ error: "E-mail a heslo sú povinné." }, { status: 422 });
     }
-    const user = await authenticate(email, password);
+
+    let user;
+    try {
+      user = await authenticate(email, password);
+    } catch (dbErr) {
+      console.error("[auth/login] DB error:", dbErr);
+      return NextResponse.json(
+        {
+          error:
+            "Databáza nie je dostupná. Na dokončenie nasadenia: 1) Vytvorte Neon Postgres 2) Pridajte DATABASE_URL do Vercel env vars 3) Spustite bun run db:push && bun run seed",
+          dbError: true,
+        },
+        { status: 503 }
+      );
+    }
+
     if (!user) {
       return NextResponse.json({ error: "Nesprávny e-mail alebo heslo." }, { status: 401 });
     }
+
     const token = await createSession(user.id, user.email);
     const res = NextResponse.json({ ok: true, user: { email: user.email, name: user.name } });
     res.cookies.set(SESSION_COOKIE, token, COOKIE_OPTIONS);
     return res;
   } catch (err) {
-    console.error("[auth/login] error:", err);
+    console.error("[auth/login] unexpected error:", err);
     return NextResponse.json({ error: "Serverová chyba." }, { status: 500 });
   }
 }

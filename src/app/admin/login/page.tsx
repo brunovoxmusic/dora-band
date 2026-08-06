@@ -97,6 +97,7 @@ export default function AdminLoginPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-charcoal bg-ink py-2.5 pl-10 pr-3 text-sm text-off-white outline-none transition-colors focus:border-neon-red"
@@ -114,6 +115,7 @@ export default function AdminLoginPage() {
                 <input
                   type="password"
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full border border-charcoal bg-ink py-2.5 pl-10 pr-3 text-sm text-off-white outline-none transition-colors focus:border-neon-red"
