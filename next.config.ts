@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ["sharp"],
+  // Allow the sandbox preview gateway to access Next.js dev resources (_next/*)
+  allowedDevOrigins: [
+    "*.space-z.ai",
+    "preview-chat-*.space-z.ai",
+  ],
 };
 
 export default nextConfig;
