@@ -1393,3 +1393,61 @@ Both user-reported issues fixed:
    text readability (z-index layering corrected)
 2. Ken Burns now clearly visible — 32% zoom over 5s (was 18% over 7.5s)
    with stronger pan (±4%/3% vs ±2%/1.5%) and expo-out easing
+
+---
+Task ID: 24 (user-requested: restore corner decorations + fix Ken Burns freeze)
+Agent: Main (Z.ai Code)
+Task: Restore hero corner graphic elements + definitively fix Ken Burns animation
+
+PROBLEM 1: Corner decorations invisible
+- SVG container with diagonal lines, L-brackets, barcode strips had no z-index
+- Overlays had z-10, SVG was z-auto (0) → decorations hidden under overlays
+- User provided screenshot showing these elements should be visible
+
+FIX 1: z-index layering (hero-section.tsx)
+- SVG container: added z-20 class (above overlays at z-10)
+- Increased decoration opacity:
+  - Diagonal lines: 0.35→0.5 / 0.2→0.3
+  - Corner brackets: added opacity=0.7
+  - Barcode strips: 0.5→0.6
+- VLM confirmed all 4 decoration types visible:
+  "Red L-bracket top-left, yellow L-bracket bottom-right,
+   diagonal red lines at top, vertical barcode strip bottom-left"
+
+PROBLEM 2: Ken Burns appeared frozen
+- Root cause A: Animation was 5000ms with 'forwards' fill mode, but slide
+  interval was 7000ms → animation completed at 5s, then FROZE at scale
+  1.32 for 2s before transition (looked static)
+- Root cause B: CSS animation didn't restart when slide reactivated
+  (browser cached animation state on persistent DOM element — the div
+  kept the same key={slide.id} so React reused it)
+
+FIX 2a: Duration = interval (globals.css)
+- KEN_BURNS_MS: 5000→7000 (matches SLIDE_INTERVAL_MS exactly)
+- Animation runs for FULL slide duration — NO freeze period
+- Zoom: 1.32→1.35, pan: ±4%/3%→±5%/4% (slightly stronger)
+- CROSSFADE_MS: 2200→2000
+- 'forwards' kept so old slide doesn't snap back during crossfade
+
+FIX 2b: Force animation restart via key remount (hero-slideshow.tsx)
+- Changed <div key={slide.id}> to <div key={`${slide.id}-${isActive ? 'active' : 'idle'}`}>
+- When slide becomes active, React UNMOUNTS old div + MOUNTS new div
+- Fresh DOM element = CSS animation starts from scale(1) every time
+- Without this, browser caches animation state and zoom won't replay
+
+VERIFICATION (agent-browser + VLM):
+- SVG container: z-index 20, 8 elements (lines + paths + rects)
+- Ken Burns: 7s animation, running, currentTime progresses continuously
+- activeTransform: matrix(1.35, ...) at end — full zoom reached
+- VLM: "0s vs 2s: visible zoom-in, subject larger. 4s vs 6s: visible
+  zoom-in, smoke more magnified"
+- Lint: 0 errors
+
+GIT:
+- Commit: f9b86b6 fix: restore hero corner decorations + fix Ken Burns freeze
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+
+Stage Summary:
+Both issues definitively fixed:
+1. Corner decorations (brackets, diagonal lines, barcode) restored at z-20
+2. Ken Burns runs for full 7s (no freeze) + restarts via key remount
