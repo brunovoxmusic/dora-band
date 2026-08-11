@@ -373,57 +373,115 @@
   }
 }
 
-/* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) ===== */
+/* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) =====
+   Crossfade: 2200ms ease-in-out (long enough to be clearly visible)
+   Ken Burns: 7500ms ease-out (slightly shorter than 8000ms interval so it
+              never freezes — zoom eases in then settles).
+   Zoom range: scale(1) → scale(1.18) with a subtle pan for natural feel.
+*/
 .hero-slideshow-wrapper {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background-color: #0a0a0a; /* ink — avoids white flash before first image loads */
 }
 
 .hero-slide {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 1500ms ease-in-out;
+  transition: opacity 2200ms cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  will-change: opacity;
+  /* Slight scale on inactive slides so when they become active and zoom in,
+     there's no jump from 1.0 → 1.0 (they start slightly smaller). */
+  transform: scale(1);
 }
 
 .hero-slide-active {
   opacity: 1;
+  z-index: 2;
 }
 
+/* Previous slide keeps fading out (1→0) on top of the new active one
+   for a true crossfade. z-index higher so it covers briefly during the
+   overlap window, then reveals the new slide beneath. */
+.hero-slide-prev {
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
+   Using a wrapper avoids conflicts with next/image's own transforms. */
 .hero-slide-zoom {
-  animation: kenBurns 6500ms linear forwards;
-  transform-origin: center center;
+  animation: kenBurns 7500ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  transform-origin: 50% 50%;
   will-change: transform;
 }
 
 .hero-slide-image {
   object-fit: cover;
+  object-position: center center;
+  /* Disable next/image default fade-in — we handle opacity via wrapper */
+  opacity: 1 !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 @keyframes kenBurns {
-  from { transform: scale(1); }
-  to { transform: scale(1.25); }
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    /* scale up 18% + subtle pan to upper-left for dynamic feel */
+    transform: scale(1.18) translate(-2%, -1.5%);
+  }
+}
+
+/* Alternate pan direction for odd/even slides for variety.
+   Applied via :nth-child on active slide wrapper. */
+.hero-slide-active:nth-child(odd) {
+  animation-name: kenBurnsAlt;
+}
+
+@keyframes kenBurnsAlt {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    /* scale up 18% + pan to lower-right */
+    transform: scale(1.18) translate(2%, 1.5%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide-zoom {
+  .hero-slide-zoom,
+  .hero-slide-active:nth-child(odd) {
     animation: none !important;
   }
   .hero-slide {
-    transition: none !important;
+    transition: opacity 400ms linear !important;
   }
 }
 
+/* Slide indicators — fixed at viewport bottom center, always visible.
+   Using `position: fixed` so they stay visible even when hero content is
+   taller than viewport (indicators don't scroll away with the hero). */
 .hero-slide-indicators {
-  position: absolute;
-  bottom: 96px;
+  position: fixed;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
-  z-index: 10;
+  gap: 10px;
+  z-index: 30;
+  padding: 8px 12px;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(192, 192, 192, 0.15);
+  border-radius: 999px;
+  pointer-events: auto;
+  transition: opacity 400ms ease, transform 400ms ease;
 }
 
 .hero-slide-indicator {
@@ -432,11 +490,83 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: all 300ms ease;
-  background-color: rgba(192, 192, 192, 0.4);
+  transition: width 350ms ease, background-color 350ms ease;
+  background-color: rgba(192, 192, 192, 0.5);
+  border-radius: 999px;
+}
+
+.hero-slide-indicator:hover {
+  background-color: rgba(230, 57, 70, 0.7);
+  width: 16px;
 }
 
 .hero-slide-indicator-active {
-  width: 32px;
+  width: 36px;
   background-color: #E63946;
+  box-shadow: 0 0 12px rgba(230, 57, 70, 0.6);
+}
+
+/* Slide counter — fixed at viewport bottom-right, always visible */
+.hero-slide-counter {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 30;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: rgba(192, 192, 192, 0.7);
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border: 1px solid rgba(192, 192, 192, 0.15);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+.hero-slide-counter-current {
+  color: #E63946;
+  font-weight: 700;
+}
+
+.hero-slide-counter-sep {
+  color: rgba(192, 192, 192, 0.4);
+  margin: 0 2px;
+}
+
+.hero-slide-counter-total {
+  color: rgba(192, 192, 192, 0.6);
+}
+
+/* Hide indicators/counter when scrolled past hero (avoid covering other sections) */
+.hero-slide-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) translateY(20px) !important;
+  transition: opacity 400ms ease, transform 400ms ease !important;
+}
+
+.hero-slide-counter.hero-slide-hidden {
+  transform: translateY(20px) !important;
+}
+
+@media (max-width: 640px) {
+  .hero-slide-indicators {
+    bottom: 16px;
+    gap: 6px;
+    padding: 6px 10px;
+  }
+  .hero-slide-indicator-active {
+    width: 24px;
+  }
+  .hero-slide-counter {
+    bottom: 16px;
+    right: 16px;
+    font-size: 10px;
+  }
 }
