@@ -1451,3 +1451,79 @@ Stage Summary:
 Both issues definitively fixed:
 1. Corner decorations (brackets, diagonal lines, barcode) restored at z-20
 2. Ken Burns runs for full 7s (no freeze) + restarts via key remount
+
+---
+Task ID: 25 (user-requested: DEFINITIVE hero slideshow animation fix)
+Agent: Main (Z.ai Code)
+Task: Fix hero slideshow — no animations working (crossfade + Ken Burns)
+
+ROOT CAUSE (diagnosed via agent-browser real-time DOM inspection):
+Previous fix (Task 24) used key={slide.id-active/idle} on each slide div.
+This caused React to REMOUNT the div every time a slide changed active state:
+- Old active slide: key changes from "X-active" to "X-idle" → UNMOUNT (instant delete, no fade-out)
+- New active slide: key changes from "Y-idle" to "Y-active" → MOUNT at opacity 1 (no fade-in)
+- Result: instant hard cut between slides, NO crossfade visible
+- Ken Burns DID restart (fresh mount = fresh animation), but crossfade was completely broken
+
+FIX: Split slideshow into SlideElement subcomponent with two separate concerns:
+
+1. STABLE key={slide.id} (set by parent) — DOM div persists across
+   active/inactive transitions → CSS opacity transition works = crossfade
+
+2. Ken Burns restart via useRef + useEffect (NOT via key remount):
+   When isActive becomes true:
+   - el.style.animation = 'none'     (kill current animation)
+   - void el.offsetWidth              (force synchronous reflow)
+   - el.style.animation = ''          (restore — CSS class animation replays from 0%)
+   This is the classic CSS animation restart technique that works without
+   unmounting the DOM element.
+
+3. animationName set via inline style (kenBurns for even index, kenBurnsAlt
+   for odd index) — removed fragile :nth-child(odd) CSS selector that
+   depended on DOM order rather than active state.
+
+CSS changes (globals.css):
+- Removed .hero-slide-active:nth-child(odd) { animation-name: kenBurnsAlt }
+  (was fragile, conflicted with JS-based restart)
+- Kept @keyframes kenBurns + @keyframes kenBurnsAlt (now applied via inline style)
+- Simplified prefers-reduced-motion media query
+
+VERIFICATION (agent-browser real-time opacity + transform capture):
+
+Ken Burns on slide 2 (before transition):
+  animTime: 5050ms → 6883ms (progressing)
+  scale: 1.34883 → 1.35 (reaching end of zoom)
+  → Continuous motion, no freeze
+
+Crossfade slide 2 → slide 3:
+  step 8:  slide 2 (prev) opacity=0.963, slide 3 (active) opacity=0.037
+  step 9:  slide 2=0.722, slide 3=0.278
+  step 10: slide 2=0.338, slide 3=0.662
+  step 11: slide 2=0.145, slide 3=0.855
+  step 12: slide 2=0.050, slide 3=0.950
+  step 13: slide 3=0.991 (crossfade complete)
+  → TRUE crossfade: old fades out while new fades in simultaneously
+
+Ken Burns on slide 3 (after transition, restarted):
+  animTime: 233ms → 2700ms (restarted from 0!)
+  scale: 1.068 → 1.326 (zooming again)
+  → Ken Burns correctly restarted on new active slide
+
+VLM confirmation:
+- Crossfade: "Second screenshot clearly shows blend — semi-transparent
+  ghostly image. Transition is smooth, no hard cuts."
+- Ken Burns: "Subject appears larger/closer at 4s vs 2s. Ken Burns effect
+  is active — image is slowly scaling up."
+
+GIT:
+- Commit: 765caa4 fix: hero slideshow — stable keys for crossfade + ref-based Ken Burns restart
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+
+Stage Summary:
+Both animations now DEFINITIVELY work:
+1. Crossfade: 2s opacity transition between slides (old fades out, new fades in)
+2. Ken Burns: 7s zoom (1.0→1.35) that restarts on each slide activation
+   via ref + forced reflow (no DOM remount, no crossfade breakage)
+The key insight: React key remount and CSS opacity transition are mutually
+exclusive — you can't use key changes to restart animations if you also
+need opacity transitions. The ref-based restart technique solves both.
