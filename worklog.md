@@ -1340,3 +1340,56 @@ transitions and persistent controls.
 - Could add parallax effect to background photos during scroll
 - Could add preload hint for next slide image to reduce flash
 - Could add keyboard navigation (arrow keys) for slideshow
+
+---
+Task ID: 23 (user-requested: hero overlay + Ken Burns fix)
+Agent: Main (Z.ai Code)
+Task: Fix missing hero overlay (text readability) + non-visible Ken Burns zoom
+
+PROBLEM 1: Overlay disappeared
+- Previous commit (Task 22) added z-index to .hero-slide-active (2) and
+  .hero-slide-prev (3), but overlay divs had z-index:auto (0)
+- Overlay was UNDER the slideshow → no dark gradient → text unreadable
+
+FIX 1: z-index layering (hero-section.tsx + globals.css)
+- .hero-slideshow-wrapper: z-index:0 (was auto)
+- .hero-slide-active: z-index:1 (was 2)
+- .hero-slide-prev: z-index:2 (was 3)
+- Overlay divs in hero-section.tsx: added z-10 class (was auto)
+- Now overlay (z-10) sits ABOVE slideshow slides (z-1, z-2)
+- VLM confirmed: "Background photo clearly visible, text highly readable,
+  subtle-to-moderate overlay heaviest on left where text sits"
+
+PROBLEM 2: Ken Burns not visible
+- Zoom was 1.0 → 1.18 over 7.5s = only ~2.4% per second (imperceptible)
+- Users couldn't see the zoom happening
+
+FIX 2: Stronger, faster Ken Burns (globals.css + hero-slideshow.tsx)
+- Zoom range: 1.18 → 1.32 (32% zoom, was 18%)
+- Duration: 7500ms → 5000ms (faster motion)
+- Pan range: ±2%/1.5% → ±4%/3% (clearer pan)
+- Easing: cubic-bezier(0.25,0.1,0.25,1) → cubic-bezier(0.16,1,0.3,1)
+  (easeOutExpo — fast start, smooth settle)
+- SLIDE_INTERVAL: 8000ms → 7000ms (KB 5s + 2s rest)
+- CROSSFADE_MS: 2200ms → 2000ms
+- VLM confirmed: "Composition at 2s relatively wide, at 4s visibly zoomed
+  in tighter. Image scale increases noticeably over 2-second interval."
+
+VERIFICATION (agent-browser + VLM):
+- activeTransform: matrix(1.32, 0, 0, 1.32, ±67, ±29) — full 32% zoom + pan
+- activeAnimation: 5s cubic-bezier(0.16,1,0.3,1) forwards kenBurns[Alt]
+- Overlay z-index:10 > slide-active z-index:1 (overlay visible above photos)
+- VLM: overlay "subtle-to-moderate, heaviest on left where text sits"
+- VLM: Ken Burns "visibly zoomed in tighter at 4s vs 2s"
+- Lint: 0 errors
+
+GIT:
+- Commit: 815fc2a fix: hero overlay z-index + stronger Ken Burns zoom
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+
+Stage Summary:
+Both user-reported issues fixed:
+1. Overlay restored — dark gradient now sits ABOVE slideshow photos for
+   text readability (z-index layering corrected)
+2. Ken Burns now clearly visible — 32% zoom over 5s (was 18% over 7.5s)
+   with stronger pan (±4%/3% vs ±2%/1.5%) and expo-out easing
