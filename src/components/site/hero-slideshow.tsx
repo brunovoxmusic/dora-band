@@ -38,8 +38,8 @@ type Props = {
  * CSS lives in globals.css as PLAIN global classes (no CSS Module hashing).
  */
 
-const SLIDE_INTERVAL_MS = 7000;
-const CROSSFADE_MS = 2000;
+const SLIDE_INTERVAL_MS = 6000;
+const CROSSFADE_MS = 1800;
 
 export function HeroSlideshow({ slides, staticFallback }: Props) {
   const images = useMemo<Slide[]>(() => {
@@ -174,30 +174,42 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
   const ref = useRef<HTMLDivElement>(null);
 
   // Restart Ken Burns animation each time this slide becomes active.
-  // Technique: set animation to 'none', force a synchronous reflow by
-  // reading offsetWidth, then restore the animation (clear inline style)
-  // so the CSS class's animation declaration takes effect again from 0%.
+  // Critical: without this restart, the CSS animation only runs ONCE on mount
+  // and never replays when the slide cycles back to active (browser caches
+  // animation state on persistent DOM elements).
+  //
+  // Technique: set inline animation to 'none', force synchronous reflow via
+  // offsetWidth, then set the real animation inline (with per-index name).
+  // Inline style overrides the CSS class declaration, ensuring a fresh start.
   useEffect(() => {
     const el = ref.current;
     if (!el || !isActive) return;
-    // Only restart if the slide has the zoom class (i.e., not the fallback).
-    if (!el.classList.contains("hero-slide-zoom")) return;
+    const animName = index % 2 === 0 ? "kenBurns" : "kenBurnsAlt";
+    // 1. Kill any running animation.
     el.style.animation = "none";
-    // Force reflow — reading offsetWidth is the classic way to do this.
+    // 2. Force synchronous reflow so browser registers the 'none' state.
     void el.offsetWidth;
-    // Restore: remove inline animation so the CSS class animation replays.
-    el.style.animation = "";
-  }, [isActive]);
+    // 3. Set the full animation shorthand inline. This overrides the CSS
+    //    class and restarts the animation from 0%.
+    //    Duration 4s = STRONGLY visible zoom (12.5% per second).
+    el.style.animation = `${animName} 4000ms cubic-bezier(0.16, 1, 0.3, 1) forwards`;
+  }, [isActive, index]);
 
-  // Alternate pan direction per slide index for variety.
-  // Applied via inline style animationName override so we don't rely on
-  // :nth-child CSS selectors (which are fragile with dynamic active states).
-  const animationName = index % 2 === 0 ? "kenBurns" : "kenBurnsAlt";
+  // When a slide becomes inactive (not active, not prev), clear the inline
+  // animation so the CSS class declaration takes over (which is 'none' for
+  // inactive slides — they should have no transform, just opacity 0).
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!isActive && !isPrev) {
+      // Inactive slide: remove inline animation so it returns to base state.
+      el.style.animation = "";
+    }
+  }, [isActive, isPrev]);
 
   const classes = [
     "hero-slide",
     isActive ? "hero-slide-active" : "",
-    isActive ? "hero-slide-zoom" : "",
     isPrev ? "hero-slide-prev" : "",
   ].filter(Boolean).join(" ");
 
@@ -208,8 +220,6 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
       aria-hidden={!isActive}
       style={{
         transitionDuration: `${crossfadeMs}ms`,
-        // Set animationName only when active (so inactive slides don't run KB).
-        animationName: isActive ? animationName : undefined,
       }}
     >
       <Image

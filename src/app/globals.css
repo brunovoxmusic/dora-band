@@ -376,11 +376,16 @@
 /* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) =====
    Crossfade: 2000ms cubic-bezier (clearly visible transition)
    Ken Burns: 7000ms ease-out — runs for the FULL slide interval so it
-              NEVER freezes. Zoom 1.0 → 1.35 with clear pan = visible motion
-              throughout the entire slide display.
+              NEVER freezes. Zoom 1.0 → 1.5 with clear pan = STRONGLY
+              visible motion throughout the entire slide display.
    Animation restart is handled in JS (hero-slideshow.tsx SlideElement)
    via ref + forced reflow — NOT via React key remount (which would break
    the opacity crossfade).
+   IMPORTANT: `.hero-slide` has NO `transform` declaration so the Ken Burns
+   animation (set on `.hero-slide-zoom`) is the ONLY source of transform.
+   This prevents a "snap back to scale(1)" jump when a slide transitions
+   from active → prev (the prev slide keeps its zoom end-state during the
+   crossfade fade-out, no jarring jump).
 */
 .hero-slideshow-wrapper {
   position: absolute;
@@ -396,8 +401,11 @@
   opacity: 0;
   transition: opacity 2000ms cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  will-change: opacity, transform;
-  transform: scale(1);
+  will-change: opacity;
+  /* NO transform here — Ken Burns animation is the sole source of transform.
+     Without this, `transform: scale(1)` would override the animation's
+     end-state when the slide loses .hero-slide-zoom class, causing a
+     visible "snap back" jump during crossfade. */
 }
 
 .hero-slide-active {
@@ -414,15 +422,23 @@
 }
 
 /* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
-   The animation-name is overridden via inline style in SlideElement to
-   alternate between kenBurns / kenBurnsAlt per slide index.
-   Zoom 1.0 → 1.35 over 7s = continuous motion, no freeze.
-   `forwards` keeps the end state during crossfade fade-out (no snap-back). */
-.hero-slide-zoom {
-  animation: kenBurns 7000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+   Animation is set via INLINE STYLE in SlideElement (hero-slideshow.tsx)
+   when isActive becomes true. The inline style has higher priority than
+   this CSS class, so the JS restart technique works.
+   `.hero-slide-active` here only sets opacity + z-index.
+   `.hero-slide-prev` does NOT get animation — it keeps the inline animation
+   from its active phase (with `forwards` fill mode, so scale stays at 1.5
+   during the crossfade fade-out, no snap-back jump).
+   Zoom 1.0 → 1.5 over 4s = STRONGLY visible motion (12.5% per second). */
+.hero-slide-active {
+  animation: kenBurns 4000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: 50% 50%;
   will-change: transform;
 }
+
+/* .hero-slide-prev intentionally has NO animation declaration.
+   The prev slide keeps its inline animation (set during active phase)
+   which holds the end state (scale 1.5) thanks to `forwards` fill mode. */
 
 .hero-slide-image {
   object-fit: cover;
@@ -438,8 +454,8 @@
     transform: scale(1) translate(0%, 0%);
   }
   100% {
-    /* scale up 35% + clear pan to upper-left for dynamic feel */
-    transform: scale(1.35) translate(-5%, -4%);
+    /* scale up 50% + clear pan to upper-left for dynamic feel */
+    transform: scale(1.5) translate(-6%, -5%);
   }
 }
 
@@ -448,13 +464,13 @@
     transform: scale(1) translate(0%, 0%);
   }
   100% {
-    /* scale up 35% + pan to lower-right */
-    transform: scale(1.35) translate(5%, 4%);
+    /* scale up 50% + pan to lower-right */
+    transform: scale(1.5) translate(6%, 5%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide-zoom {
+  .hero-slide-active {
     animation: none !important;
   }
   .hero-slide {
