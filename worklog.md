@@ -1527,3 +1527,79 @@ Both animations now DEFINITIVELY work:
 The key insight: React key remount and CSS opacity transition are mutually
 exclusive — you can't use key changes to restart animations if you also
 need opacity transitions. The ref-based restart technique solves both.
+
+---
+Task ID: 26 (user-requested: Ken Burns STILL not working — definitive fix)
+Agent: Main (Z.ai Code)
+Task: Fix Ken Burns animation that user reported still not working
+
+ROOT CAUSES (3 issues found):
+
+1. ReferenceError: animationName is not defined
+   - Previous edit left a dangling `animationName` variable reference in
+     inline style prop
+   - This caused 500 error + 'Niečo sa pokazilo' error page
+   - Slides weren't rendering at all → no animation visible
+
+2. Snap-back jump during crossfade
+   - .hero-slide had `transform: scale(1)` as base style
+   - When slide transitioned active → prev, it lost .hero-slide-zoom class
+   - transform: scale(1) from .hero-slide kicked in → SNAPPED to scale 1.0
+   - This jarring jump (1.5 → 1.0) made zoom look broken
+
+3. Zoom too subtle to perceive
+   - Scale 1.0 → 1.35 over 7s = only ~5% per second
+   - User couldn't see the motion happening
+
+FIXES:
+
+CSS (globals.css):
+- Removed `transform: scale(1)` from .hero-slide (was causing snap-back)
+- Removed `will-change: transform` from .hero-slide (only on active now)
+- Moved animation from .hero-slide-zoom to .hero-slide-active only
+- .hero-slide-prev has NO animation declaration — keeps inline animation
+  from active phase with forwards fill mode (scale stays at 1.5 during
+  fade-out, no snap-back)
+- @keyframes kenBurns: scale 1.0 → 1.5 (was 1.35) = 50% zoom
+- @keyframes kenBurnsAlt: scale 1.0 → 1.5 + opposite pan (±6%/5%)
+- Ken Burns duration: 7s → 4s (12.5% per second, clearly perceptible)
+
+JS (hero-slideshow.tsx):
+- Fixed ReferenceError: removed dangling animationName reference
+- SLIDE_INTERVAL_MS: 7000 → 6000 (4s KB + 2s rest)
+- CROSSFADE_MS: 2000 → 1800
+- Removed .hero-slide-zoom class (animation now on .hero-slide-active)
+- Restart technique uses inline style (overrides CSS class):
+    el.style.animation = 'none';
+    void el.offsetWidth;  // force reflow
+    el.style.animation = 'kenBurns 4000ms cubic-bezier(0.16,1,0.3,1) forwards';
+- Clear inline animation when slide becomes fully inactive (not active,
+  not prev) so CSS base state takes over
+
+VERIFICATION (agent-browser real-time + VLM):
+
+Slide 2 Ken Burns progression:
+  animTime 167ms → 4883ms (continuous)
+  scale 1.07 → 1.50 (reaching end of zoom)
+
+Crossfade slide 2 → slide 3:
+  slide 2 (prev): opacity 0.96 → 0.04, scale STAYS 1.50 (no snap-back!)
+  slide 3 (active): opacity 0.04 → 0.96, scale 1.09 → 1.39 (restarted)
+
+VLM confirmation:
+  "Image 1 (1.50x) vs Image 2 (~1.0x): clear difference in magnification.
+   Guitarist's face and hand appear noticeably larger/closer in Image 1."
+  "The Ken Burns zoom effect is clearly visible and working."
+
+GIT:
+- Commit: c104169 fix: Ken Burns — stronger zoom (1.5x), faster (4s), no snap-back on crossfade
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+
+Stage Summary:
+Three root causes fixed:
+1. ReferenceError causing 500 error (slides not rendering)
+2. Snap-back jump during crossfade (transform: scale(1) on .hero-slide)
+3. Zoom too subtle (1.35 over 7s → 1.5 over 4s)
+
+Ken Burns now STRONGLY visible: 50% zoom over 4 seconds, no snap-back,
+animation restarts cleanly on each slide via inline style + forced reflow.
