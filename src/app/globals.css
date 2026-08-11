@@ -378,6 +378,9 @@
    Ken Burns: 7000ms ease-out — runs for the FULL slide interval so it
               NEVER freezes. Zoom 1.0 → 1.35 with clear pan = visible motion
               throughout the entire slide display.
+   Animation restart is handled in JS (hero-slideshow.tsx SlideElement)
+   via ref + forced reflow — NOT via React key remount (which would break
+   the opacity crossfade).
 */
 .hero-slideshow-wrapper {
   position: absolute;
@@ -411,7 +414,8 @@
 }
 
 /* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
-   Using a wrapper avoids conflicts with next/image's own transforms.
+   The animation-name is overridden via inline style in SlideElement to
+   alternate between kenBurns / kenBurnsAlt per slide index.
    Zoom 1.0 → 1.35 over 7s = continuous motion, no freeze.
    `forwards` keeps the end state during crossfade fade-out (no snap-back). */
 .hero-slide-zoom {
@@ -439,12 +443,6 @@
   }
 }
 
-/* Alternate pan direction for odd/even slides for variety.
-   Applied via :nth-child on active slide wrapper. */
-.hero-slide-active:nth-child(odd) {
-  animation-name: kenBurnsAlt;
-}
-
 @keyframes kenBurnsAlt {
   0% {
     transform: scale(1) translate(0%, 0%);
@@ -456,8 +454,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide-zoom,
-  .hero-slide-active:nth-child(odd) {
+  .hero-slide-zoom {
     animation: none !important;
   }
   .hero-slide {
