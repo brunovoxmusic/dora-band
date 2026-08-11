@@ -196,8 +196,9 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
     // 3. Set the full animation shorthand inline. This is the ONLY source
     //    of Ken Burns animation (CSS class has no animation declaration).
     //    LINEAR easing = constant zoom rate throughout (no front-loaded jump).
-    //    Duration 6s = smooth zoom from scale 1.0 to 1.5 (8.3% per second).
-    el.style.animation = `${animName} 6000ms linear forwards`;
+    //    Duration 7s = SLIDE_INTERVAL_MS, so zoom runs for the ENTIRE slide
+    //    display (no freeze period at end). Scale 1.0 → 1.5 = 7.1% per second.
+    el.style.animation = `${animName} 7000ms linear forwards`;
   }, [isActive, index]);
 
   // When a slide becomes inactive (not active, not prev), clear the inline

@@ -429,7 +429,10 @@
    `.hero-slide-active` here ONLY sets opacity + z-index.
    `.hero-slide-prev` does NOT get animation — it keeps the inline animation
    from its active phase (with `forwards` fill mode, so scale stays at 1.5
-   during the crossfade fade-out, no snap-back jump). */
+   during the crossfade fade-out, no snap-back jump).
+   Ken Burns 7s = SLIDE_INTERVAL_MS, so zoom runs for the ENTIRE slide
+   display (no freeze period at end). Crossfade starts at 7s when slide
+   changes; prev slide keeps scale 1.5 via forwards fill. */
 .hero-slide-active {
   opacity: 1;
   z-index: 1;
