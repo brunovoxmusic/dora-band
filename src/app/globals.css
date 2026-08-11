@@ -429,9 +429,11 @@
    `.hero-slide-prev` does NOT get animation — it keeps the inline animation
    from its active phase (with `forwards` fill mode, so scale stays at 1.5
    during the crossfade fade-out, no snap-back jump).
-   Zoom 1.0 → 1.5 over 4s = STRONGLY visible motion (12.5% per second). */
+   Zoom 1.0 → 1.5 over 6s with LINEAR easing = perfectly smooth, constant
+   zoom rate (8.3% per second) throughout the entire slide display.
+   NO easeOut (which front-loads the zoom then freezes). */
 .hero-slide-active {
-  animation: kenBurns 4000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: kenBurns 6000ms linear forwards;
   transform-origin: 50% 50%;
   will-change: transform;
 }

@@ -38,8 +38,8 @@ type Props = {
  * CSS lives in globals.css as PLAIN global classes (no CSS Module hashing).
  */
 
-const SLIDE_INTERVAL_MS = 6000;
-const CROSSFADE_MS = 1800;
+const SLIDE_INTERVAL_MS = 7000;
+const CROSSFADE_MS = 2000;
 
 export function HeroSlideshow({ slides, staticFallback }: Props) {
   const images = useMemo<Slide[]>(() => {
@@ -191,8 +191,9 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
     void el.offsetWidth;
     // 3. Set the full animation shorthand inline. This overrides the CSS
     //    class and restarts the animation from 0%.
-    //    Duration 4s = STRONGLY visible zoom (12.5% per second).
-    el.style.animation = `${animName} 4000ms cubic-bezier(0.16, 1, 0.3, 1) forwards`;
+    //    LINEAR easing = constant zoom rate throughout (no front-loaded jump).
+    //    Duration 6s = smooth zoom from scale 1.0 to 1.5 (8.3% per second).
+    el.style.animation = `${animName} 6000ms linear forwards`;
   }, [isActive, index]);
 
   // When a slide becomes inactive (not active, not prev), clear the inline
