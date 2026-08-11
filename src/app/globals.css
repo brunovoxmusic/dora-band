@@ -422,20 +422,17 @@
 }
 
 /* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
-   Animation is set via INLINE STYLE in SlideElement (hero-slideshow.tsx)
-   when isActive becomes true. The inline style has higher priority than
-   this CSS class, so the JS restart technique works.
-   `.hero-slide-active` here only sets opacity + z-index.
+   Animation is set EXCLUSIVELY via INLINE STYLE in SlideElement
+   (hero-slideshow.tsx) when isActive becomes true. NO CSS animation here
+   to avoid double-animation conflicts (CSS would fire on class add,
+   then JS would restart it → visual jank).
+   `.hero-slide-active` here ONLY sets opacity + z-index.
    `.hero-slide-prev` does NOT get animation — it keeps the inline animation
    from its active phase (with `forwards` fill mode, so scale stays at 1.5
-   during the crossfade fade-out, no snap-back jump).
-   Zoom 1.0 → 1.5 over 6s with LINEAR easing = perfectly smooth, constant
-   zoom rate (8.3% per second) throughout the entire slide display.
-   NO easeOut (which front-loads the zoom then freezes). */
+   during the crossfade fade-out, no snap-back jump). */
 .hero-slide-active {
-  animation: kenBurns 6000ms linear forwards;
-  transform-origin: 50% 50%;
-  will-change: transform;
+  opacity: 1;
+  z-index: 1;
 }
 
 /* .hero-slide-prev intentionally has NO animation declaration.

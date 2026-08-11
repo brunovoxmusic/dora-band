@@ -185,12 +185,16 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
     const el = ref.current;
     if (!el || !isActive) return;
     const animName = index % 2 === 0 ? "kenBurns" : "kenBurnsAlt";
+    // Set transform-origin + will-change BEFORE animation restart so the
+    // browser is ready to composite the transform efficiently.
+    el.style.transformOrigin = "50% 50%";
+    el.style.willChange = "transform";
     // 1. Kill any running animation.
     el.style.animation = "none";
     // 2. Force synchronous reflow so browser registers the 'none' state.
     void el.offsetWidth;
-    // 3. Set the full animation shorthand inline. This overrides the CSS
-    //    class and restarts the animation from 0%.
+    // 3. Set the full animation shorthand inline. This is the ONLY source
+    //    of Ken Burns animation (CSS class has no animation declaration).
     //    LINEAR easing = constant zoom rate throughout (no front-loaded jump).
     //    Duration 6s = smooth zoom from scale 1.0 to 1.5 (8.3% per second).
     el.style.animation = `${animName} 6000ms linear forwards`;
