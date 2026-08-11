@@ -1256,3 +1256,87 @@ schema.prisma. Local dev preserved via separate schema.sqlite.prisma.
 - User should verify production at https://dora-band.vercel.app after deploy completes
 - If Neon database doesn't have all settings.* keys seeded, defaults will be used
   (this is expected behavior — settings are created on first admin PUT)
+
+---
+Task ID: 22 (user-requested: hero slideshow animations fix)
+Agent: Main (Z.ai Code)
+Task: Fix hero section background slideshow — crossfade + Ken Burns animations
+
+PROBLEM (user report):
+"slideshov fotiek na pozadi sekcie HERO stale nefunguje spravne a sekcie hera
+a jej fotky na pozadi neobsahuju animacie pocas ich zobrazzenia ani crossfade
+animacie pri ich vymenach"
+
+DIAGNOSIS (via agent-browser eval + VLM):
+1. Crossfade duration was 1500ms — too short to be clearly visible
+2. Ken Burns (6500ms) ran exactly as long as slide interval (6500ms) —
+   animation froze at end, looked static
+3. Slide indicators positioned absolute at bottom:110px — OUTSIDE viewport
+   on short screens (hero content is 735px tall, viewport 577px)
+4. next/image default transition:all was interfering with wrapper-level
+   opacity crossfade
+
+FIXES:
+
+hero-slideshow.tsx (rewritten):
+- SLIDE_INTERVAL_MS: 6500 → 8000 (longer display per slide)
+- CROSSFADE_MS: 1500 → 2200 (clearly visible transition)
+- KEN_BURNS_MS: 6500 → 7500 (shorter than interval so it never freezes)
+- Added prevActive tracking: old slide fades out (1→0) while new slide
+  fades in (0→1) simultaneously = TRUE crossfade
+- Auto-clear prevActive after crossfade completes (z-index boost cleanup)
+- Added IntersectionObserver: hides fixed indicators/counter when scrolled
+  past hero section
+- Added slide counter (01/07 format) bottom-right
+- key tied to isActive on Image — Ken Burns restarts cleanly each activation
+- goTo(i) for click-to-jump on indicators
+
+globals.css (hero slideshow section rewritten):
+- .hero-slide transition: opacity 2200ms cubic-bezier(0.4,0,0.2,1)
+- .hero-slide-active z-index: 2, .hero-slide-prev z-index: 3
+- @keyframes kenBurns: scale(1) → scale(1.18) + translate(-2%,-1.5%)
+- @keyframes kenBurnsAlt: alternate pan direction for odd slides (variety)
+- .hero-slide-image: opacity:1 !important, transition:none !important,
+  transform:none !important (disables next/image interference)
+- .hero-slide-indicators: position: fixed (was absolute) — always visible
+- .hero-slide-indicator: 6px, hover 16px, active 36px with neon-red glow
+- .hero-slide-counter (new): fixed bottom-right, 11px monospace, 01/07
+- .hero-slide-hidden (new): opacity:0 + translateY(20px) for smooth hide
+- Mobile: smaller indicators + counter
+
+VERIFICATION (agent-browser + VLM):
+- 7 slides render correctly, 1 active with Ken Burns (transform 1.17+)
+- Crossfade captured via opacity tracking:
+  slide 1 (prev) 0.16 → 0.05 → 0, slide 2 (active) 0.84 → 0.95 → 1.0
+- VLM confirmed crossfade: "Image 6 clearly shows crossfade effect.
+  Smoke image fading out while singer image fading in underneath.
+  Standard opacity-based crossfade with blending overlap."
+- VLM confirmed Ken Burns: "Image 1: wider view with mic stand visible.
+  Image 2: zoomed in, mic cut off, tighter composition" (0s vs 3s)
+- Indicators: position:fixed, top:529 in 577px viewport = visible
+- Counter: shows 06/07 (verified via textContent)
+- Hide on scroll: after 800px scroll, indicators opacity:0 (hidden)
+- Lint: 0 errors
+
+GIT:
+- Commit: 7d44da9 fix: hero slideshow — robust crossfade + Ken Burns + visible indicators
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+
+Stage Summary:
+Hero slideshow now has:
+1. Smooth 2.2s crossfade between photos (VLM-verified visible)
+2. Ken Burns zoom+pan (1.0→1.18 scale + 2% pan, alternating direction per slide)
+3. Always-visible fixed indicators (hide on scroll past hero via IntersectionObserver)
+4. Slide counter (01/07 format, neon-red current number)
+5. Click-to-jump on indicators
+
+## Current Project Status: HERO SLIDESHOW FIXED
+All 3 user-reported issues resolved: crossfade animations, Ken Burns zoom,
+and section visibility. Slideshow is now visually engaging with smooth
+transitions and persistent controls.
+
+### Unresolved issues / risks for next phase:
+- Cookie consent popup can temporarily cover indicators (auto-dismisses)
+- Could add parallax effect to background photos during scroll
+- Could add preload hint for next slide image to reduce flash
+- Could add keyboard navigation (arrow keys) for slideshow
