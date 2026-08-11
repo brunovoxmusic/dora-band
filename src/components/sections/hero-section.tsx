@@ -48,10 +48,12 @@ export function HeroSection({
       {/* Background slideshow — absolute inset-0, no height hack */}
       <div className="absolute inset-0 overflow-hidden">
         <HeroSlideshow slides={heroSlides} staticFallback="/gallery/hero-banner.jpg" />
-        {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/50 via-ink/40 to-ink" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
-        <div className="absolute inset-0 bg-stage-grid opacity-30" />
+        {/* Dark gradient overlays — z-index ABOVE slideshow slides
+            (.hero-slide-active is z-index:2, .hero-slide-prev is z-index:3,
+             so overlays must be z-index:10+ to sit on top for readability) */}
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-ink/50 via-ink/40 to-ink" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-ink/80 via-ink/20 to-transparent" />
+        <div className="absolute inset-0 z-10 bg-stage-grid opacity-30" />
       </div>
 
       {/* Neon-red geometric lines (brand manual accent) */}

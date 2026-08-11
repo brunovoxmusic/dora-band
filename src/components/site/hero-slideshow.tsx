@@ -39,9 +39,9 @@ type Props = {
  * If `slides` is empty, renders a single static image (no interval, no KB).
  */
 
-const SLIDE_INTERVAL_MS = 8000;
-const CROSSFADE_MS = 2200;
-const KEN_BURNS_MS = 7500;
+const SLIDE_INTERVAL_MS = 7000;
+const CROSSFADE_MS = 2000;
+const KEN_BURNS_MS = 5000;
 
 export function HeroSlideshow({ slides, staticFallback }: Props) {
   const images = useMemo<Slide[]>(() => {

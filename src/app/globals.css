@@ -374,16 +374,17 @@
 }
 
 /* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) =====
-   Crossfade: 2200ms ease-in-out (long enough to be clearly visible)
-   Ken Burns: 7500ms ease-out (slightly shorter than 8000ms interval so it
-              never freezes — zoom eases in then settles).
-   Zoom range: scale(1) → scale(1.18) with a subtle pan for natural feel.
+   Crossfade: 2200ms cubic-bezier (clearly visible transition)
+   Ken Burns: 5000ms ease-out (shorter than 8000ms slide interval so it
+              eases in then settles, never freezes).
+   Zoom range: scale(1) → scale(1.32) with a clear pan for visible motion.
 */
 .hero-slideshow-wrapper {
   position: absolute;
   inset: 0;
   overflow: hidden;
   background-color: #0a0a0a; /* ink — avoids white flash before first image loads */
+  z-index: 0;
 }
 
 .hero-slide {
@@ -392,29 +393,28 @@
   opacity: 0;
   transition: opacity 2200ms cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  will-change: opacity;
-  /* Slight scale on inactive slides so when they become active and zoom in,
-     there's no jump from 1.0 → 1.0 (they start slightly smaller). */
+  will-change: opacity, transform;
   transform: scale(1);
 }
 
 .hero-slide-active {
   opacity: 1;
-  z-index: 2;
+  z-index: 1;
 }
 
 /* Previous slide keeps fading out (1→0) on top of the new active one
    for a true crossfade. z-index higher so it covers briefly during the
    overlap window, then reveals the new slide beneath. */
 .hero-slide-prev {
-  z-index: 3;
+  z-index: 2;
   pointer-events: none;
 }
 
 /* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
-   Using a wrapper avoids conflicts with next/image's own transforms. */
+   Using a wrapper avoids conflicts with next/image's own transforms.
+   Zoom 1.0 → 1.32 over 5s = clearly visible motion (~6.4% per second). */
 .hero-slide-zoom {
-  animation: kenBurns 7500ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation: kenBurns 5000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: 50% 50%;
   will-change: transform;
 }
@@ -430,11 +430,11 @@
 
 @keyframes kenBurns {
   0% {
-    transform: scale(1) translate(0, 0);
+    transform: scale(1) translate(0%, 0%);
   }
   100% {
-    /* scale up 18% + subtle pan to upper-left for dynamic feel */
-    transform: scale(1.18) translate(-2%, -1.5%);
+    /* scale up 32% + clear pan to upper-left for dynamic feel */
+    transform: scale(1.32) translate(-4%, -3%);
   }
 }
 
@@ -446,11 +446,11 @@
 
 @keyframes kenBurnsAlt {
   0% {
-    transform: scale(1) translate(0, 0);
+    transform: scale(1) translate(0%, 0%);
   }
   100% {
-    /* scale up 18% + pan to lower-right */
-    transform: scale(1.18) translate(2%, 1.5%);
+    /* scale up 32% + pan to lower-right */
+    transform: scale(1.32) translate(4%, 3%);
   }
 }
 
