@@ -1603,3 +1603,74 @@ Three root causes fixed:
 
 Ken Burns now STRONGLY visible: 50% zoom over 4 seconds, no snap-back,
 animation restarts cleanly on each slide via inline style + forced reflow.
+
+---
+Task ID: 27 (user-requested: Ken Burns not smooth — abrupt final size before crossfade)
+Agent: Main (Z.ai Code)
+Task: Fix Ken Burns animation smoothness — user reported zoom not smooth, final size appears abruptly before crossfade
+
+ROOT CAUSE (diagnosed via agent-browser real-time scale capture):
+The easing function cubic-bezier(0.16, 1, 0.3, 1) is easeOutExpo — it
+front-loads 80% of the zoom in the first 25% of duration, then crawls
+to the end. With 4s duration:
+  0ms:   scale 1.00
+  500ms: scale 1.31 (80% of zoom done in first 0.5s!)
+  2000ms: scale 1.49 (almost at end)
+  4000ms: scale 1.50 (frozen for remaining time)
+
+User saw: rapid jump at start, then static image for 3+ seconds, then
+crossfade. This looked broken — "final size appears abruptly before
+crossfade" because the zoom reached its end state at 25% of duration
+and then froze for 75% of the time.
+
+FIX: Switch to LINEAR easing + 6s duration:
+  0ms:   scale 1.00
+  1000ms: scale 1.08
+  2000ms: scale 1.17
+  3000ms: scale 1.25
+  4000ms: scale 1.33
+  5000ms: scale 1.42
+  6000ms: scale 1.50
+
+Constant rate of ~0.083 per second = smooth, perceptible zoom throughout
+the ENTIRE slide display. No front-loaded jump, no end freeze.
+
+Changes:
+- CSS (globals.css):
+  - .hero-slide-active animation: cubic-bezier(0.16,1,0.3,1) → linear
+  - Duration: 4s → 6s
+- JS (hero-slideshow.tsx):
+  - Inline animation: cubic-bezier(0.16,1,0.3,1) → linear
+  - Inline duration: 4s → 6s
+  - SLIDE_INTERVAL_MS: 6s → 7s (6s KB + 1s buffer before crossfade)
+  - CROSSFADE_MS: 1.8s → 2s
+
+VERIFICATION (agent-browser real-time scale capture every 500ms):
+  animTime  483ms → scale 1.040 (delta +0.040)
+  animTime 1050ms → scale 1.087 (delta +0.047)
+  animTime 1617ms → scale 1.135 (delta +0.048)
+  animTime 2167ms → scale 1.181 (delta +0.046)
+  animTime 2733ms → scale 1.228 (delta +0.047)
+  animTime 3267ms → scale 1.272 (delta +0.044)
+  animTime 3833ms → scale 1.319 (delta +0.047)
+  animTime 4400ms → scale 1.367 (delta +0.048)
+  animTime 4950ms → scale 1.412 (delta +0.045)
+  animTime 5500ms → scale 1.458 (delta +0.046)
+  animTime 6000ms → scale 1.500 (delta +0.042)
+  → Constant ~0.047 per 500ms = PERFECTLY LINEAR
+
+VLM confirmation:
+  "Frame 1 (0s): subject smallest, see shoulder and background
+   Frame 2 (2s): noticeably larger/closer, less background
+   Frame 3 (4s): zoom progressed further, face fills more of frame
+   Progression smooth and gradual. Constant/linear — increase from
+   0s→2s visually consistent with 2s→4s."
+
+GIT:
+- Commit: 638ae13 fix: Ken Burns — LINEAR easing for smooth constant zoom
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+
+Stage Summary:
+Ken Burns now zooms SMOOTHLY and CONSTANTLY throughout the entire 6s
+slide display. No front-loaded jump (easeOutExpo), no end freeze. The
+zoom rate is ~8.3% per second, clearly perceptible and continuous.
