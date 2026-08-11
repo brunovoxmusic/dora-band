@@ -41,7 +41,7 @@ type Props = {
 
 const SLIDE_INTERVAL_MS = 7000;
 const CROSSFADE_MS = 2000;
-const KEN_BURNS_MS = 5000;
+const KEN_BURNS_MS = 7000;
 
 export function HeroSlideshow({ slides, staticFallback }: Props) {
   const images = useMemo<Slide[]>(() => {
@@ -136,17 +136,19 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
 
         return (
           <div
-            key={slide.id}
+            /* KEY INCLUDES isActive so React REMOUNTS the div each time
+               the slide becomes active. This forces the CSS Ken Burns
+               animation to RESTART from scale(1) — without this, the
+               browser caches the animation state and the zoom won't
+               replay on subsequent activations. */
+            key={`${slide.id}-${isActive ? "active" : "idle"}`}
             className={classes}
             aria-hidden={!isActive}
             style={{
               transitionDuration: `${CROSSFADE_MS}ms`,
             }}
           >
-            {/* Use `key` tied to isActive so Ken Burns animation restarts
-                cleanly each time this slide becomes active. */}
             <Image
-              key={`${slide.id}-${isActive ? "active" : "idle"}`}
               src={slide.url}
               alt={slide.altText || slide.title || "D.O.R.A. naživo na koncertnom pódiu"}
               fill

@@ -374,10 +374,10 @@
 }
 
 /* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) =====
-   Crossfade: 2200ms cubic-bezier (clearly visible transition)
-   Ken Burns: 5000ms ease-out (shorter than 8000ms slide interval so it
-              eases in then settles, never freezes).
-   Zoom range: scale(1) → scale(1.32) with a clear pan for visible motion.
+   Crossfade: 2000ms cubic-bezier (clearly visible transition)
+   Ken Burns: 7000ms ease-out — runs for the FULL slide interval so it
+              NEVER freezes. Zoom 1.0 → 1.35 with clear pan = visible motion
+              throughout the entire slide display.
 */
 .hero-slideshow-wrapper {
   position: absolute;
@@ -391,7 +391,7 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 2200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 2000ms cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   will-change: opacity, transform;
   transform: scale(1);
@@ -412,9 +412,10 @@
 
 /* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
    Using a wrapper avoids conflicts with next/image's own transforms.
-   Zoom 1.0 → 1.32 over 5s = clearly visible motion (~6.4% per second). */
+   Zoom 1.0 → 1.35 over 7s = continuous motion, no freeze.
+   `forwards` keeps the end state during crossfade fade-out (no snap-back). */
 .hero-slide-zoom {
-  animation: kenBurns 5000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: kenBurns 7000ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: 50% 50%;
   will-change: transform;
 }
@@ -433,8 +434,8 @@
     transform: scale(1) translate(0%, 0%);
   }
   100% {
-    /* scale up 32% + clear pan to upper-left for dynamic feel */
-    transform: scale(1.32) translate(-4%, -3%);
+    /* scale up 35% + clear pan to upper-left for dynamic feel */
+    transform: scale(1.35) translate(-5%, -4%);
   }
 }
 
@@ -449,8 +450,8 @@
     transform: scale(1) translate(0%, 0%);
   }
   100% {
-    /* scale up 32% + pan to lower-right */
-    transform: scale(1.32) translate(4%, 3%);
+    /* scale up 35% + pan to lower-right */
+    transform: scale(1.35) translate(5%, 4%);
   }
 }
 

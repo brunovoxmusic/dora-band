@@ -56,8 +56,10 @@ export function HeroSection({
         <div className="absolute inset-0 z-10 bg-stage-grid opacity-30" />
       </div>
 
-      {/* Neon-red geometric lines (brand manual accent) */}
-      <div className="pointer-events-none absolute inset-0">
+      {/* Neon-red geometric lines (brand manual accent) — z-20 ABOVE overlays
+          (z-10) so corner brackets, diagonal lines, and barcode strips are
+          always visible over the darkened photo. */}
+      <div className="pointer-events-none absolute inset-0 z-20">
         <svg
           className="absolute inset-0 h-full w-full"
           preserveAspectRatio="none"
@@ -65,14 +67,15 @@ export function HeroSection({
           fill="none"
           aria-hidden
         >
-          {/* Diagonal accent lines */}
-          <line x1="0" y1="180" x2="1440" y2="60" stroke="#E63946" strokeWidth="2" opacity="0.35" />
-          <line x1="0" y1="220" x2="1440" y2="100" stroke="#E63946" strokeWidth="1" opacity="0.2" />
-          {/* Corner brackets */}
-          <path d="M40 120 L40 60 L120 60" stroke="#E63946" strokeWidth="3" fill="none" />
-          <path d="M1400 780 L1400 840 L1320 840" stroke="#F4A300" strokeWidth="3" fill="none" />
-          {/* Vertical barcode strips (punk feel) */}
-          <g opacity="0.5">
+          {/* Diagonal accent lines at top — punk energy */}
+          <line x1="0" y1="180" x2="1440" y2="60" stroke="#E63946" strokeWidth="2" opacity="0.5" />
+          <line x1="0" y1="220" x2="1440" y2="100" stroke="#E63946" strokeWidth="1.5" opacity="0.3" />
+          {/* Corner brackets — top-left (red) */}
+          <path d="M40 120 L40 60 L120 60" stroke="#E63946" strokeWidth="3" fill="none" opacity="0.7" />
+          {/* Corner brackets — bottom-right (warm yellow) */}
+          <path d="M1400 780 L1400 840 L1320 840" stroke="#F4A300" strokeWidth="3" fill="none" opacity="0.7" />
+          {/* Vertical barcode strips (punk feel) — bottom-left */}
+          <g opacity="0.6">
             <rect x="60" y="700" width="4" height="120" fill="#E63946" />
             <rect x="68" y="720" width="2" height="80" fill="#F4A300" />
             <rect x="73" y="710" width="3" height="100" fill="#E63946" />
