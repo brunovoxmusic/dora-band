@@ -1674,3 +1674,60 @@ Stage Summary:
 Ken Burns now zooms SMOOTHLY and CONSTANTLY throughout the entire 6s
 slide display. No front-loaded jump (easeOutExpo), no end freeze. The
 zoom rate is ~8.3% per second, clearly perceptible and continuous.
+
+---
+Task ID: 28 (user-requested: Ken Burns STILL not working — definitive fix)
+Agent: Main (Z.ai Code)
+Task: Fix Ken Burns — user reported zoom not smooth, final size appears abruptly
+
+ROOT CAUSES (3 issues found and fixed):
+
+1. Double-animation conflict (CSS + inline)
+   - CSS .hero-slide-active had animation: kenBurns 6000ms linear forwards
+   - JS also set inline animation on same element
+   - Both fired simultaneously on class add → visual jank
+   - FIX: Removed animation from CSS .hero-slide-active entirely.
+     Now ONLY sets opacity:1 + z-index:1. JS inline is sole animation source.
+
+2. Freeze period before crossfade
+   - Ken Burns duration (5s) was shorter than slide interval (7s)
+   - Scale reached 1.5 at 5s, then FROZE for 2s before crossfade at 7s
+   - This static period looked like animation stopped
+   - FIX: Set Ken Burns duration = SLIDE_INTERVAL_MS (7s = 7s).
+     Zoom runs for ENTIRE slide display — no freeze, no static period.
+
+3. Missing transform-origin + will-change in JS
+   - Without these, browser may not composite transform efficiently
+   - FIX: Set el.style.transformOrigin + el.style.willChange BEFORE
+     animation restart in useEffect.
+
+VERIFICATION (agent-browser real-time scale capture, Vercel production):
+  animTime  383ms → scale 1.027
+  animTime 1433ms → scale 1.102  (delta +0.075 per 1050ms = 0.071/s)
+  animTime 2483ms → scale 1.177  (delta +0.075 per 1050ms = 0.071/s)
+  animTime 3533ms → scale 1.252  (delta +0.075 per 1050ms = 0.071/s)
+  animTime 4600ms → scale 1.329  (delta +0.076 per 1067ms = 0.071/s)
+  animTime 5700ms → scale 1.407  (delta +0.079 per 1100ms = 0.072/s)
+  animTime 6750ms → scale 1.482  (delta +0.075 per 1050ms = 0.071/s)
+  → PERFECTLY LINEAR: constant 0.071/sec throughout entire 7s
+
+VLM confirmation (4 screenshots of same slide, 1s apart):
+  "All four screenshots display the exact same background image.
+   The central singer's head and torso appear visibly larger.
+   The zoom continues, making the singer's t-shirt logo more prominent.
+   The transition appears smooth visually. No stuttering, jumping, or
+   jerky motion. Fluid 'dolly-in' zoom-in effect."
+
+GIT:
+- Commit: c387c03 fix: Ken Burns 7s = slide interval — continuous zoom, no freeze
+- Commit: 87fac82 fix: Ken Burns — single animation source (JS inline only)
+- Pushed to: https://github.com/brunovoxmusic/dora-band
+- Vercel auto-deployed, verified working
+
+Stage Summary:
+Ken Burns now works DEFINITIVELY:
+1. Single animation source (JS inline only, no CSS animation conflict)
+2. Duration = slide interval (7s = 7s, no freeze period)
+3. LINEAR easing (constant 0.071/sec zoom rate)
+4. Smooth from start to end, no jumps, no freeze, no abrupt changes
+5. Verified on both local + Vercel production via agent-browser + VLM
