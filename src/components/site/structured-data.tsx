@@ -51,10 +51,12 @@ export function StructuredData() {
       availableLanguage: ["Slovak", "Czech", "English"],
     },
     sameAs: [
-      "https://www.facebook.com/",
-      "https://www.instagram.com/",
-      "https://www.youtube.com/",
-    ],
+      BAND.social.facebook,
+      BAND.social.instagram,
+      BAND.social.youtube,
+      // TODO(DORA): Pridať reálny Spotify URL po overení — pozri band-data.ts
+      ...(BAND.social.spotify ? [BAND.social.spotify] : []),
+    ].filter(Boolean),
   };
 
   const webSite = {

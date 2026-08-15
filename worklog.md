@@ -1731,3 +1731,145 @@ Ken Burns now works DEFINITIVELY:
 3. LINEAR easing (constant 0.071/sec zoom rate)
 4. Smooth from start to end, no jumps, no freeze, no abrupt changes
 5. Verified on both local + Vercel production via agent-browser + VLM
+
+---
+Task ID: 29 (user-requested: DORA_audit_copy_content.docx — obsahový audit)
+Agent: Main (Z.ai Code)
+Task: Zapracovať obsahový audit + nový copy-content podľa priloženého dokumentu
+
+ZDROJ: /home/z/my-project/upload/DORA_audit_copy_content.docx
+       (pandoc konverzia → /tmp/dora_audit.txt, 321 riadkov)
+
+UPRAVENÉ SÚBORY (10):
+
+1. src/lib/band-data.ts — hlavný zdroj obsahu
+   - BAND.bioLong: „Viac ako dve dekády na scéne“ → „Tri desaťročia na scéne“
+   - BAND.social.spotify: prázdny reťazec + TODO komentár (placeholder URL odstránený)
+   - MILESTONES: pridaný TODO komentár o 21-ročnej medzere 2005–2026 (časť 2.2)
+   - TRACKS: všetkých 5 videoId „dQw4w9WgXcQ“ (rickroll) nahradených prázdňou + TODO
+     komentár — nahradiť reálnymi ID z @DORAkapela (časť 2.3)
+   - SETLIST: 5 skladieb (Abstinujem, Púchovská noc, Rebelova, Spoločne,
+     Encore: Dnes Od Rána) označených TODO komentármi — nie sú v diskografii,
+     treba overiť (časť 2.4)
+   - COPY_TEXTS[festival]: generický festival copy nahradený textom z časti 3.4
+     ([NÁZOV FESTIVALU] ponechaný ako editovateľná premenná)
+   - COPY_TEXTS[short-bio]: aktualizovaný text z časti 3.2
+   - COPY_TEXTS[extended-bio]: NOVÝ záznam s rozšíreným BIO z časti 3.3
+   - FAQS: pridaná nová otázka „Prečo D.O.R.A. dlho nekoncertovala…?“ s [DOPLNIŤ]
+     zástupným miestom (časť 3.5)
+
+2. src/components/sections/hero-section.tsx
+   - Počítadlá: Nahrávky/Demá 3→5, Žánrov 5→4 (časť 2.1)
+   - Tagline: „Kapela aktívna od roku 1996 — viac ako dve dekády…“ nahradené
+     novým textom z časti 3.1 („Od roku 1996 miešame punkovú drzosť… tri
+     desaťročia“)
+
+3. src/components/sections/about-section.tsx
+   - Nadpis: „Viac ako dve dekády na scéne“ → „Tri desaťročia na scéne“
+
+4. src/components/sections/music-section.tsx
+   - Pridaný fallback pre prázdne videoId: ak TRACKS[].videoId je prázdne,
+     zobrazí sa „Video zatiaľ nie je k dispozícii“ s odkazom na @DORAkapela
+     namiesto nefunkčného YouTube embedu
+
+5. src/components/sections/social-section.tsx
+   - Pridaný „Coming soon“ placeholder pre platformy s prázdnou URL (Spotify)
+   - Aktivný odkaz sa nezobrazí, kým nebude reálne URL
+
+6. src/app/layout.tsx — meta tagy
+   - description: „Aktívna od 1996“ → „Na scéne od roku 1996 — tri desaťročia…“
+   - openGraph.description: rovnaká úprava
+   - twitter.description: rovnaká úprava
+
+7. src/app/opengraph-image.tsx
+   - Text: „Aktívna od 1996 — viac ako dve dekády“ → „Na scéne od roku 1996 —
+     tri desaťročia“
+   - Počítadlá: NAHRÁVKY 3→5, ŽÁNROV 5→4
+
+8. src/lib/content.ts
+   - seo.metaDescription default: „Aktívna od 1996“ → „Na scéne od roku 1996 —
+     tri desaťročia…“
+
+9. src/app/page.tsx
+   - TestimonialsSection DOČASNE SKRYTÝ (zakomentovaný render blok) + TODO
+     komentár s vysvetlením (časť 2.5 — neoveriteľné referencie)
+
+10. src/components/site/structured-data.tsx
+    - sameAs: generické URL nahradené reálnymi BAND.social.* URL + TODO pre
+      Spotify
+
+VERIFIKÁCIA:
+- Lint: 0 errors ✓
+- Home page: 200, 377KB ✓
+- Všetky sekcie sa renderujú (top, o-kapele, clenovia, hudba, galeria,
+  diskografia, setlist, press, faq, kontakt) ✓
+- Testimonials sekcia (`#recenzie`) skrytá ✓
+- „viac ako dve dekády“ v HTML: 0 výskytov ✓
+- „tri desaťročia“ v HTML: prítomné ✓
+- „dQw4w9WgXcQ“ v HTML: 0 výskytov ✓
+- Press Kit obsahuje 5 tabov: Festivalová pozvánka, Koncertné oznámenie,
+  Všeobecná pozvánka, Krátke BIO, Rozšírené BIO ✓
+- FAQ obsahuje novú otázku „Prečo D.O.R.A. dlho nekoncertovala…?“ ✓
+- Music fallback zobrazuje „Video zatiaľ nie je k dispozícii“ + @DORAkapela ✓
+- Social section zobrazuje „Coming soon“ pre Spotify ✓
+
+## SÚHRN TODO MIEST (na doplnenie kapelou):
+
+1. **YouTube video ID** (band-data.ts TRACKS, 5x): nahradiť reálnymi ID z
+   kanála @DORAkapela (https://www.youtube.com/@DORAkapela)
+2. **Spotify URL** (band-data.ts BAND.social.spotify): overiť a nahradiť
+   reálnym Spotify artist profilom
+3. **MILESTONES 2005–2026** (band-data.ts MILESTONES): doplniť aspoň 2–3
+   míľniky z obdobia 2005–2026 (koncerty, festivaly, zmeny v zostave)
+4. **FAQ odpoveď** (band-data.ts FAQS): reálna odpoveď na otázku „Prečo
+   D.O.R.A. dlho nekoncertovala a teraz sa vracia?“ namiesto [DOPLNIŤ]
+5. **SETLIST skladby** (band-data.ts SETLIST): overiť existenciu 5 skladieb
+   (Abstinujem, Púchovská noc, Rebelova, Spoločne, Encore: Dnes Od Rána) —
+   buď doplniť do DISCOGRAPHY/TRACKS, alebo odstrániť zo setlistu
+6. **Testimonials** (page.tsx): nahradiť reálnymi citátmi od reálnych
+   organizátorov, s ktorými kapela spolupracovala — potom odkomentovať
+   TestimonialsSection render blok
+7. **Press Kit [NÁZOV FESTIVALU]** (band-data.ts COPY_TEXTS[festival]): pri
+   reálnom použití nahradiť zástupný symbol konkrétnym názvom festivalu
+
+Stage Summary:
+Obsahový audit úspešne zapracovaný — 10 súborov upravených, 7 TODO miest
+označených pre kapelu na doplnenie. Žiadne vymyslené fakty, mená ani
+citácie — všetky chýbajúce dáta sú vyznačené jednotným formátom
+`// TODO(DORA): <popis>`. Build a lint čisté, stránka sa renderuje bez
+chýb. Git commit/push neprebehol — čaká na explicitný súhlas používateľa.
+
+---
+Task ID: 30 (user-requested: aktualizácia koncertnej zostavy)
+Agent: Main (Z.ai Code)
+Task: Zo zostavy na koncertnom pódiu odstrániť Chlebana a Pleváka, namiesto Jánošík MATT napísať Matúš Dobeš
+
+UPRAVENÉ SÚBORY (2):
+
+1. src/lib/band-data.ts
+   - MEMBERS: odstránený Marcel Chleban (Spev) a Jozef Plevák (Gitara)
+   - MEMBERS: „Jánošík MATT" premenovaný na „Matúš Dobeš" (initials JM → MD)
+   - MEMBERS: pridaný TODO komentár s vysvetlením zmeny
+   - MILESTONES 2005: „prichádza basák Jánošík MATT" → „prichádza basák Matúš Dobeš"
+   - COPY_TEXTS[festival].body: „Marcel Chleban za mikrofónom" → „náš frontman za mikrofónom" + TODO komentár (súčasný text — Chleban už nie je v zostave)
+   - COPY_TEXTS[short-bio].body: „nezameniteľný frontman Marcel Chleban" → odstránené meno + TODO komentár
+   - COPY_TEXTS[extended-bio].body: „basgitaristu Jánošíka MATT-a" → „basgitaristu Matúša Dobeša"
+   - HISTORICKÉ fakty zachované (MILESTONES 1996, FAQ o založení, extended-bio o založení) — tam Chleban a Plevák figurujú ako zakladatelia
+
+2. src/components/admin/media-tab.tsx
+   - Placeholder pre altText: „napr. Marcel Chleban spieva na koncerte v Púchove" → „napr. Kapela D.O.R.A. naživo na koncerte v Púchove"
+
+VERIFIKÁCIA:
+- Lint: 0 errors ✓
+- Home page: 200 ✓
+- Sekcia #clenovia: 4 členovia (Majo Agafon, Branislav Guzma, Matúš Dobeš, Július Flimmel) ✓
+- hasChleban: false ✓
+- hasPlevak: false ✓
+- hasJanosik: false ✓
+- hasDobes: true ✓
+
+NOVÉ TODO MIESTO (na doplnenie kapelou):
+- Kto je súčasný frontman/spevák? (COPY_TEXTS[festival] a [short-bio] spomínajú „náš frontman" bez mena — Marcel Chleban bol odstránený zo zostavy, ale nové meno nie je známe. Pravdepodobne Majo Agafon preberá rolu speváka, ale treba potvrdiť.)
+
+Stage Summary:
+Koncertná zostava aktualizovaná — 4 členovia namiesto 6. Historické fakty o založení (1996) a nahrávke (2005) zachované s aktualizovaným menom basgitaristu. Súčasné BIO texty upravené tak, aby nezobrazovali neaktuálne meno Chlebana. Nové TODO pre frontmana — treba doplniť reálne meno.

@@ -193,13 +193,23 @@ export default async function HomePage() {
         {showSection("discography") && <DiscographySection />}
         {showSection("gigs") && <GigsSection />}
         {showSection("setlist") && <SetlistSection />}
-        {showSection("testimonials") && (
+        {/* TODO(DORA): Sekcia „Recenzie & referencie“ je DOČASNE SKRYTÁ.
+            Päť citovaných recenzií (Marek Hudec, Lucia Poláková, Peter Vavro,
+            Tomáš Janík, Eva Macháčová) pôsobí ako neoveriteľný placeholder obsah
+            — mená, tituly aj citácie nemajú overiteľný zdroj. Pozri
+            _audit_copy_content.docx časť 2.5.
+            Akciu: nahradiť reálnymi citátmi od reálnych organizátorov, s ktorými
+            kapela spolupracovala. Alternatíva: nahradiť sekciou „Kde sme hrali“
+            s logami/názvami reálnych podujatí bez priamych citácií.
+            Komponent testimonials-section.tsx je ponechaný v kóde — len sa
+            nevykresľuje. Až budú reálne referencie, odkomentovať blok nižšie. */}
+        {/* {showSection("testimonials") && (
           <>
             <SectionDivider />
             <TestimonialsSection />
             <SectionDivider />
           </>
-        )}
+        )} */}
         {showSection("press") && <PressSection />}
         {showSection("faq") && <FaqSection />}
         {showSection("social") && (

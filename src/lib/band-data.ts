@@ -8,7 +8,7 @@ export const BAND = {
   founded: 1996,
   origin: "Púchov, Slovensko",
   bio: `Kapela D.O.R.A., známa aj pod plným názvom „Dnes Od Rána Abstinujem", je funky-punková formácia, ktorá vznikla v roku 1996 v meste Púchov. Spája prvky punku, funku, rapu a crossoveru s energickou, autentickou a spoločensky angažovanou hudbou.`,
-  bioLong: `Kapela D.O.R.A., známa aj pod plným názvom „Dnes Od Rána Abstinujem", je funky-punková formácia, ktorá vznikla v roku 1996 v malom meste Púchov na Slovensku. Od svojho zrodu si kapela získala priazeň fanúšikov nekonvenčnou energiou, hudobnou výbušnosťou a jedinečným kombinovaním prvkov punku, funku a rapu. Viac ako dve dekády na scéne dokazujú, že D.O.R.A. nie je len kapela – je to hnutie, ktoré spája generácie poslucháčov vášňou pre autentickú, energickú a spoločensky angažovanú hudbu.`,
+  bioLong: `Kapela D.O.R.A., známa aj pod plným názvom „Dnes Od Rána Abstinujem", je funky-punková formácia, ktorá vznikla v roku 1996 v malom meste Púchov na Slovensku. Od svojho zrodu si kapela získala priazeň fanúšikov nekonvenčnou energiou, hudobnou výbušnosťou a jedinečným kombinovaním prvkov punku, funku a rapu. Tri desaťročia na scéne dokazujú, že D.O.R.A. nie je len kapela – je to hnutie, ktoré spája generácie poslucháčov vášňou pre autentickú, energickú a spoločensky angažovanú hudbu.`,
   contact: {
     email: "branislav.guzma@gmail.com",
     phone: "0907 630 206",
@@ -18,7 +18,11 @@ export const BAND = {
     facebook: "https://www.facebook.com/dora.kapela",
     instagram: "https://www.instagram.com/dora.funkypunk",
     youtube: "https://www.youtube.com/@DORAkapela",
-    spotify: "https://open.spotify.com/artist/dora",
+    // TODO(DORA): Overiť a nahradiť reálnym Spotify artist profilom.
+    // Aktuálne URL "https://open.spotify.com/artist/dora" je placeholder —
+    // Spotify artist ID je alfanumerický kód, nie textové meno.
+    // Do overenia ponechať ako TODO, nepoužívať ako live odkaz.
+    spotify: "",
     bandcamp: "https://dorakapela.bandcamp.com",
   },
 } as const;
@@ -73,9 +77,14 @@ export const MILESTONES: Milestone[] = [
     year: "2005",
     title: "‚TCHO SME NAHLAVU?‘",
     description:
-      "Maťo odchádza do USA, prichádza basák Jánošík MATT a vzniká nová nahrávka ‚TCHO SME NAHLAVU?‘.",
+      "Maťo odchádza do USA, prichádza basák Matúš Dobeš a vzniká nová nahrávka ‚TCHO SME NAHLAVU?‘.",
     highlight: true,
   },
+  // TODO(DORA): Doplniť aspoň 2–3 míľniky z obdobia 2005–2026 (koncerty, festivaly,
+  // zmeny v zostave, významné vystúpenia)._audit_copy_content.docx časť 2.2 odporúča
+  // vyplniť 21-ročnú medzeru medzi rokom 2005 a 2026 — inak pôsobí, že kapela
+  // bola dve dekády neaktívna, čo si protirečí s tvrdením „Aktívna od 1996“.
+  // Pozri aj FAQ otázku o historickej pauze (časť 3.5 dokumentu).
   {
     year: "2026",
     title: "PR 2026 dokument",
@@ -95,14 +104,10 @@ export type Member = {
 };
 
 export const MEMBERS: Member[] = [
-  {
-    name: "Marcel Chleban",
-    role: "Spev",
-    roleEn: "Vocals",
-    bio: "Zakladajúci spevák a autor názvu kapely. Charizmatický frontman, ktorého vokál a pódiová prítomnosť sú motorom každého vystúpenia.",
-    initials: "MC",
-    since: "1996",
-  },
+  // TODO(DORA): Koncertná zostava aktualizovaná podľa pokynu kapely —
+  // Marcel Chleban a Jozef Plevák už nefigurujú na koncertnom pódiu.
+  // "Jánošík MATT" premenovaný na reálne meno "Matúš Dobeš".
+  // Historické spomenutia (MILESTONES, FAQ) zachované — sú to fakty o založení.
   {
     name: "Majo Agafon",
     role: "Vokály / Rap",
@@ -110,14 +115,6 @@ export const MEMBERS: Member[] = [
     bio: "Prínos crossoverového rapu do zvuku kapely. Prináša hip-hopový element, ktorý D.O.R.A. odlišuje od klasickej punkovej formácie.",
     initials: "MA",
     since: "—",
-  },
-  {
-    name: "Jozef Plevák",
-    role: "Gitara",
-    roleEn: "Guitar",
-    bio: "Zakladajúci člen a gitarový motor kapely. Autor melodických riffov a chytlavých gitarových línií, ktoré definujú zvuk D.O.R.A.",
-    initials: "JP",
-    since: "1996",
   },
   {
     name: "Branislav Guzma",
@@ -128,11 +125,11 @@ export const MEMBERS: Member[] = [
     since: "1996",
   },
   {
-    name: "Jánošík MATT",
+    name: "Matúš Dobeš",
     role: "Basgitara",
     roleEn: "Bass",
     bio: "Pridal sa v roku 2005 a významne prispel k nahrávke ‚TCHO SME NAHLAVU?‘. Stabilná basová linka je základom funky-punkového groovu.",
-    initials: "JM",
+    initials: "MD",
     since: "2005",
   },
   {
@@ -198,7 +195,11 @@ export type Track = {
 };
 
 // Representative tracklist for the music/video section.
-// Video IDs are public punk/funky live performance placeholders.
+// TODO(DORA): Všetky YouTube video ID nižšie sú placeholder „dQw4w9WgXcQ“ (notoricky
+// známy „rickroll“). Nahradiť reálnymi YouTube ID z kanála @DORAkapela
+// (https://www.youtube.com/@DORAkapela). Do overenia nechať prázdne — komponent
+// by mal zobraziť fallback „Video zatiaľ nie je k dispozícii“.
+// Pozri _audit_copy_content.docx časť 2.3.
 export const TRACKS: Track[] = [
   {
     id: "t1",
@@ -207,7 +208,8 @@ export const TRACKS: Track[] = [
     year: "2005",
     duration: "3:42",
     genre: "Funky-Punk",
-    videoId: "dQw4w9WgXcQ",
+    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
+    videoId: "",
     featured: true,
   },
   {
@@ -217,7 +219,8 @@ export const TRACKS: Track[] = [
     year: "2001",
     duration: "4:05",
     genre: "Crossover",
-    videoId: "dQw4w9WgXcQ",
+    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
+    videoId: "",
   },
   {
     id: "t3",
@@ -226,7 +229,8 @@ export const TRACKS: Track[] = [
     year: "1997",
     duration: "3:18",
     genre: "Punk Rock",
-    videoId: "dQw4w9WgXcQ",
+    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
+    videoId: "",
   },
   {
     id: "t4",
@@ -235,7 +239,8 @@ export const TRACKS: Track[] = [
     year: "1998",
     duration: "2:54",
     genre: "Rap-Rock",
-    videoId: "dQw4w9WgXcQ",
+    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
+    videoId: "",
   },
   {
     id: "t5",
@@ -244,7 +249,8 @@ export const TRACKS: Track[] = [
     year: "2024",
     duration: "5:12",
     genre: "Funk",
-    videoId: "dQw4w9WgXcQ",
+    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
+    videoId: "",
   },
 ];
 
@@ -260,8 +266,13 @@ export const COPY_TEXTS: CopyText[] = [
   {
     id: "festival",
     tab: "Festivalová pozvánka",
-    title: "D.O.R.A. — Nevynechajte letný hudobný festival!",
-    body: `Pripojte sa k nám na letnom pivnom festivale a pripravte sa na jedinečný zvuk a nezabudnuteľnú atmosféru s kapelou D.O.R.A.! Naše melodické riffy, energické bicie a nezameniteľný vokál vám zaručia nezabudnuteľný zážitok. Od funky-punkových hymien až po melodické balady, náš repertoár ponúka niečo pre každého. Pridajte sa k nám na festivalovom pódiu a zažite spoločne s nami tú najlepšiu letnú párty plnú vášne, hudby a radosti! Tešíme sa na vás!`,
+    title: "D.O.R.A. — [NÁZOV FESTIVALU]",
+    // Náhrada generického festivalového copy — _audit_copy_content.docx časť 3.4.
+    // [NÁZOV FESTIVALU] je editovateľné pole/premenná — dopĺňa sa podľa konkrétneho festivalu.
+    // TODO(DORA): Text spomína "náš frontman za mikrofónom" — Marcel Chleban už
+    // nefiguruje v koncertnej zostave. Doplniť reálne meno nového frontmana
+    // (alebo potvrdiť, že je to Majo Agafon).
+    body: `Tridsať rokov abstinencie od nudy. D.O.R.A. prichádza na [NÁZOV FESTIVALU] s repertoárom, ktorý spojil dve generácie punkových fanúšikov z Púchova aj z celého Slovenska. Funky riffy, drsné bicie a náš frontman za mikrofónom, ktorý si servítku pred ústa nikdy nebral — to je vystúpenie, po ktorom si zapamätáte, prečo ste na festival vôbec prišli. Prídite si to overiť naživo.`,
     footnote: `Kapela D.O.R.A. vznikla v roku 1996 v malom meste Púchov na Slovensku. Svojím unikátnym zvukom a energickým vystupovaním si získala priazeň fanúšikov po celej krajine. Ich hudba kombinuje prvky funky a punku, čím vytvára nezameniteľný štýl, ktorý okamžite zaujme. Sú známi nielen svojimi chytlavými riffmi, ale aj textami, ktoré oslovujú aktuálne témy a osobné skúsenosti. D.O.R.A. je hudobná formácia, ktorá vie spojiť energiu punku s melódiami, ktoré vás nechajú v duchu zahúkať ešte dlho po skončení koncertu.`,
   },
   {
@@ -279,11 +290,25 @@ export const COPY_TEXTS: CopyText[] = [
     footnote: `Formácia D.O.R.A. vznikla v roku 1996 v Púchove a odvtedy sa stala pevnou súčasťou slovenskej punkovej scény. Svojou energickou hudbou a dynamickým vystúpením si získali priazeň fanúšikov po celej krajine. Texty ich piesní často reflektujú aktuálne spoločenské témy a ich hudba je kombináciou punku, funku a rapu. D.O.R.A. je kapela, ktorá vie svojimi piesňami oslovovať, inšpirovať a rozvíjať kritické myslenie.`,
   },
   {
+    // Krátke BIO — _audit_copy_content.docx časť 3.2
+    // Vhodné pre sociálne siete a rýchle predstavenie kapely organizátorom.
     id: "short-bio",
     tab: "Krátke BIO",
     title: "Krátke BIO (univerzálne)",
-    body: `D.O.R.A. (Dnes Od Rána Abstinujem) je funky-punková formácia z Púchova, aktívna od roku 1996. Kombinácia punkovej energie, funky groovu a rapových prvkov vytvára ich nezameniteľný zvuk. Kapela je známa dynamickými živými vystúpeniami a textami, ktoré reflektujú aktuálne spoločenské témy.`,
+    // TODO(DORA): Text spomína "nezameniteľný frontman" — Marcel Chleban už
+    // nefiguruje v koncertnej zostave. Doplniť reálne meno nového frontmana
+    // (alebo potvrdiť, že je to Majo Agafon).
+    body: `D.O.R.A. (Dnes Od Rána Abstinujem) je funky-punková formácia z Púchova, ktorá od roku 1996 spája punkovú energiu, funky groove a drzý rapový prízvuk. Tri desaťročia na slovenskej scéne a repertoár, ktorý rozhýbe každé pódium — od klubov po letné festivaly.`,
     footnote: `Ultra krátky (30 slov): D.O.R.A. – funky-punk z Púchova od 1996. Energické koncerty, chytlavé riffy a texty s hospodárskou a spoločenskou adresou. Živá legenda slovenskej punkovej scény.`,
+  },
+  {
+    // Rozšírené BIO — _audit_copy_content.docx časť 3.3
+    // Vhodné pre PR materiály a médiá.
+    id: "extended-bio",
+    tab: "Rozšírené BIO",
+    title: "Rozšírené BIO (pre PR a médiá)",
+    body: `Kapela D.O.R.A. vznikla v roku 1996 v Púchove z iniciatívy troch hudobníkov — Júliusa Flimmela (bicie), Jozefa Pleváka (gitara) a Braňa Guzmu (basgitara, neskôr gitara). Meno „Dnes Od Rána Abstinujem“ vymyslel spevák Marcel Chleban a presne v tomto duchu si kapela odjakživa nebrala servítku pred ústa. Ich zvuk je krížením punkovej surovosti, funky groovu a rapového prízvuku — kombinácia, ktorá bola v polovici deväťdesiatych rokov na Slovensku ojedinelá a zostáva výrazná dodnes. Od dema „Don't Touch Me“ (1997) cez „Iný deň“ (2001) až po nahrávku „TCHO SME NAHLAVU?“ (2005), ktorá priniesla do zostavy basgitaristu Matúša Dobeša, si D.O.R.A. budovala povesť kapely, na ktorú sa dá spoľahnúť — energickej naživo a profesionálnej v zákulisí.`,
+    footnote: `Pre kompletnú diskografiu, zoznam členov a technické požiadavky pozri ďalšie záložky v Press Kite. Kontakt pre booking: branislav.guzma@gmail.com / 0907 630 206.`,
   },
 ];
 
@@ -358,6 +383,15 @@ export const FAQS: FAQ[] = [
     q: "Má kapela nejaké nahrávky na streamovacích platformách?",
     a: "Diskografia zahŕňa demo „Don't Touch Me\" (1997, angličtina), „Iný deň\" (2001, slovenčina) a nahrávku „TCHO SME NAHLAVU?\" (2005). Pre aktualizácie o nových vydaniach sa prihláste k newsletteru.",
   },
+  // TODO(DORA): Pridať reálnu odpoveď namiesto [DOPLNIŤ] — pozri _audit_copy_content.docx
+  // časť 3.5. Autentické vysvetlenie historickej pauzy (napr. zmeny v zostave,
+  // pracovné povinnosti členov, rodinný život) funguje výrazne lepšie než mlčanie.
+  // Pozri aj MILESTONES komentár o medzere 2005–2026.
+  {
+    category: "general",
+    q: "Prečo D.O.R.A. dlho nekoncertovala a teraz sa vracia?",
+    a: "[DOPLNIŤ reálny dôvod a časový rámec — napr. zmeny v zostave, pracovné povinnosti členov, rodinný život. Autentické vysvetlenie tu funguje výrazne lepšie než mlčanie alebo vynechanie tohto obdobia z časovej osi.]",
+  },
 ];
 
 export type Testimonial = {
@@ -415,16 +449,27 @@ export type SetlistTrack = {
 };
 
 // Representative live setlist — typical concert repertoire.
+// Zdrojom pravdy pre skladby je DISCOGRAPHY + TRACKS vyššie v tomto súbore.
+// TODO(DORA): Skladby „Abstinujem“, „Púchovská noc“, „Rebelova“, „Spoločne“ a
+// „Encore: Dnes Od Rána“ sa nenachádzajú v oficiálnej diskografii (pozri
+// _audit_copy_content.docx časť 2.4). Buď ich doplniť do DISCOGRAPHY/TRACKS,
+// ak reálne existujú, alebo odstrániť zo setlistu. Aktuálne ponechané s TODO
+// komentárom na overenie kapelou — nezmazané, aby sa nestratili pri review.
 export const SETLIST: SetlistTrack[] = [
   { id: "s1", title: "TCHO SME NAHLAVU?", duration: "3:42", genre: "Funky-Punk", era: "2005", popular: true },
   { id: "s2", title: "Iný deň", duration: "4:05", genre: "Crossover", era: "2001", popular: true },
   { id: "s3", title: "Don't Touch Me", duration: "3:18", genre: "Punk Rock", era: "1997" },
   { id: "s4", title: "I Have A Taste", duration: "2:54", genre: "Rap-Rock", era: "1998" },
+  // TODO(DORA): „Abstinujem“ nie je v diskografii — overiť, či skladba reálne existuje
   { id: "s5", title: "Abstinujem", duration: "4:22", genre: "Funky-Punk", era: "2005", popular: true },
+  // TODO(DORA): „Púchovská noc“ nie je v diskografii — overiť, či skladba reálne existuje
   { id: "s6", title: "Púchovská noc", duration: "3:56", genre: "Crossover", era: "2001" },
   { id: "s7", title: "Funky pokus", duration: "5:12", genre: "Funk", era: "2024" },
+  // TODO(DORA): „Rebelova“ nie je v diskografii — overiť, či skladba reálne existuje
   { id: "s8", title: "Rebelova", duration: "3:08", genre: "Punk Rock", era: "2005", popular: true },
+  // TODO(DORA): „Spoločne“ nie je v diskografii — overiť, či skladba reálne existuje
   { id: "s9", title: "Spoločne", duration: "4:40", genre: "Rap-Rock", era: "2001" },
+  // TODO(DORA): „Encore: Dnes Od Rána“ nie je v diskografii — overiť, či skladba reálne existuje
   { id: "s10", title: "Encore: Dnes Od Rána", duration: "6:15", genre: "Funky-Punk", era: "2024", popular: true },
 ];
 

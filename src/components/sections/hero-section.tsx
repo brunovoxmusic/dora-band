@@ -114,8 +114,9 @@ export function HeroSection({
           <p className="mt-6 max-w-xl text-lg text-off-white/75 sm:text-xl">
             {c["hero.tagline"] || BAND.tagline}{" "}
             <span className="text-off-white/55">
-              Kapela aktívna od roku {BAND.founded} — viac ako dve dekády autentickej, energickej a
-              spoločensky angažovanej hudby.
+              Od roku 1996 miešame punkovú drzosť s funky groovom priamo z Púchova.
+              D.O.R.A. — kapela, ktorá si zo sediacej abstinencie urobila meno a z pódia
+              druhý domov už tri desaťročia.
             </span>
           </p>
         </div>
@@ -141,10 +142,11 @@ export function HeroSection({
         {/* Stat strip */}
         <div className="mt-16 grid max-w-3xl grid-cols-2 gap-px border border-charcoal bg-charcoal sm:grid-cols-4">
           {[
+            // Hodnoty podľa _audit_copy_content.docx časť 2.1
             { k: "1996", v: "Založená" },
             { k: "30+", v: "Rokov na scéne" },
-            { k: "3", v: "Nahrávky / Demá" },
-            { k: "5", v: "Žánrov" },
+            { k: "5", v: "Nahrávky / Demá" },
+            { k: "4", v: "Žánrov" },
           ].map((s) => (
             <StatCell key={s.v} value={s.k} label={s.v} />
           ))}

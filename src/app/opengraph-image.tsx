@@ -100,7 +100,7 @@ export default async function OGImage() {
             Dnes Od Rána Abstinujem
           </div>
           <div style={{ color: "#C0C0C0", fontSize: "22px", maxWidth: "780px", marginTop: "8px" }}>
-            Legendárna funky-punková formácia z Púchova. Aktívna od 1996 — viac ako dve dekády
+            Legendárna funky-punková formácia z Púchova. Na scéne od roku 1996 — tri desaťročia
             autentickej, energickej a spoločensky angažovanej hudby.
           </div>
         </div>
@@ -108,10 +108,11 @@ export default async function OGImage() {
         {/* Bottom: stats strip */}
         <div style={{ display: "flex", gap: "0px", border: "1px solid #2D2D2D" }}>
           {[
+            // Hodnoty podľa _audit_copy_content.docx časť 2.1
             { k: "1996", v: "ZALOŽENÁ" },
             { k: "30+", v: "ROKOV NA SCÉNE" },
-            { k: "3", v: "NAHRÁVKY" },
-            { k: "5", v: "ŽÁNROV" },
+            { k: "5", v: "NAHRÁVKY" },
+            { k: "4", v: "ŽÁNROV" },
           ].map((s, i) => (
             <div
               key={i}

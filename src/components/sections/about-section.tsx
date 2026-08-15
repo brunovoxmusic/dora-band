@@ -30,7 +30,7 @@ export function AboutSection({ bioLong }: { bioLong?: string }) {
                 D.O.R.A. — Dnes Od Rána Abstinujem
               </p>
               <h3 className="mt-2 font-display text-2xl font-bold text-off-white sm:text-3xl">
-                Viac ako dve dekády na scéne
+                Tri desaťročia na scéne
               </h3>
             </div>
 

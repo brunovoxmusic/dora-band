@@ -88,6 +88,32 @@ export function SocialSection({ content }: { content?: Record<string, string> })
         <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {platforms.map((p, i) => {
             const Icon = p.icon;
+            const hasHref = !!p.href && p.href.length > 0;
+            if (!hasHref) {
+              // TODO(DORA): Spotify (a prípadne ďalšie) nemá reálne URL — pozri
+              // band-data.ts BAND.social.spotify. Zobrazí sa „coming soon“ karta
+              // namiesto nefunkčného odkazu.
+              return (
+                <Reveal key={p.name} delay={i * 80} direction="up">
+                  <div
+                    className={`group relative flex h-full flex-col items-start border ${p.border} ${p.bg} p-5 opacity-70 clip-corner`}
+                    aria-disabled="true"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <Icon className="h-7 w-7" style={{ color: p.color }} />
+                      <span className="font-mono-brand text-[8px] uppercase tracking-wider text-silver/60">
+                        Coming soon
+                      </span>
+                    </div>
+                    <p className="mt-4 font-display text-lg font-bold text-off-white">{p.name}</p>
+                    <p className="font-mono-brand text-[10px] uppercase tracking-wider" style={{ color: p.color }}>
+                      {p.handle}
+                    </p>
+                    <p className="mt-1.5 text-xs text-off-white/60">{p.desc}</p>
+                  </div>
+                </Reveal>
+              );
+            }
             return (
               <Reveal key={p.name} delay={i * 80} direction="up">
                 <a

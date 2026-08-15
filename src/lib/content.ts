@@ -46,7 +46,7 @@ export const CONTENT_DEFAULTS: Record<string, { value: string; category: string;
 
   // SEO defaults
   "seo.metaTitle": { value: "D.O.R.A. — Dnes Od Rána Abstinujem | Funky-Punk z Púchova", category: "seo", label: "SEO — meta title", type: "text" },
-  "seo.metaDescription": { value: "Legendárna funky-punková formácia D.O.R.A. z Púchova. Aktívna od 1996. Booking, PR materiály, diskografia, fotky a kontakt pre médiá a partnerov.", category: "seo", label: "SEO — meta description", type: "textarea" },
+  "seo.metaDescription": { value: "Legendárna funky-punková formácia D.O.R.A. z Púchova. Na scéne od roku 1996 — tri desaťročia autentickej, energickej a spoločensky angažovanej hudby. Booking, PR materiály, diskografia, fotky a kontakt pre médiá a partnerov.", category: "seo", label: "SEO — meta description", type: "textarea" },
   "seo.keywords": { value: "D.O.R.A., Dnes Od Rána Abstinujem, funky-punk, Púchov, slovenský punk, crossover, kapela, booking, koncert", category: "seo", label: "SEO — kľúčové slová", type: "textarea" },
 
   // === SITE SETTINGS (VŠEOBECNÉ NASTAVENIA) ===

@@ -42,7 +42,7 @@ export function MusicSection() {
             <div className="relative border border-charcoal bg-dark-gray clip-corner-lg overflow-hidden">
               {/* Aspect-ratio video frame */}
               <div className="relative aspect-video w-full bg-ink">
-                {playing ? (
+                {active.videoId && playing ? (
                   <iframe
                     key={active.id + "-play"}
                     src={`https://www.youtube.com/embed/${active.videoId}?autoplay=1&rel=0&modestbranding=1`}
@@ -51,7 +51,7 @@ export function MusicSection() {
                     allowFullScreen
                     className="absolute inset-0 h-full w-full"
                   />
-                ) : (
+                ) : active.videoId ? (
                   <button
                     onClick={() => setPlaying(true)}
                     className="group absolute inset-0 flex flex-col items-center justify-center"
@@ -76,6 +76,32 @@ export function MusicSection() {
                       {active.genre} · {active.year}
                     </p>
                   </button>
+                ) : (
+                  // Fallback: video nie je k dispozícii (TODO — pozri band-data.ts TRACKS)
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
+                    <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-charcoal text-silver">
+                      <Play className="h-7 w-7 opacity-50" />
+                    </div>
+                    <p className="relative font-display text-lg font-bold text-off-white">
+                      {active.title}
+                    </p>
+                    <p className="relative mt-2 font-mono-brand text-[10px] uppercase tracking-[0.2em] text-warm-yellow">
+                      Video zatiaľ nie je k dispozícii
+                    </p>
+                    <p className="relative mt-3 max-w-xs text-xs text-silver/60">
+                      YouTube embed sa pripravuje — sledujte oficiálny kanál{" "}
+                      <a
+                        href="https://www.youtube.com/@DORAkapela"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-neon-red hover:underline"
+                      >
+                        @DORAkapela
+                      </a>
+                      .
+                    </p>
+                  </div>
                 )}
               </div>
 

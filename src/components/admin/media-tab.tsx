@@ -579,7 +579,7 @@ export function MediaTab({ onChange }: { onChange: (n: number) => void }) {
                   value={form.altText}
                   onChange={(e) => setForm({ ...form, altText: e.target.value })}
                   className="media-input"
-                  placeholder="napr. Marcel Chleban spieva na koncerte v Púchove"
+                  placeholder="napr. Kapela D.O.R.A. naživo na koncerte v Púchove"
                 />
                 <span className="mt-1 block text-[10px] text-silver/60">
                   Popis obrázka pre čítačky obrazovky a vyhľadávače. Odporúčané pre prístupnosť.

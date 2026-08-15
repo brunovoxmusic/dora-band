@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     template: "%s | D.O.R.A.",
   },
   description:
-    "Legendárna funky-punková formácia D.O.R.A. z Púchova. Aktívna od 1996. Booking, PR materiály, diskografia, fotky a kontakt pre médiá a partnerov.",
+    "Legendárna funky-punková formácia D.O.R.A. z Púchova. Na scéne od roku 1996 — tri desaťročia autentickej, energickej a spoločensky angažovanej hudby. Booking, PR materiály, diskografia, fotky a kontakt pre médiá a partnerov.",
   keywords: [
     "D.O.R.A.",
     "Dnes Od Rána Abstinujem",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "D.O.R.A. — Dnes Od Rána Abstinujem",
-    description: "Legendárna funky-punková formácia z Púchova. Aktívna od 1996. Booking, PR materiály, diskografia, fotky.",
+    description: "Legendárna funky-punková formácia z Púchova. Na scéne od roku 1996 — tri desaťročia autentickej, energickej a spoločensky angažovanej hudby. Booking, PR materiály, diskografia, fotky.",
     type: "website",
     locale: "sk_SK",
     siteName: "D.O.R.A.",
@@ -81,7 +81,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "D.O.R.A. — Dnes Od Rána Abstinujem",
-    description: "Legendárna funky-punková formácia z Púchova. Aktívna od 1996.",
+    description: "Legendárna funky-punková formácia z Púchova. Na scéne od roku 1996 — tri desaťročia autentickej, energickej a spoločensky angažovanej hudby.",
     images: ["/gallery/hero-banner.jpg"],
   },
   robots: {
