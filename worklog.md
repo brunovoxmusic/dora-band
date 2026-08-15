@@ -1873,3 +1873,61 @@ NOVÉ TODO MIESTO (na doplnenie kapelou):
 
 Stage Summary:
 Koncertná zostava aktualizovaná — 4 členovia namiesto 6. Historické fakty o založení (1996) a nahrávke (2005) zachované s aktualizovaným menom basgitaristu. Súčasné BIO texty upravené tak, aby nezobrazovali neaktuálne meno Chlebana. Nové TODO pre frontmana — treba doplniť reálne meno.
+
+---
+Task ID: 31 (user-requested: sticky music player + mobile UX)
+Agent: Main (Z.ai Code)
+Task: Vytvoriť sticky prehrávač hudby (viditeľný pri scrolovaní + defaultne zobrazený) + vylepšiť mobilnú verziu
+
+UPRAVENÉ SÚBORY (6):
+
+1. src/lib/music-player-context.tsx (NOVÝ)
+   - MusicPlayerContext — zdieľaný state medzi MusicSection a StickyMusicPlayer
+   - MusicPlayerProvider — React context provider
+   - useMusicPlayer() hook — aktívna skladba, playing, select, togglePlay, next, prev
+
+2. src/components/site/sticky-music-player.tsx (NOVÝ)
+   - Fixed bottom bar, viditeľný od načítania stránky
+   - Auto-hide keď užívateľ v MusicSection (scroll event listener)
+   - Auto-collapse na floating button (48x48px) v MusicSection + not playing
+   - Expandovateľný tracklist:
+     - Desktop: dropdown vpravo dole (384px široký)
+     - Mobile: bottom sheet takmer full-screen
+   - Controls:
+     - Desktop: prev, play/pause, next, tracklist toggle, collapse
+     - Mobile: play/pause, tracklist toggle (ostatné skryté)
+   - Progress bar (decorative)
+   - slideUpPlayer animácia
+
+3. src/components/sections/music-section.tsx (refaktorovaný)
+   - Používa useMusicPlayer() hook namiesto lokálneho useState
+   - State zdieľaný so StickyMusicPlayer
+
+4. src/app/layout.tsx
+   - Pridaný MusicPlayerProvider wrapping children + StickyMusicPlayer
+
+5. src/components/site/navbar.tsx
+   - Mobile menu: full-screen overlay (fixed inset-0 top-16) namiesto dropdown
+   - Väčšie touch targets (py-4), ChevronRight ikony, glow-red-sm na CTA
+
+6. src/app/globals.css
+   - padding-bottom na main (70px mobile, 80px desktop)
+   - Min 44px touch target pre button/a na mobile
+   - Smooth scroll, -webkit-text-size-adjust, overflow-x hidden
+   - -webkit-tap-highlight-color (branded)
+   - Backdrop blur 12px pre mobile
+   - slideUpPlayer keyframe
+
+VERIFIKÁCIA:
+- Sticky player viditeľný od načítania ✓
+- Track sync medzi sticky + hlavná sekcia ✓
+- Play/pause + next/prev sync ✓
+- Auto-hide v MusicSection ✓
+- Auto-expand pri odscrolle ✓
+- Mobilné controls (play/pause + tracklist len) ✓
+- VLM: "music player bar fixed at bottom, clean layout, standard controls"
+- Lint: 0 errors
+
+GIT:
+- Commit: d1f30aa feat: sticky music player + mobile UX improvements
+- Pushed to: https://github.com/brunovoxmusic/dora-band
