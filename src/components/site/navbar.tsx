@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/band-data";
 import { cn } from "@/lib/utils";
 
@@ -74,22 +74,23 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
 
       {/* Mobile menu */}
       {open && (
-        <div className="border-t border-charcoal bg-ink/95 backdrop-blur-xl lg:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col px-4 py-3">
+        <div className="fixed inset-0 top-16 z-40 bg-ink/98 backdrop-blur-xl lg:hidden">
+          <nav className="mx-auto flex max-w-7xl flex-col px-4 py-4">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="border-b border-charcoal/50 py-3 text-sm font-medium text-off-white/80 transition-colors hover:text-neon-red"
+                className="flex items-center justify-between border-b border-charcoal/50 py-4 text-base font-semibold text-off-white/90 transition-colors hover:text-neon-red"
               >
-                {link.label}
+                <span>{link.label}</span>
+                <ChevronRight className="h-4 w-4 text-silver/40" />
               </a>
             ))}
             <a
               href="#kontakt"
               onClick={() => setOpen(false)}
-              className="mt-3 inline-flex items-center justify-center bg-neon-red px-4 py-3 text-sm font-bold uppercase tracking-wide text-white clip-corner"
+              className="mt-4 inline-flex items-center justify-center gap-2 bg-neon-red px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm"
             >
               Rezervovať koncert
             </a>

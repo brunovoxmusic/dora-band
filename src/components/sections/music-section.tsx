@@ -1,21 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Play, Pause, Music2, Headphones, Volume2, Clock, Disc3 } from "lucide-react";
+import { useMusicPlayer } from "@/lib/music-player-context";
 import { TRACKS } from "@/lib/band-data";
+import { Play, Pause, Music2, Headphones, Volume2, Clock, Disc3 } from "lucide-react";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/site/reveal";
 import { cn } from "@/lib/utils";
 
 export function MusicSection() {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const active = TRACKS[activeIdx];
-
-  const select = (i: number) => {
-    setActiveIdx(i);
-    setPlaying(true);
-  };
+  const { activeIdx, activeTrack, playing, select, togglePlay, setPlaying } = useMusicPlayer();
 
   return (
     <section
@@ -42,24 +35,24 @@ export function MusicSection() {
             <div className="relative border border-charcoal bg-dark-gray clip-corner-lg overflow-hidden">
               {/* Aspect-ratio video frame */}
               <div className="relative aspect-video w-full bg-ink">
-                {active.videoId && playing ? (
+                {activeTrack.videoId && playing ? (
                   <iframe
-                    key={active.id + "-play"}
-                    src={`https://www.youtube.com/embed/${active.videoId}?autoplay=1&rel=0&modestbranding=1`}
-                    title={`D.O.R.A. — ${active.title}`}
+                    key={activeTrack.id + "-play"}
+                    src={`https://www.youtube.com/embed/${activeTrack.videoId}?autoplay=1&rel=0&modestbranding=1`}
+                    title={`D.O.R.A. — ${activeTrack.title}`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 h-full w-full"
                   />
-                ) : active.videoId ? (
+                ) : activeTrack.videoId ? (
                   <button
                     onClick={() => setPlaying(true)}
                     className="group absolute inset-0 flex flex-col items-center justify-center"
-                    aria-label={`Prehrať: ${active.title}`}
+                    aria-label={`Prehrať: ${activeTrack.title}`}
                   >
                     {/* Thumbnail backdrop */}
                     <img
-                      src={`https://i.ytimg.com/vi/${active.videoId}/hqdefault.jpg`}
+                      src={`https://i.ytimg.com/vi/${activeTrack.videoId}/hqdefault.jpg`}
                       alt=""
                       className="absolute inset-0 h-full w-full object-cover opacity-40 transition-opacity group-hover:opacity-60"
                     />
@@ -70,10 +63,10 @@ export function MusicSection() {
                       <span className="absolute inset-0 animate-ping rounded-full bg-neon-red/40" />
                     </div>
                     <p className="relative mt-4 font-display text-lg font-bold text-off-white">
-                      {active.title}
+                      {activeTrack.title}
                     </p>
                     <p className="relative font-mono-brand text-[10px] uppercase tracking-[0.2em] text-warm-yellow">
-                      {active.genre} · {active.year}
+                      {activeTrack.genre} · {activeTrack.year}
                     </p>
                   </button>
                 ) : (
@@ -84,7 +77,7 @@ export function MusicSection() {
                       <Play className="h-7 w-7 opacity-50" />
                     </div>
                     <p className="relative font-display text-lg font-bold text-off-white">
-                      {active.title}
+                      {activeTrack.title}
                     </p>
                     <p className="relative mt-2 font-mono-brand text-[10px] uppercase tracking-[0.2em] text-warm-yellow">
                       Video zatiaľ nie je k dispozícii
@@ -118,11 +111,11 @@ export function MusicSection() {
                   <p className="font-mono-brand text-[9px] uppercase tracking-[0.2em] text-silver">
                     {playing ? "Now playing" : "Pripravené na prehrávanie"}
                   </p>
-                  <p className="truncate text-sm font-semibold text-off-white">{active.title}</p>
+                  <p className="truncate text-sm font-semibold text-off-white">{activeTrack.title}</p>
                 </div>
-                <span className="font-mono-brand text-xs text-warm-yellow">{active.duration}</span>
+                <span className="font-mono-brand text-xs text-warm-yellow">{activeTrack.duration}</span>
                 <button
-                  onClick={() => setPlaying((p) => !p)}
+                  onClick={togglePlay}
                   className="inline-flex h-9 w-9 items-center justify-center border border-charcoal text-off-white transition-colors hover:border-neon-red hover:text-neon-red"
                   aria-label={playing ? "Pauza" : "Prehrať"}
                 >

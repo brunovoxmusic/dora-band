@@ -586,3 +586,80 @@
     font-size: 10px;
   }
 }
+
+/* ===== Sticky Music Player — bottom padding pre obsah ===== */
+/* Zabezpečí, že sticky player nezakryje spodok stránky */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Keď je sticky player viditeľný, pridáme padding-bottom na main */
+@media (max-width: 1023px) {
+  /* Mobil: sticky player ~60px + bezpečná zóna */
+  main {
+    padding-bottom: 70px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Desktop: sticky player ~64px */
+  main {
+    padding-bottom: 80px;
+  }
+}
+
+/* ===== Mobilné vylepšenia ===== */
+
+/* Väčší touch target pre tlačidlá na mobile (min 44px) */
+@media (max-width: 640px) {
+  button,
+  a[class*="clip-corner"],
+  a[href^="#"] {
+    min-height: 44px;
+  }
+
+  /* Zmenšiť font sizes na mobile pre lepšiu čitateľnosť */
+  h1 {
+    line-height: 1.05;
+  }
+
+  /* Smooth scroll pre kotvové odkazy */
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent horizontal scroll na mobile */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Lepší tap highlight */
+  * {
+    -webkit-tap-highlight-color: rgba(230, 57, 70, 0.2);
+  }
+}
+
+/* Backdrop blur pre lepšiu čitateľnosť na mobile */
+@media (max-width: 640px) {
+  .backdrop-blur-xl {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Sticky player animácia pri zobrazení */
+@keyframes slideUpPlayer {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+[data-sticky-player] {
+  animation: slideUpPlayer 0.3s ease-out;
+}

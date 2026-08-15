@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { StructuredData } from "@/components/site/structured-data";
+import { MusicPlayerProvider } from "@/lib/music-player-context";
+import { StickyMusicPlayer } from "@/components/site/sticky-music-player";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -109,7 +111,10 @@ export default function RootLayout({
         className={`${montserrat.variable} ${robotoCondensed.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <StructuredData />
-        {children}
+        <MusicPlayerProvider>
+          {children}
+          <StickyMusicPlayer />
+        </MusicPlayerProvider>
         <Toaster />
         <SonnerToaster />
       </body>
