@@ -1931,3 +1931,74 @@ VERIFIKÁCIA:
 GIT:
 - Commit: d1f30aa feat: sticky music player + mobile UX improvements
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 32 (P0 Security Fixes — Fáza 0, M0.1-M0.6)
+Agent: Main (Z.ai Code)
+Task: Forenzný audit + implementácia P0 security fixes podľa D.O.R.A.-komplexny-audit-a-roadmap-2026-2027.md
+
+ZDROJ: Pasted Content_1786981805521.txt (engineering instructions) + D.O.R.A.-komplexny-audit-a-roadmap-2026-2027.md (audit/roadmap)
+
+FAZA 0 — FORENSIC AUDIT (dokončený):
+- 4 paralelné audítorské agenti prehľadali repozitár
+- Vytvorené dokumenty: DORA-IMPLEMENTATION-GAP-ANALYSIS.md, DORA-ENGINEERING-ROADMAP.md
+- Identifikovaných 10× P0 blokátorov
+
+IMPLEMENTED P0 SECURITY FIXES:
+
+M0.1 — Password Hashing (bcrypt):
+- New src/lib/password.ts: hashPassword(), verifyPassword(), isHashedPassword()
+- bcryptjs installed (pure JS, Vercel serverless compatible)
+- AdminUser.password → AdminUser.passwordHash (schema migration via raw SQL)
+- auth.ts: authenticate() uses verifyPassword() + auto-migrates plaintext on first login
+
+M0.2 — Session Secret + Cookie Security:
+- Removed fallback secret "dora-funky-punk-2026-secret" — now throws if ADMIN_SESSION_SECRET env missing
+- Added secure cookie flag: secure: process.env.NODE_ENV === 'production'
+- Timing-safe token verify: crypto.timingSafeEqual (was === string compare)
+- Removed info disclosure in login error (deployment details)
+
+M0.3 — Z.AI Token Rotation:
+- Deleted src/lib/zai-config.ts (dead code, contained hardcoded JWT)
+- Deleted .z-ai-config file
+- Removed z-ai-web-dev-sdk dependency (not used anywhere in src/)
+
+M0.4 — Seed Script Security:
+- seed.ts: ADMIN_EMAIL + ADMIN_PASSWORD from env (was hardcoded "dora2026")
+- Throws if env missing or password < 8 chars
+- No plaintext password in console.log
+
+M0.5 — Mass-Assignment Fix (4 PATCH routes):
+- contacts/[id], tasks/[id], bookings/[id], campaigns/[id]: explicit whitelist
+- All fields checked with typeof before assignment
+- id, createdAt, updatedAt can no longer be overwritten by client
+
+M0.6 — Orphan FK Relations:
+- Booking.gigId → Gig (onDelete: SetNull)
+- Task.gigId → Gig (onDelete: SetNull)
+- Campaign.segmentId → FanSegment (onDelete: SetNull)
+- Added reverse relations + @@index
+
+VERIFICATION:
+- Login with new bcrypt password: ✓
+- Old plaintext password rejected: ✓
+- Admin API 200 with auth: ✓
+- Mass-assignment blocked (id ignored): ✓
+- Z.AI config + dependency removed: ✓
+- Lint: 0 errors
+- DB synced with Neon Postgres
+
+ADMIN CREDENTIALS CHANGED:
+- Old: admin@dora.band / dora2026 (plaintext, public in git)
+- New: admin@dora.band / D0ra2026!Secure (bcrypt hashed)
+- Production: set ADMIN_PASSWORD in Vercel env vars
+
+REMAINING P0 (M0.7-M0.10):
+- M0.7: AI provider adapter pattern
+- M0.8: AI RBAC + Human-in-the-Loop
+- M0.9: Prompt injection defense
+- M0.10: MusicEvent JSON-LD structured data
+
+GIT:
+- Commit: 3051b1c fix(security): P0 security fixes
+- Pushed to: https://github.com/brunovoxmusic/dora-band
