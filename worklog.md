@@ -2262,3 +2262,33 @@ NOTE: Requires GROQ_API_KEY for AI responses.
 GIT:
 - Commit: 427acd7 feat(ai): M4.3 — D.O.R.A. AI Copilot
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 40 (M5.2 + M5.4 — Rehearsal Mode + Setlist model)
+Agent: Main (Z.ai Code)
+Task: Rehearsal Mode + Setlist model (Fáza 5 Music OS)
+
+IMPLEMENTED:
+
+M5.2 — Rehearsal Mode:
+- New Prisma model: Rehearsal (date, attendees, songIds, newMaterial,
+  notes, nextActions, recordings, durationMin, status)
+- New API: /api/admin/rehearsals (GET, POST) + [id] (PATCH, DELETE)
+- New admin tab: rehearsals-tab.tsx (list with status badges, attendees,
+  song count, duration, new material/next actions, mark as done, CRUD form)
+- Added to sidebar (Hudba: Skladby + Skúšky) + Command Palette
+- Created test rehearsal: 20.8.2026, 3 attendees, 120 min, planned
+
+M5.4 — Setlist model:
+- New Prisma model: Setlist (gigId, name, items JSON, totalDuration,
+  trackCount, status, notes) — schema ready for UI in next phase
+- DB synced with Neon Postgres
+
+VERIFIED:
+- Rehearsals API: 200 (GET + POST)
+- Admin: 200, Lint: 0 errors, no regressions
+- Admin now has 17 tabs in 8 navigation groups
+
+GIT:
+- Commit: 256749d feat(music): M5.2 — Rehearsal Mode + Setlist model
+- Pushed to: https://github.com/brunovoxmusic/dora-band
