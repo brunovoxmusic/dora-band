@@ -41,15 +41,20 @@ model Gig {
   ticketPrice String?
   status      String   @default("upcoming")
   notes       String?
+  // M2.2: Link to Venue entity (optional — keeps backward compat with string venue)
+  venueId     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // P0-6: Added FK relations (were orphan String fields)
   bookings    Booking[]
   tasks       Task[]
+  // M2.2: Relation to Venue entity
+  venueRef    Venue?   @relation(fields: [venueId], references: [id], onDelete: SetNull)
 
   @@index([date])
   @@index([status])
+  @@index([venueId])
 }
 
 /// Gallery / media items managed in admin (Media tab).
@@ -152,6 +157,7 @@ model Contact {
   email         String?
   phone         String?
   organization  String?
+  organizationId String? // M2.2: FK to Organization entity
   website       String?
   city          String?
   country       String   @default("SK")
@@ -164,10 +170,66 @@ model Contact {
 
   communications Communication[]
   bookings      Booking[]
+  // M2.2: Relation to Organization entity
+  organizationRef Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([type])
   @@index([aiScore])
   @@index([status])
+  @@index([organizationId])
+}
+
+/// M2.2: Venue — samostatná entita pre kluby, festivaly, miesta.
+model Venue {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("club") // club | festival | cultural_center | outdoor | private
+  city        String?
+  country     String   @default("SK")
+  address     String?
+  /// Kapacita (číslo alebo text ako "500-1000")
+  capacity    String?
+  /// Web stránka venue
+  website     String?
+  /// Technické vybavenie (PA, monitory, pódiom)
+  techInfo    String?  @db.Text
+  /// Kontakt na venue
+  contactPerson String?
+  contactEmail  String?
+  contactPhone  String?
+  /// Hodnotenie skúsenosti (1-5)
+  rating      Int?
+  /// Poznámky z minulých vystúpení
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gigs        Gig[]
+
+  @@index([city])
+  @@index([type])
+}
+
+/// M2.2: Organization — promotéri, festivaly, agentúry ako entity.
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("promoter") // promoter | festival | agency | media | sponsor
+  email       String?
+  phone       String?
+  website     String?
+  city        String?
+  country     String   @default("SK")
+  /// IČO (pre fakturáciu)
+  vatId       String?
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  contacts    Contact[]
+
+  @@index([type])
+  @@index([city])
 }
 
 /// Communication log — emails, calls, meetings, notes.
@@ -389,4 +451,49 @@ model Setlist {
 
   @@index([gigId])
   @@index([status])
+}
+
+/// M3.1: Structured Content Entity — prechádza z key/value na entitný model.
+/// Workflow: idea → draft → ai_generated → ai_check → fact_check →
+/// human_review → approved → scheduled → published → analyzed
+model ContentItem {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  type        String   @default("blog") // blog | news | event | page | press_release
+  status      String   @default("draft") // idea → draft → ... → published → analyzed
+  language    String   @default("sk")
+  author      String?
+  body        String   @db.Text
+  excerpt     String?  @db.Text
+  /// SEO title (override)
+  seoTitle    String?
+  /// SEO description (override)
+  seoDescription String?
+  /// Keywords (comma-separated)
+  keywords    String?
+  /// Media IDs linked to this content (JSON array)
+  mediaIds    String   @default("[]") @db.Text
+  /// Tags (JSON array)
+  tags        String   @default("[]") @db.Text
+  /// AI generated?
+  aiGenerated Boolean  @default(false)
+  /// AI quality score (0-100)
+  aiQualityScore Float?
+  /// Scheduled publish date
+  publishAt   DateTime?
+  /// Actually published date
+  publishedAt DateTime?
+  /// Version number (for revision tracking)
+  version     Int      @default(1)
+  /// Approval: who approved
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([language])
+  @@index([publishedAt])
 }
