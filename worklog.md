@@ -2167,3 +2167,32 @@ VERIFIED:
 GIT:
 - Commits: bb51571 (M2.5), 1645a2d (M4.1)
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 37 (M5.1 — Song Database)
+Agent: Main (Z.ai Code)
+Task: Song Database model + API + admin tab
+
+IMPLEMENTED:
+
+M5.1 — Song Database:
+- New Prisma model: Song (title, altTitle, bpm, musicalKey, tuning, genre,
+  status, duration, lyrics, notes, releaseYear, releaseName, videoId,
+  inSetlist, isCover, originalArtist)
+- 8-stage workflow: idea → demo → arrangement → rehearsal → recording →
+  mix → master → released
+- New API: /api/admin/songs (GET, POST) + [id] (PATCH, DELETE)
+- PATCH with mass-assignment whitelist (P0-5 pattern)
+- New admin tab: songs-tab.tsx (grid layout, 8 status filters, search,
+  setlist toggle, cover flag, CRUD form with lyrics/notes/BPM/key/tuning)
+- Added to sidebar (new 'Hudba' group) + Command Palette (⌘K)
+- DB synced with Neon Postgres
+- Created test song: TCHO SME NAHLAVU? (released, 140 BPM, Am, 3:42)
+
+VERIFIED:
+- Songs API: 200 (GET + POST)
+- Admin: 200, Lint: 0 errors, no regressions
+
+GIT:
+- Commit: 55d198e feat(music): M5.1 — Song Database
+- Pushed to: https://github.com/brunovoxmusic/dora-band
