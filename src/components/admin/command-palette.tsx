@@ -78,6 +78,7 @@ export function CommandPalette({
     { id: "nav-automations", label: "AI Agenti", icon: Zap, group: "Navigácia", action: () => navigate("automations"), keywords: "agenti automations" },
     { id: "nav-knowledge", label: "Knowledge Base", icon: Brain, group: "Navigácia", action: () => navigate("knowledge"), keywords: "knowledge fakty base brain" },
     { id: "nav-songs", label: "Skladby", icon: Music, group: "Navigácia", action: () => navigate("songs"), keywords: "songs skladby music" },
+    { id: "nav-campaigns", label: "Kampane", icon: Mail, group: "Navigácia", action: () => navigate("campaigns"), keywords: "campaigns kampane segments" },
     { id: "nav-settings", label: "Nastavenia", icon: Settings, group: "Navigácia", action: () => navigate("settings"), keywords: "nastavenia settings" },
     // Actions
     { id: "act-web", label: "Otvoriť verejný web", icon: ExternalLink, group: "Akcie", action: () => window.open("/", "_blank") },

@@ -17,6 +17,7 @@ import { BookingTab } from "@/components/admin/booking-tab";
 import { SettingsTab } from "@/components/admin/settings-tab";
 import { KnowledgeTab } from "@/components/admin/knowledge-tab";
 import { SongsTab } from "@/components/admin/songs-tab";
+import { CampaignsTab } from "@/components/admin/campaigns-tab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("stats");
@@ -58,6 +59,7 @@ export default function AdminPage() {
       {tab === "ai" && <AiTab />}
       {tab === "knowledge" && <KnowledgeTab />}
       {tab === "songs" && <SongsTab />}
+      {tab === "campaigns" && <CampaignsTab />}
       {tab === "settings" && <SettingsTab />}
     </AdminShell>
   );

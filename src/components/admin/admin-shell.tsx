@@ -14,7 +14,7 @@ import { CommandPalette } from "./command-palette";
 
 export type AdminTab =
   | "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -55,6 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "content", label: "CMS", icon: FileText },
       { id: "media", label: "Médiá", icon: Images, hasCount: true },
       { id: "seo", label: "SEO", icon: Search },
+      { id: "campaigns", label: "Kampane", icon: Mail },
     ],
   },
   {
