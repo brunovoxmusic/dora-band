@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { CommandPalette } from "./command-palette";
+import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
   | "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
@@ -295,6 +296,9 @@ export function AdminShell({
 
       {/* Command Palette (⌘K) */}
       <CommandPalette onNavigate={onTabChange} userEmail={email} />
+
+      {/* D.O.R.A. AI Copilot (Ctrl+Shift+A) */}
+      <AiCopilot />
     </div>
   );
 }
