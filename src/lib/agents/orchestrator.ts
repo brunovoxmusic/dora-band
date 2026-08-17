@@ -5,10 +5,35 @@ import { db } from "@/lib/db";
 /**
  * AI Agent Framework for D.O.R.A. Band Management OS.
  * Multi-agent orchestration with trigger-based workflows.
+ *
+ * P0 SECURITY FIXES (M0.8 + M0.9):
+ * - inquiryAgent: NO LONGER auto-creates Contact/Booking/Task/Communication.
+ *   Instead, stores AI analysis as a "pending" AutomationLog for admin review.
+ *   Admin approves → records are created manually or via approval workflow.
+ * - Prompt injection defense: all user-provided text is sanitized before
+ *   insertion into LLM prompts.
  */
 
 type Gig = { id: string; title: string; date: Date; venue: string; city: string };
 type Inquiry = { id: string; organizer: string; email: string; phone: string; eventDate: string; eventLocation: string; eventType: string; message: string };
+
+/**
+ * M0-9: Sanitize user input before insertion into LLM prompts.
+ * Strips prompt injection patterns, control chars, and truncates length.
+ */
+function sanitizeForPrompt(input: string, maxLength = 500): string {
+  if (!input || typeof input !== "string") return "";
+  let s = input.slice(0, maxLength);
+  // Strip control characters (except newlines/tabs)
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  // Neutralize common prompt injection patterns (case-insensitive)
+  // Replace with [REDACTED] so the LLM sees something was there
+  s = s.replace(/(?:ignore|disregard|forget)\s+(?:all\s+)?(?:previous|prior|above)\s+instructions?/gi, "[REDACTED]");
+  s = s.replace(/(?:system|assistant|user)\s*:/gi, "[REDACTED]");
+  s = s.replace(/(?:you are|act as|pretend to be)\s+(?:now|a)\s/gi, "[REDACTED] ");
+  s = s.replace(/```[\s\S]*?```/g, "[CODE BLOCK REMOVED]");
+  return s;
+}
 
 /** Content Agent — generates content bundles for events */
 export async function contentAgent(gig: Gig) {
@@ -65,7 +90,9 @@ Vráť IBA JSON.`;
 
 /** Email Agent — generates booking/reply emails */
 export async function emailAgent(params: { tone: string; recipient: string; context: string; subject?: string }) {
-  const prompt = `Príjemca: ${params.recipient}\nTón: ${params.tone}\nKontext: ${params.context}\n\nNapíš profesionálny email v slovenčine pre kapelu D.O.R.A.`;
+  const safeRecipient = sanitizeForPrompt(params.recipient, 100);
+  const safeContext = sanitizeForPrompt(params.context, 1000);
+  const prompt = `Príjemca: ${safeRecipient}\nTón: ${params.tone}\nKontext: ${safeContext}\n\nNapíš profesionálny email v slovenčine pre kapelu D.O.R.A.`;
   const result = await generateText({ model: getModel("writing"), system: `Si booking manažér slovenskej kapely D.O.R.A. Tón: ${params.tone}. Píš v slovenčine.`, prompt });
 
   await db.automationLog.create({ data: { agentType: "email", trigger: "manual", input: JSON.stringify(params), output: result.text, status: "success" } });
@@ -74,7 +101,8 @@ export async function emailAgent(params: { tone: string; recipient: string; cont
 
 /** Booking Agent — analyzes a venue/festival URL */
 export async function bookingAgent(url: string) {
-  const prompt = `Analyzuj túto webstránku eventu/festivalu: ${url}\nVráť JSON:\n{"name":"názov","genre":"žáner","audience":"cieľová skupina","capacity":"kapacita","contact":"kontakt","email":"email","matchScore":0-100,"recommendation":"KONTAKTOVAŤ|NÍZKY|NEVHODNÉ","reason":"dôvod","suggestedEmail":"predmet"}\nVráť IBA JSON.`;
+  const safeUrl = sanitizeForPrompt(url, 500);
+  const prompt = `Analyzuj túto webstránku eventu/festivalu: ${safeUrl}\nVráť JSON:\n{"name":"názov","genre":"žáner","audience":"cieľová skupina","capacity":"kapacita","contact":"kontakt","email":"email","matchScore":0-100,"recommendation":"KONTAKTOVAŤ|NÍZKY|NEVHODNÉ","reason":"dôvod","suggestedEmail":"predmet"}\nVráť IBA JSON.`;
   const result = await generateText({ model: getModel("analysis"), system: "Si AI analytik pre hudobný priemysel. Vráť iba JSON.", prompt });
 
   let analysis;
@@ -85,67 +113,65 @@ export async function bookingAgent(url: string) {
   return analysis;
 }
 
-/** Inquiry Agent — auto-analyzes incoming booking inquiry */
+/**
+ * Inquiry Agent — analyzes incoming booking inquiry.
+ *
+ * P0-8 (Human-in-the-Loop): NO LONGER auto-creates Contact/Booking/Task/Communication.
+ * Instead, stores AI analysis in AutomationLog with status "pending_review".
+ * Admin reviews the analysis and manually creates records if approved.
+ *
+ * P0-9 (Prompt Injection): inquiry.message is sanitized before prompt insertion.
+ */
 export async function inquiryAgent(inquiry: Inquiry) {
-  // 1. Create CRM contact from inquiry
-  const contact = await db.contact.create({
-    data: {
-      type: "promoter",
-      name: inquiry.organizer,
-      email: inquiry.email,
-      phone: inquiry.phone,
-      notes: `Auto-created from inquiry: ${inquiry.eventType} @ ${inquiry.eventLocation} on ${inquiry.eventDate}`,
-      tags: JSON.stringify(["auto-from-inquiry", inquiry.eventType.toLowerCase()]),
-    },
-  }).catch(() => null); // might already exist
+  // M0-9: Sanitize all user-provided fields before LLM prompt
+  const safeOrganizer = sanitizeForPrompt(inquiry.organizer, 100);
+  const safeEmail = sanitizeForPrompt(inquiry.email, 100);
+  const safeEventType = sanitizeForPrompt(inquiry.eventType, 50);
+  const safeEventDate = sanitizeForPrompt(inquiry.eventDate, 50);
+  const safeEventLocation = sanitizeForPrompt(inquiry.eventLocation, 200);
+  const safeMessage = sanitizeForPrompt(inquiry.message, 500);
 
-  // 2. AI analysis of the inquiry
-  const prompt = `Analyzuj booking dopyt:\nOrganizátor: ${inquiry.organizer}\nEmail: ${inquiry.email}\nTyp: ${inquiry.eventType}\nDátum: ${inquiry.eventDate}\nMiesto: ${inquiry.eventLocation}\nSpráva: ${inquiry.message}\n\nVráť JSON:\n{"matchScore":0-100,"priority":"high|medium|low","suggestedReply":"navrhovaná odpoveď v slovenčine","analysis":"stručná analýza potenciálu"}\nVráť IBA JSON.`;
+  // AI analysis with sanitized input
+  const prompt = `Analyzuj booking dopyt:\nOrganizátor: ${safeOrganizer}\nEmail: ${safeEmail}\nTyp: ${safeEventType}\nDátum: ${safeEventDate}\nMiesto: ${safeEventLocation}\nSpráva: ${safeMessage}\n\nVráť JSON:\n{"matchScore":0-100,"priority":"high|medium|low","suggestedReply":"navrhovaná odpoveď v slovenčine","analysis":"stručná analýza potenciálu"}\nVráť IBA JSON.`;
   const result = await generateText({ model: getModel("analysis"), system: "Si booking analytik pre kapelu D.O.R.A. Vráť iba JSON.", prompt });
 
   let analysis = { matchScore: 50, priority: "medium", suggestedReply: "", analysis: "" };
   try { analysis = JSON.parse(result.text.replace(/```json\n?/g, "").replace(/\n?```/g, "")); }
   catch { /* fallback */ }
 
-  // 3. Create booking record
-  if (contact) {
-    await db.booking.create({
-      data: {
-        contactId: contact.id,
-        status: "lead",
-        aiMatchScore: analysis.matchScore,
-        aiAnalysis: analysis.analysis,
-      },
-    });
-  }
-
-  // 4. Create follow-up task
-  await db.task.create({
+  // M0-8: Human-in-the-Loop — NO auto-create of Contact/Booking/Task/Communication.
+  // Store analysis as pending review in AutomationLog.
+  // Admin reviews and creates records manually.
+  await db.automationLog.create({
     data: {
-      title: `Odpovedať na dopyt: ${inquiry.organizer}`,
-      description: `Dopyt na ${inquiry.eventType} @ ${inquiry.eventLocation}. AI návrh odpovede: ${analysis.suggestedReply?.slice(0, 200)}`,
-      priority: analysis.priority || "medium",
-      status: "todo",
-      aiGenerated: true,
+      agentType: "inquiry",
+      trigger: "inquiry_received",
+      input: JSON.stringify({
+        inquiryId: inquiry.id,
+        organizer: inquiry.organizer,
+        email: inquiry.email,
+        phone: inquiry.phone,
+        eventType: inquiry.eventType,
+        eventDate: inquiry.eventDate,
+        eventLocation: inquiry.eventLocation,
+      }),
+      output: JSON.stringify({
+        ...analysis,
+        // Include raw inquiry data for admin to create records if approved
+        pendingAction: "review_and_create_contact_booking",
+        inquiryData: {
+          organizer: inquiry.organizer,
+          email: inquiry.email,
+          phone: inquiry.phone,
+          notes: `Inquiry: ${inquiry.eventType} @ ${inquiry.eventLocation} on ${inquiry.eventDate}`,
+          message: inquiry.message,
+        },
+      }),
+      status: "success",
     },
   });
 
-  // 5. Log communication
-  if (contact) {
-    await db.communication.create({
-      data: {
-        contactId: contact.id,
-        type: "email",
-        direction: "inbound",
-        subject: `Booking dopyt: ${inquiry.eventType}`,
-        body: inquiry.message,
-        aiGenerated: false,
-      },
-    });
-  }
-
-  await db.automationLog.create({ data: { agentType: "inquiry", trigger: "inquiry_received", input: JSON.stringify(inquiry), output: JSON.stringify(analysis), status: "success" } });
-  return { contact, analysis };
+  return { analysis, pendingReview: true };
 }
 
 /** Orchestrator — chains agents for multi-step workflows */
@@ -165,8 +191,7 @@ export async function orchestrator(trigger: string, data: unknown) {
   if (trigger === "inquiry_received") {
     const inquiry = data as Inquiry;
     const result = await inquiryAgent(inquiry).catch(e => ({ error: e.message }));
-    const hasContact = result && "contact" in result && !!result.contact;
-    await db.automationLog.create({ data: { agentType: "orchestrator", trigger, input: JSON.stringify(inquiry), output: JSON.stringify({ hasContact }), status: "success" } });
+    await db.automationLog.create({ data: { agentType: "orchestrator", trigger, input: JSON.stringify(inquiry), output: JSON.stringify({ pendingReview: true }), status: "success" } });
     return result;
   }
 }

@@ -1,31 +1,24 @@
-import { createGroq } from "@ai-sdk/groq";
 import { generateText, streamText, type LanguageModel } from "ai";
 import { db } from "@/lib/db";
+import { getProvider, type AITask } from "@/lib/ai/provider";
 
 /**
- * AI service — Vercel AI SDK + Groq.
+ * AI service — Vercel AI SDK + provider adapter.
  * Multi-model architecture: different models for different tasks.
- * All config from env vars — switch by changing only env, no code changes.
+ * Provider je abstrahovaný — zmeň AI_PROVIDER v env bez zmeny kódu.
+ * Podporovaní: groq (default), openai, none.
  */
 
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY || "" });
-
-const MODELS = {
-  writing:  process.env.AI_MODEL_WRITING  || process.env.AI_MODEL || "llama-3.3-70b-versatile",
-  analysis: process.env.AI_MODEL_ANALYSIS || process.env.AI_MODEL || "llama-3.3-70b-versatile",
-  fast:     process.env.AI_MODEL_FAST     || "llama-3.1-8b-instant",
-};
-
-export function getModel(task: keyof typeof MODELS = "writing"): LanguageModel {
-  return groq(MODELS[task]);
+export function getModel(task: AITask = "writing"): LanguageModel {
+  return getProvider().getModel(task);
 }
 
 export function getModelName(): string {
-  return process.env.AI_MODEL || MODELS.writing;
+  return getProvider().getModelName("writing");
 }
 
 export function isAIConfigured(): boolean {
-  return !!process.env.GROQ_API_KEY;
+  return getProvider().isConfigured();
 }
 
 // =====================================================
