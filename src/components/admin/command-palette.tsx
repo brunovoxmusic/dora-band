@@ -5,7 +5,7 @@ import { Command } from "cmdk";
 import {
   LayoutDashboard, Inbox, CalendarDays, TrendingUp, Users, Mail,
   CheckSquare, FileText, Images, Search, Sparkles, Zap, Settings,
-  ExternalLink, LogOut, Brain, Music,
+  ExternalLink, LogOut, Brain, Music, Activity,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -65,6 +65,7 @@ export function CommandPalette({
   const actions: CommandAction[] = [
     // Navigation
     { id: "nav-stats", label: "Prehľad", icon: LayoutDashboard, group: "Navigácia", action: () => navigate("stats") },
+    { id: "nav-analytics", label: "Analytika", icon: Activity, group: "Navigácia", action: () => navigate("analytics"), keywords: "analytics štatistiky KPI" },
     { id: "nav-inquiries", label: "Dopyty", icon: Inbox, group: "Navigácia", action: () => navigate("inquiries"), keywords: "booking dopyty inquiries" },
     { id: "nav-gigs", label: "Koncerty", icon: CalendarDays, group: "Navigácia", action: () => navigate("gigs"), keywords: "koncerty gigs events" },
     { id: "nav-booking", label: "Pipeline", icon: TrendingUp, group: "Navigácia", action: () => navigate("booking"), keywords: "pipeline booking kanban" },

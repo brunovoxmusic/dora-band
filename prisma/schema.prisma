@@ -84,14 +84,37 @@ model AdminUser {
   updatedAt    DateTime @updatedAt
 }
 
-/// Newsletter subscribers (public signup).
+/// M6.1: Fan 360° — rozšírený Subscriber s profilom a engagement.
 model Subscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  active    Boolean  @default(true)
-  source    String   @default("website")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  email       String   @unique
+  active      Boolean  @default(true)
+  source      String   @default("website") // website | social | event | referral | import
+  // M6.1: Fan 360° polia
+  name        String?
+  city        String?
+  country     String   @default("SK")
+  /// Fan journey: visitor → listener → follower → subscriber → attendee → repeat → superfan
+  journeyStage String  @default("subscriber")
+  /// Segment (LOCAL, CORE_FANS, CASUAL, LIVE_FANS, SUPERFANS, PRESS, INDUSTRY, BOOKERS)
+  segment     String?
+  /// Number of events attended
+  eventsAttended Int   @default(0)
+  /// Engagement score (0-100, computed from interactions)
+  engagementScore Float @default(0)
+  /// Interests (JSON array: genres, event types, etc.)
+  interests   String   @default("[]") // JSON-encoded array
+  /// First contact date
+  firstContactAt DateTime @default(now())
+  /// Last interaction date
+  lastInteractionAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([journeyStage])
+  @@index([segment])
+  @@index([city])
 }
 
 /// Editable site content (CMS key-value store) — also stores settings.* keys.

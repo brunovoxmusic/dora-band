@@ -5,7 +5,7 @@ import {
   Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink,
   LayoutDashboard, Mail, FileText, Search, Sparkles, Users,
   CheckSquare, Zap, TrendingUp, Settings, Menu, X, ChevronRight,
-  Command as CommandIcon, Brain, Music,
+  Command as CommandIcon, Brain, Music, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ import { CommandPalette } from "./command-palette";
 import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
-  | "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
+  | "stats" | "analytics" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
   | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "rehearsals" | "campaigns" | "settings";
 
 type NavGroup = {
@@ -27,6 +27,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Command Center",
     items: [
       { id: "stats", label: "Prehľad", icon: LayoutDashboard },
+      { id: "analytics", label: "Analytika", icon: Activity },
     ],
   },
   {

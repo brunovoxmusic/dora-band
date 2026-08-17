@@ -19,6 +19,7 @@ import { KnowledgeTab } from "@/components/admin/knowledge-tab";
 import { SongsTab } from "@/components/admin/songs-tab";
 import { CampaignsTab } from "@/components/admin/campaigns-tab";
 import { RehearsalsTab } from "@/components/admin/rehearsals-tab";
+import { AnalyticsTab } from "@/components/admin/analytics-tab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("stats");
@@ -31,6 +32,7 @@ export default function AdminPage() {
   return (
     <AdminShell activeTab={tab} onTabChange={handleTabChange} userEmail={userEmail}>
       {tab === "stats" && <StatsTab />}
+      {tab === "analytics" && <AnalyticsTab />}
       {tab === "inquiries" && <InquiriesTab onChange={(n) => {
         if (typeof window !== "undefined") {
           (window as unknown as { __refreshAdminCount?: (key: string, n: number) => void }).__refreshAdminCount?.("inquiries", n);
