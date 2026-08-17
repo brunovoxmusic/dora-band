@@ -2292,3 +2292,35 @@ VERIFIED:
 GIT:
 - Commit: 256749d feat(music): M5.2 — Rehearsal Mode + Setlist model
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 41 (M6.1 + M6.3 — Fan 360° + Analytics Dashboard)
+Agent: Main (Z.ai Code)
+Task: Fan 360° + Analytics Dashboard (Fáza 6)
+
+IMPLEMENTED:
+
+M6.1 — Fan 360°:
+- Extended Subscriber model: name, city, country, journeyStage,
+  segment, eventsAttended, engagementScore, interests, firstContactAt,
+  lastInteractionAt
+- Fan journey: visitor → listener → follower → subscriber → attendee →
+  repeat → superfan
+- Added indexes on active, journeyStage, segment, city
+- DB synced
+
+M6.3 — Analytics Dashboard:
+- New API: GET /api/admin/analytics — 6 KPI categories:
+  LIVE, CRM, FAN, MUSIC, CONTENT, BUSINESS
+- Each category has aggregated counts + breakdowns
+- New admin tab: analytics-tab.tsx with 6 visual sections
+- Added to sidebar (Command Center: Prehľad + Analytika) + ⌘K
+
+VERIFIED:
+- Analytics API: 200 (real data: 3 gigs, 1 contact, 2 songs, 21 media)
+- Admin: 200, Lint: 0 errors, no regressions
+- Admin now has 18 tabs in 8 navigation groups
+
+GIT:
+- Commit: 7b3df27 feat(analytics): M6.1 + M6.3
+- Pushed to: https://github.com/brunovoxmusic/dora-band
