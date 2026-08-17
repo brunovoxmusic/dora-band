@@ -15,7 +15,7 @@ import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
   | "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "campaigns" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "rehearsals" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -71,6 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Hudba",
     items: [
       { id: "songs", label: "Skladby", icon: Music },
+      { id: "rehearsals", label: "Skúšky", icon: CalendarDays },
     ],
   },
   {

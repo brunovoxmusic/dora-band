@@ -319,3 +319,51 @@ model Song {
   @@index([genre])
   @@index([inSetlist])
 }
+
+/// M5.2: Rehearsal Mode — skúšky kapely s setlistom a poznámkami.
+model Rehearsal {
+  id          String   @id @default(cuid())
+  date        DateTime
+  /// Zúčastnení členovia (JSON array of member names)
+  attendees   String   @default("[]") // JSON-encoded array
+  /// Setlist skúšaných skladieb (JSON array of song IDs)
+  songIds     String   @default("[]") // JSON-encoded array
+  /// Nový materiál (čo sa učili)
+  newMaterial String?  @db.Text
+  /// Poznámky z skúšky
+  notes       String?  @db.Text
+  /// Ďalšie úlohy (čo treba doučiť)
+  nextActions String?  @db.Text
+  /// Nahrané demo/zápisy z skúšky
+  recordings  String?  @db.Text // JSON array of URLs
+  /// Trvanie skúšky v minútach
+  durationMin Int?
+  status      String   @default("planned") // planned | done | cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+}
+
+/// M5.4: Setlist — prepojenie skladieb s koncertmi.
+/// Každý setlist je konkrétna zostava pre konkrétny koncert.
+model Setlist {
+  id          String   @id @default(cuid())
+  gigId       String?
+  name        String   @default("Setlist")
+  /// JSON array of { songId, order, note } objects
+  items       String   @default("[]") @db.Text
+  /// Celkové trvanie odhadované (MM:SS)
+  totalDuration String?
+  /// Počet skladieb
+  trackCount  Int      @default(0)
+  /// Status: draft → confirmed → performed
+  status      String   @default("draft")
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([gigId])
+  @@index([status])
+}
