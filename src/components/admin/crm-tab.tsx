@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Users, Plus, Trash2, Pencil, X, Loader2, Search, Mail, Phone, Building, MapPin, Star, MessageSquare, Send } from "lucide-react";
+import { Users, Plus, Trash2, Pencil, X, Loader2, Search, Mail, Phone, Building, MapPin, Star, MessageSquare, Send, TrendingUp, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -112,10 +112,27 @@ function ContactForm({ onClose }: { onClose: () => void }) {
 
 function ContactDetail({ contact, onClose, onUpdate }: { contact: Contact; onClose: () => void; onUpdate: () => void }) {
   const [comms, setComms] = useState<Array<{ id: string; type: string; direction: string; subject: string | null; body: string; aiGenerated: boolean; createdAt: string }>>([]);
+  const [bookings, setBookings] = useState<Array<{ id: string; status: string; aiMatchScore: number | null; proposedFee: string | null; actualFee: string | null; gigId: string | null; createdAt: string }>>([]);
+  const [tasks, setTasks] = useState<Array<{ id: string; title: string; status: string; priority: string; dueDate: string | null; gigId: string | null }>>([]);
   const [showComm, setShowComm] = useState(false);
   const [commBody, setCommBody] = useState("");
 
-  useEffect(() => { fetch(`/api/admin/communications?contactId=${contact.id}`).then(r => r.json()).then(d => setComms(d.items ?? [])); }, [contact.id]);
+  // M2.3: Fetch communications + bookings + tasks for Contact 360°
+  useEffect(() => {
+    fetch(`/api/admin/communications?contactId=${contact.id}`).then(r => r.json()).then(d => setComms(d.items ?? []));
+    // Fetch all bookings, filter by contactId
+    fetch("/api/admin/bookings").then(r => r.json()).then(d => {
+      const contactBookings = (d.items ?? []).filter((b: { contactId: string | null }) => b.contactId === contact.id);
+      setBookings(contactBookings);
+      // Fetch tasks linked to the same gigs as this contact's bookings
+      const gigIds = contactBookings.map((b: { gigId: string | null }) => b.gigId).filter(Boolean);
+      if (gigIds.length > 0) {
+        fetch("/api/admin/tasks").then(r => r.json()).then(d => {
+          setTasks((d.items ?? []).filter((t: { gigId: string | null }) => t.gigId && gigIds.includes(t.gigId)));
+        });
+      }
+    });
+  }, [contact.id]);
 
   const addComm = async () => {
     if (!commBody.trim()) return;
@@ -149,6 +166,85 @@ function ContactDetail({ contact, onClose, onUpdate }: { contact: Contact; onClo
           <div className="max-h-40 space-y-2 overflow-y-auto scroll-dora">
             {comms.map(c => <div key={c.id} className="border border-charcoal/50 bg-ink p-2"><p className="text-xs text-off-white/80">{c.body}</p><p className="mt-1 font-mono-brand text-[9px] text-silver">{c.type} · {new Date(c.createdAt).toLocaleDateString("sk-SK")}{c.aiGenerated && " · AI"}</p></div>)}
             {comms.length === 0 && <p className="text-xs text-silver/50">Žiadna komunikácia.</p>}
+          </div>
+        </div>
+
+        {/* M2.3: Bookings — Contact 360° */}
+        {bookings.length > 0 && (
+          <div className="mt-4 border-t border-charcoal pt-4">
+            <div className="mb-2 flex items-center gap-2">
+              <TrendingUp className="h-3.5 w-3.5 text-neon-red" />
+              <p className="font-mono-brand text-[11px] uppercase text-warm-yellow">{"// Booking pipeline"}</p>
+            </div>
+            <div className="space-y-2">
+              {bookings.map(b => (
+                <div key={b.id} className="flex items-center justify-between border border-charcoal/50 bg-ink p-2">
+                  <div>
+                    <span className={cn(
+                      "inline-block border px-1.5 py-0.5 font-mono-brand text-[9px] uppercase",
+                      b.status === "confirmed" ? "border-green-500/40 text-green-400" :
+                      b.status === "cancelled" ? "border-neon-red/40 text-neon-red" :
+                      "border-charcoal text-silver"
+                    )}>
+                      {b.status}
+                    </span>
+                    {b.aiMatchScore !== null && (
+                      <span className="ml-2 font-mono-brand text-xs text-warm-yellow">
+                        {Math.round(b.aiMatchScore)}% match
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-off-white/60">{b.proposedFee || b.actualFee || "—"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* M2.3: Tasks — Contact 360° */}
+        {tasks.length > 0 && (
+          <div className="mt-4 border-t border-charcoal pt-4">
+            <div className="mb-2 flex items-center gap-2">
+              <CheckSquare className="h-3.5 w-3.5 text-neon-red" />
+              <p className="font-mono-brand text-[11px] uppercase text-warm-yellow">{"// Súvisiace úlohy"}</p>
+            </div>
+            <div className="space-y-1.5">
+              {tasks.map(t => (
+                <div key={t.id} className="flex items-center gap-2 border border-charcoal/50 bg-ink p-2">
+                  <span className={cn(
+                    "h-2 w-2 shrink-0 rounded-full",
+                    t.status === "done" ? "bg-green-500" :
+                    t.priority === "urgent" || t.priority === "high" ? "bg-neon-red" :
+                    "bg-warm-yellow"
+                  )} />
+                  <span className={cn(
+                    "flex-1 truncate text-xs",
+                    t.status === "done" ? "text-silver/50 line-through" : "text-off-white/80"
+                  )}>
+                    {t.title}
+                  </span>
+                  {t.dueDate && (
+                    <span className="font-mono-brand text-[9px] text-silver/60">
+                      {new Date(t.dueDate).toLocaleDateString("sk-SK")}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 360° Summary */}
+        <div className="mt-4 border-t border-charcoal pt-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-mono-brand text-[9px] uppercase text-silver/40">
+              360° prehľad
+            </span>
+            <div className="flex items-center gap-3 text-silver">
+              <span>💬 {comms.length}</span>
+              <span>📊 {bookings.length}</span>
+              <span>✅ {tasks.filter(t => t.status === "done").length}/{tasks.length}</span>
+            </div>
           </div>
         </div>
       </div>
