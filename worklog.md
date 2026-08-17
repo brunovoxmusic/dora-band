@@ -2196,3 +2196,29 @@ VERIFIED:
 GIT:
 - Commit: 55d198e feat(music): M5.1 — Song Database
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 38 (M1.5 — Campaigns + Segments admin tab)
+Agent: Main (Z.ai Code)
+Task: Campaign + FanSegment admin taby (modely+API existovali, chýbal UI)
+
+IMPLEMENTED:
+
+M1.5 — Campaign + FanSegment admin tab:
+- New campaigns-tab.tsx with sub-tabs (Kampane / Segmenty)
+- Campaigns: list with status badges, type icons, AI tag, scheduled date
+- Segments: list with subscriber count, description, AI tag
+- CRUD forms for both (campaign: name, type, subject, body, status, segment;
+  segment: name, description, criteria JSON)
+- EmptyState + ErrorState
+- Added to sidebar (Obsah group) + Command Palette
+- Admin now has 16 tabs in 8 navigation groups
+- Fáza 1 (Admin UX) FULLY COMPLETE: M1.1-M1.5
+
+VERIFIED:
+- Campaigns API: 200, Segments API: 200
+- Admin: 200, Lint: 0 errors, no regressions
+
+GIT:
+- Commit: 200d90d feat(admin): M1.5 — Campaigns + Segments
+- Pushed to: https://github.com/brunovoxmusic/dora-band
