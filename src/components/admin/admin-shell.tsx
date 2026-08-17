@@ -5,7 +5,7 @@ import {
   Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink,
   LayoutDashboard, Mail, FileText, Search, Sparkles, Users,
   CheckSquare, Zap, TrendingUp, Settings, Menu, X, ChevronRight,
-  Command as CommandIcon, Brain, Music, Activity, ListMusic, DollarSign, Mic2,
+  Command as CommandIcon, Brain, Music, Activity, ListMusic, DollarSign, Mic2, ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,8 @@ import { CommandPalette } from "./command-palette";
 import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
-  | "stats" | "analytics" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "ai-usage" | "knowledge" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "campaigns" | "settings";
+  | "stats" | "analytics" | "predictions" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
+  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "ai-usage" | "knowledge" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -28,6 +28,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "stats", label: "Prehľad", icon: LayoutDashboard },
       { id: "analytics", label: "Analytika", icon: Activity },
+      { id: "predictions", label: "Predikcie", icon: Sparkles },
     ],
   },
   {
@@ -76,6 +77,12 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "rehearsals", label: "Skúšky", icon: CalendarDays },
       { id: "setlists", label: "Setlisty", icon: ListMusic },
       { id: "concert-mode", label: "Concert Mode", icon: Mic2 },
+    ],
+  },
+  {
+    label: "Biznis",
+    items: [
+      { id: "merch", label: "Merch", icon: ShoppingCart },
     ],
   },
   {

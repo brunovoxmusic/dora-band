@@ -5,7 +5,7 @@ import { Command } from "cmdk";
 import {
   LayoutDashboard, Inbox, CalendarDays, TrendingUp, Users, Mail,
   CheckSquare, FileText, Images, Search, Sparkles, Zap, Settings,
-  ExternalLink, LogOut, Brain, Music, Activity, ListMusic, DollarSign, Mic2,
+  ExternalLink, LogOut, Brain, Music, Activity, ListMusic, DollarSign, Mic2, ShoppingCart,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -66,6 +66,7 @@ export function CommandPalette({
     // Navigation
     { id: "nav-stats", label: "Prehľad", icon: LayoutDashboard, group: "Navigácia", action: () => navigate("stats") },
     { id: "nav-analytics", label: "Analytika", icon: Activity, group: "Navigácia", action: () => navigate("analytics"), keywords: "analytics štatistiky KPI" },
+    { id: "nav-predictions", label: "Predikcie (AI)", icon: Sparkles, group: "Navigácia", action: () => navigate("predictions"), keywords: "predictions predictive ai forecast analýza budúcnosť" },
     { id: "nav-inquiries", label: "Dopyty", icon: Inbox, group: "Navigácia", action: () => navigate("inquiries"), keywords: "booking dopyty inquiries" },
     { id: "nav-gigs", label: "Koncerty", icon: CalendarDays, group: "Navigácia", action: () => navigate("gigs"), keywords: "koncerty gigs events" },
     { id: "nav-booking", label: "Pipeline", icon: TrendingUp, group: "Navigácia", action: () => navigate("booking"), keywords: "pipeline booking kanban" },
@@ -83,6 +84,7 @@ export function CommandPalette({
     { id: "nav-rehearsals", label: "Skúšky", icon: CalendarDays, group: "Navigácia", action: () => navigate("rehearsals"), keywords: "rehearsals skúšky rehearsals" },
     { id: "nav-setlists", label: "Setlisty", icon: ListMusic, group: "Navigácia", action: () => navigate("setlists"), keywords: "setlists setlisty zostava" },
     { id: "nav-concert-mode", label: "Concert Mode (Live OS)", icon: Mic2, group: "Navigácia", action: () => navigate("concert-mode"), keywords: "concert live mode koncert stage live performance" },
+    { id: "nav-merch", label: "Merchandise", icon: ShoppingCart, group: "Navigácia", action: () => navigate("merch"), keywords: "merch merchandise products orders shop store ecommerce" },
     { id: "nav-campaigns", label: "Kampane", icon: Mail, group: "Navigácia", action: () => navigate("campaigns"), keywords: "campaigns kampane segments" },
     { id: "nav-settings", label: "Nastavenia", icon: Settings, group: "Navigácia", action: () => navigate("settings"), keywords: "nastavenia settings" },
     // Actions

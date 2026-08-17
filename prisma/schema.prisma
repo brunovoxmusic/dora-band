@@ -558,3 +558,82 @@ model AiUsageLog {
   @@index([createdAt])
   @@index([success])
 }
+
+/// M7.4: Merchandise Management — produkty a objednávky.
+model MerchProduct {
+  id          String   @id @default(cuid())
+  /// Názov produktu (napr. "Tričko D.O.R.A. Logo")
+  name        String
+  /// Slug pre URL
+  slug        String   @unique
+  /// Popis
+  description String?  @db.Text
+  /// Kategória: t-shirt, vinyl, cd, poster, sticker, other
+  category    String   @default("other")
+  /// Cena v EUR
+  price       Float
+  /// Nákupná cena (pre margin výpočet)
+  costPrice   Float    @default(0)
+  /// Skladom (ks)
+  stock       Int      @default(0)
+  /// Minimálna rezerva pre low-stock alert
+  minStock    Int      @default(5)
+  /// Veľkosti (JSON array: ["S", "M", "L", "XL"])
+  sizes       String   @default("[]") @db.Text
+  /// Farby (JSON array)
+  colors      String   @default("[]") @db.Text
+  /// URL obrázku
+  imageUrl    String?
+  /// Je produkt aktívny / viditeľný?
+  active      Boolean  @default(true)
+  /// Best-seller badge (vypočítané z predaja)
+  bestSeller  Boolean  @default(false)
+  /// Dátum vydania / pridania
+  releasedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      MerchOrder[]
+
+  @@index([category])
+  @@index([active])
+  @@index([bestSeller])
+}
+
+/// M7.4: Merch objednávky (event sales alebo online objednávky).
+model MerchOrder {
+  id          String   @id @default(cuid())
+  /// Typ: event (predané na koncerte), online, wholesale
+  type        String   @default("event")
+  /// Reference na gig (ak event predaj)
+  gigId       String?
+  /// Referencia na produkt
+  productId   String
+  /// Množstvo
+  quantity    Int
+  /// Cena za kus (snapshot v čase predaja)
+  unitPrice   Float
+  /// Veľkosť (ak relevantné)
+  size        String?
+  /// Farba (ak relevantné)
+  color       String?
+  /// Kupujúci (ak online — meno/email)
+  buyerName   String?
+  buyerEmail  String?
+  /// Stav: pending, confirmed, shipped, delivered, cancelled, refunded
+  status      String   @default("confirmed")
+  /// Spôsob platby: cash, card, online, transfer
+  paymentMethod String? @default("cash")
+  /// Poznámky
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product     MerchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([gigId])
+  @@index([productId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}

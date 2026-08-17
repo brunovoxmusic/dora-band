@@ -2548,3 +2548,110 @@ NEXT PHASE PRIORITIES:
 - All AI calls currently fail in dev (no GROQ_API_KEY) —
   in production, AI Cost Tracking will log real token/cost data
 
+
+---
+Task ID: 45 (M7.4 + M7.5 — Merchandise OS + Predictive Analytics)
+Agent: Main (Z.ai Code)
+Task: M7.4 Merchandise Management + M7.5 Predictive Analytics
+
+IMPLEMENTED:
+
+M7.4 — Merchandise OS:
+- New Prisma models:
+  - MerchProduct (name, slug, description, category, price, costPrice,
+    stock, minStock, sizes JSON, colors JSON, imageUrl, active,
+    bestSeller, releasedAt) with indexes
+  - MerchOrder (type: event/online/wholesale, gigId, productId,
+    quantity, unitPrice, size, color, buyerName, buyerEmail, status,
+    paymentMethod, notes) with FK to MerchProduct
+- New APIs:
+  - GET/POST /api/admin/merch/products (slug auto-generation)
+  - PATCH/DELETE /api/admin/merch/products/[id]
+  - GET/POST /api/admin/merch/orders (transaction: create + decrement
+    stock + auto-bestseller at 20+ sold)
+  - PATCH/DELETE /api/admin/merch/orders/[id] (delete re-stocks)
+  - GET /api/admin/merch/stats (revenue, top products, low stock alerts,
+    best sellers, category breakdown, recent orders)
+- New admin tab: merch-tab.tsx with 3 sub-tabs:
+  - Štatistiky: 4 KPI cards, low stock alerts, top produkty, best sellers,
+    category stats (potenciálny revenue)
+  - Produkty: searchable grid with product cards (category emoji,
+    best seller badge, low stock highlight, margin %, sizes/colors)
+  - Objednávky: scroll-area list with status badges, type icons,
+    quantity × unitPrice, total, delete with auto-restock
+- Product form dialog: name, category select, price, costPrice,
+  stock, minStock, sizes/colors (comma-separated), imageUrl, active toggle
+- Order form dialog: product picker, quantity, type, size/color
+  (dynamic based on product), buyer info (for online), payment method
+- Added to sidebar (Biznis: Merch) + ⌘K (keywords: merch, products,
+  orders, shop, store, ecommerce)
+
+M7.5 — Predictive Analytics:
+- New API: GET /api/admin/predictions
+  - 5 prediction categories with rule-based fallback:
+    1. Booking probability (contacts with AI score ≥70, no bookings)
+    2. Fan engagement trend (subscriber growth rate, churn)
+    3. Revenue forecast (confirmed gigs + merch extrapolation)
+    4. Low stock risk (days-until-stockout based on velocity)
+    5. Gig readiness (task completion %, critical gigs <14d)
+  - Each prediction: type, label, value, confidence (0-1),
+    trend (up/down/stable), detail, recommendation, metadata
+  - Overall health score (avg confidence × 100)
+- New admin tab: predictions-tab.tsx
+  - Health Score card (big, color-coded: výborný/dobrý/priemerný/kritický)
+  - Trend summary cards (up/down counts)
+  - 5 prediction cards in 2-col grid:
+    - Type icon + color (booking=sky, fan=violet, revenue=emerald,
+      stock=amber, gig=rose)
+    - Trend badge with arrow icon
+    - Confidence with mini progress bar
+    - Detail text
+    - Recommendation in amber callout (Lightbulb icon)
+    - Type-specific metadata display:
+      - stock: list of at-risk products with days until out
+      - booking: badges of high-probability contacts
+      - gig: critical gigs list with days + readiness %
+  - Critical border highlight (red) when trend=down + high confidence
+- Added to sidebar (Command Center: Prehľad + Analytika + Predikcie) + ⌘K
+
+DB SYNC:
+- Both new models synced to SQLite (25 models total now)
+- Schema regenerated from postgres (preserves @db.Text for production)
+
+VERIFIED via agent-browser (end-to-end):
+- Login → admin → Predikcie tab loads, 5 predictions visible,
+  health score 59/100, revenue forecast 524€
+- Merch tab loads with 4 KPI cards (524€ revenue, 41 kusov, 5 produktov,
+  1 low stock alert, 1 bestseller)
+- Products sub-tab: 5 product cards rendered correctly with emojis,
+  badges, stock, margin
+- Orders sub-tab: 20 orders displayed with status badges, totals
+  (fixed bug: order.total was undefined → calculate from quantity × unitPrice)
+- Product form dialog: opened, filled, submitted → product count
+  incremented from 5 to 6
+- Sticky footer verified on homepage (16307×577 viewport, footer at 1614)
+
+TEST DATA CREATED:
+- 5 merch products (Tričko, Vinyl, Plagát, Nálepka, CD)
+- 20 orders (8 t-shirts × 2, 3 vinyls × 1, 5 stickers × 3, 1 poster online)
+- Tričko became best seller at 22 units sold (threshold: 20+)
+- Plagát has low stock (3 ks, minStock 10)
+
+FIXES:
+- Removed `lastContactAt` from Contact select (field doesn't exist)
+- Removed `product.createdAt` reference (was using non-existent field)
+- Fixed `order.total` → calculate inline as `quantity * unitPrice`
+
+GIT (planned):
+- Will commit: feat(business): M7.4 Merchandise OS + M7.5 Predictive Analytics
+
+FINAL PROJECT STATE:
+- Prisma models: 29 (added MerchProduct, MerchOrder)
+- Admin tabs: 22 in 9 navigation groups
+  - Added "Biznis" group with Merch
+  - Added Predictions to Command Center
+- ⌘K actions: 26
+- API endpoints: 22 admin endpoints (added 5 merch + 1 predictions)
+
+STATUS: M7.4 + M7.5 FULLY COMPLETE AND VERIFIED
+

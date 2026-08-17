@@ -21,8 +21,10 @@ import { SongsTab } from "@/components/admin/songs-tab";
 import { CampaignsTab } from "@/components/admin/campaigns-tab";
 import { RehearsalsTab } from "@/components/admin/rehearsals-tab";
 import { AnalyticsTab } from "@/components/admin/analytics-tab";
+import { PredictionsTab } from "@/components/admin/predictions-tab";
 import { SetlistsTab } from "@/components/admin/setlists-tab";
 import { ConcertModeTab } from "@/components/admin/concert-mode-tab";
+import { MerchTab } from "@/components/admin/merch-tab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("stats");
@@ -36,6 +38,7 @@ export default function AdminPage() {
     <AdminShell activeTab={tab} onTabChange={handleTabChange} userEmail={userEmail}>
       {tab === "stats" && <StatsTab />}
       {tab === "analytics" && <AnalyticsTab />}
+      {tab === "predictions" && <PredictionsTab />}
       {tab === "inquiries" && <InquiriesTab onChange={(n) => {
         if (typeof window !== "undefined") {
           (window as unknown as { __refreshAdminCount?: (key: string, n: number) => void }).__refreshAdminCount?.("inquiries", n);
@@ -69,6 +72,7 @@ export default function AdminPage() {
       {tab === "rehearsals" && <RehearsalsTab />}
       {tab === "setlists" && <SetlistsTab />}
       {tab === "concert-mode" && <ConcertModeTab />}
+      {tab === "merch" && <MerchTab />}
       {tab === "campaigns" && <CampaignsTab />}
       {tab === "settings" && <SettingsTab />}
     </AdminShell>
