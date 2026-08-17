@@ -276,3 +276,46 @@ model KnowledgeItem {
   @@index([category])
   @@index([verified])
 }
+
+/// M5.1: Song Database — skladby s metadatami, stavom a workflow.
+/// Prepojené na Setlist, Gigs a Discography.
+model Song {
+  id          String   @id @default(cuid())
+  title       String
+  /// Alternative title or working title
+  altTitle    String?
+  /// BPM (beats per minute)
+  bpm         Int?
+  /// Musical key (e.g. "Am", "C", "F#m")
+  musicalKey  String?
+  /// Guitar tuning (e.g. "Standard", "Drop D")
+  tuning      String?
+  /// Primary genre
+  genre       String   @default("Funky-Punk")
+  /// Song status: idea → demo → arrangement → rehearsal → recording → mix → master → released
+  status      String   @default("idea")
+  /// Duration in MM:SS format
+  duration    String?
+  /// Lyrics (full text)
+  lyrics      String?  @db.Text
+  /// Notes about arrangement, performance, etc.
+  notes       String?  @db.Text
+  /// Release year (if released)
+  releaseYear String?
+  /// Release title (album/demo name)
+  releaseName String?
+  /// YouTube video ID (if published)
+  videoId     String?
+  /// Is this song in the current setlist?
+  inSetlist   Boolean  @default(false)
+  /// Is this a cover?
+  isCover     Boolean  @default(false)
+  /// Original artist (if cover)
+  originalArtist String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([genre])
+  @@index([inSetlist])
+}

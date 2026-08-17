@@ -5,7 +5,7 @@ import {
   Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink,
   LayoutDashboard, Mail, FileText, Search, Sparkles, Users,
   CheckSquare, Zap, TrendingUp, Settings, Menu, X, ChevronRight,
-  Command as CommandIcon, Brain,
+  Command as CommandIcon, Brain, Music,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ import { CommandPalette } from "./command-palette";
 
 export type AdminTab =
   | "stats" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "settings";
 
 type NavGroup = {
   label: string;
@@ -63,6 +63,12 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "ai", label: "AI nástroje", icon: Sparkles },
       { id: "automations", label: "AI Agenti", icon: Zap },
       { id: "knowledge", label: "Knowledge", icon: Brain },
+    ],
+  },
+  {
+    label: "Hudba",
+    items: [
+      { id: "songs", label: "Skladby", icon: Music },
     ],
   },
   {
