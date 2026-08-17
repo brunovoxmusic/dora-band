@@ -2370,3 +2370,35 @@ Admin tabs: 18 in 8 groups
 GIT:
 - Commit: 5000fa8 feat(seo+ai): M3.4 hreflang + M4.2 AI Tool System
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 43 (M5.4 + M6.4 + M7.3 — Setlists + Market Report + Finance)
+Agent: Main (Z.ai Code)
+Task: Setlist Management UI + Marketing Intelligence + Finance OS
+
+IMPLEMENTED:
+
+M5.4 — Setlist Management UI:
+- API: /api/admin/setlists (GET, POST) + [id] (PATCH, DELETE)
+- Admin tab: setlists-tab.tsx with song picker, auto-duration calc
+- Added to sidebar (Hudba: Skladby + Skúšky + Setlisty) + ⌘K
+
+M6.4 — Marketing Intelligence:
+- API: GET /api/admin/market-report (AI-powered weekly report)
+- 'Vygenerovať report' button in Analytics tab
+- Report sections: SÚHRN, PRIORITI, PRÍLEŽITOSTI, RIZIKÁ, ODPORÚČANIA
+
+M7.3 — Finance OS:
+- New model: GigFinance (fee, travelCost, accommodation, equipmentCost,
+  promotionCost, otherCost, notes)
+- API: /api/admin/gig-finance (GET by gigId, PUT upsert)
+- Returns netValue (fee - totalCosts)
+
+VERIFIED:
+- Setlists: 200, GigFinance: 200, Market Report: 500 (no GROQ_API_KEY)
+- Admin: 200, Lint: 0 errors
+- Admin: 19 tabs, 8 groups, 26 Prisma models, 22 ⌘K actions
+
+GIT:
+- Commit: e3822f9 feat(music+finance+marketing): M5.4 + M6.4 + M7.3
+- Pushed to: https://github.com/brunovoxmusic/dora-band
