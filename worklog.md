@@ -2222,3 +2222,43 @@ VERIFIED:
 GIT:
 - Commit: 200d90d feat(admin): M1.5 — Campaigns + Segments
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 39 (M4.3 — D.O.R.A. AI Copilot)
+Agent: Main (Z.ai Code)
+Task: Kontextový AI asistent v adminu — D.O.R.A. AI Copilot
+
+IMPLEMENTED:
+
+M4.3 — D.O.R.A. AI Copilot:
+- New API: POST /api/admin/copilot (streaming)
+  - Gathers real DB context: stats (13 counts), recent inquiries (5),
+    upcoming gigs (5), urgent tasks (5), active bookings (5),
+    verified knowledge facts (10)
+  - System prompt: Slovak, punk tone, no fabrication, actionable
+  - Streaming response via Vercel AI SDK streamText
+- New component: src/components/admin/ai-copilot.tsx
+  - Floating button (bottom-right, z-50, animated ping)
+  - Opens on click or Ctrl+Shift+A
+  - Chat panel (400px, 500px tall, max 80vh)
+  - 4 quick prompts
+  - Streaming response display
+  - Message history (user/assistant bubbles)
+  - Loading spinner
+  - Context footer
+- Integrated into AdminShell
+
+VERIFIED (agent-browser + VLM):
+- Copilot button visible with animated ping ✓
+- Panel opens on click ✓
+- Header: 'D.O.R.A. AI · Copilot · kontextový asistent' ✓
+- 4 quick prompts ✓
+- Input field ✓
+- VLM confirmed all elements
+- Lint: 0 errors, no regressions
+
+NOTE: Requires GROQ_API_KEY for AI responses.
+
+GIT:
+- Commit: 427acd7 feat(ai): M4.3 — D.O.R.A. AI Copilot
+- Pushed to: https://github.com/brunovoxmusic/dora-band
