@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   Plus, Trash2, X, Loader2, TrendingUp, Mail, Building, Calendar,
-  DollarSign, FileText, Clock, AlertCircle,
+  DollarSign, FileText, Clock, AlertCircle, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -319,6 +319,52 @@ function BookingDetail({
   onClose: () => void;
   onMove: (id: string, status: string) => void;
 }) {
+  const [rescoring, setRescoring] = useState(false);
+  const [scoreData, setScoreData] = useState<{
+    score: number;
+    factors: Record<string, number>;
+    priority: string;
+    recommendation: string;
+    reasoning: string;
+  } | null>(null);
+
+  // Parse existing aiAnalysis if it's JSON (M2.4 format)
+  useEffect(() => {
+    if (booking.aiAnalysis) {
+      try {
+        const parsed = JSON.parse(booking.aiAnalysis);
+        if (parsed.factors) setScoreData(parsed);
+      } catch { /* not JSON, ignore */ }
+    }
+  }, [booking.aiAnalysis]);
+
+  const rescore = async () => {
+    setRescoring(true);
+    try {
+      const res = await fetch(`/api/admin/bookings/${booking.id}/rescore`, { method: "POST" });
+      if (!res.ok) throw new Error("Zlyhalo");
+      const d = await res.json();
+      if (d.analysis) {
+        setScoreData(d.analysis);
+        toast.success(`Re-score: ${d.analysis.score}%`);
+      }
+    } catch { toast.error("Re-scoring zlyhal."); }
+    finally { setRescoring(false); }
+  };
+
+  const factorLabels: Record<string, string> = {
+    genreFit: "Žáner",
+    locationFit: "Lokalita",
+    commercialFit: "Komercia",
+    contactQuality: "Kontakt",
+    timing: "Termín",
+  };
+  const priorityColors: Record<string, string> = {
+    high: "text-neon-red border-neon-red/40",
+    medium: "text-warm-yellow border-warm-yellow/40",
+    low: "text-silver border-charcoal",
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4 backdrop-blur"
@@ -365,15 +411,91 @@ function BookingDetail({
           )}
         </div>
 
-        {/* AI Analysis */}
-        {booking.aiAnalysis && (
-          <div className="mt-4 border-t border-charcoal pt-4">
-            <p className="mb-2 font-mono-brand text-[11px] uppercase text-warm-yellow">
-              {"// AI analýza"}
+        {/* M2.4: Booking Score v2 — explainable + re-scoreable */}
+        <div className="mt-4 border-t border-charcoal pt-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="font-mono-brand text-[11px] uppercase text-warm-yellow">
+              {"// Booking Score"}
             </p>
-            <p className="text-sm text-off-white/70">{booking.aiAnalysis}</p>
+            <button
+              onClick={rescore}
+              disabled={rescoring}
+              className="inline-flex items-center gap-1.5 border border-charcoal px-2.5 py-1 text-[10px] font-bold uppercase text-silver transition-colors hover:border-neon-red hover:text-neon-red disabled:opacity-50"
+            >
+              {rescoring ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              {rescoring ? "Analyzujem..." : "Re-score"}
+            </button>
           </div>
-        )}
+
+          {/* Overall score */}
+          {booking.aiMatchScore !== null && (
+            <div className="mb-3 flex items-center gap-3">
+              <div className={cn(
+                "flex h-14 w-14 items-center justify-center border-2",
+                booking.aiMatchScore >= 70 ? "border-green-500 text-green-400" :
+                booking.aiMatchScore >= 40 ? "border-warm-yellow text-warm-yellow" :
+                "border-neon-red text-neon-red"
+              )}>
+                <span className="font-display text-xl font-black">
+                  {Math.round(booking.aiMatchScore)}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-off-white">D.O.R.A. Booking Score</p>
+                {scoreData?.priority && (
+                  <span className={cn(
+                    "inline-block border px-1.5 py-0.5 font-mono-brand text-[9px] uppercase",
+                    priorityColors[scoreData.priority] || priorityColors.medium
+                  )}>
+                    {scoreData.priority === "high" ? "🔥 Vysoká priorita" :
+                     scoreData.priority === "medium" ? "⏱ Stredná priorita" : "📅 Nízka priorita"}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Factor breakdown */}
+          {scoreData?.factors && (
+            <div className="space-y-2">
+              {Object.entries(scoreData.factors).map(([key, value]) => (
+                <div key={key} className="flex items-center gap-3">
+                  <span className="w-20 text-xs text-silver">{factorLabels[key] || key}</span>
+                  <div className="h-2 flex-1 bg-charcoal">
+                    <div
+                      className={cn(
+                        "h-full transition-all",
+                        value >= 70 ? "bg-green-500" :
+                        value >= 40 ? "bg-warm-yellow" :
+                        "bg-neon-red"
+                      )}
+                      style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-right font-mono-brand text-xs text-off-white">
+                    {Math.round(value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Recommendation */}
+          {scoreData?.recommendation && (
+            <div className="mt-3 border border-charcoal/50 bg-ink p-3">
+              <p className="font-mono-brand text-[9px] uppercase text-warm-yellow">Odporúčanie</p>
+              <p className="mt-1 text-sm text-off-white/80">{scoreData.recommendation}</p>
+            </div>
+          )}
+
+          {/* Reasoning */}
+          {scoreData?.reasoning && (
+            <div className="mt-2 border border-charcoal/50 bg-ink p-3">
+              <p className="font-mono-brand text-[9px] uppercase text-silver/60">Vysvetlenie</p>
+              <p className="mt-1 text-xs text-silver">{scoreData.reasoning}</p>
+            </div>
+          )}
+        </div>
 
         {/* Fees */}
         <div className="mt-4 border-t border-charcoal pt-4">

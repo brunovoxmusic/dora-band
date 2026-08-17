@@ -98,6 +98,16 @@ export const metadata: Metadata = {
     },
   },
   category: "music",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/dora-mark.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/dora-mark.svg", type: "image/svg+xml" },
+    ],
+  },
+  themeColor: "#E63946",
 };
 
 export default function RootLayout({

@@ -1,0 +1,33 @@
+{
+  "name": "D.O.R.A. — Dnes Od Rána Abstinujem",
+  "short_name": "D.O.R.A.",
+  "description": "Legendárna funky-punková formácia z Púchova. Na scéne od roku 1996.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#E63946",
+  "orientation": "portrait-primary",
+  "lang": "sk-SK",
+  "icons": [
+    {
+      "src": "/dora-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/dora-mark.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/dora-mark.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["music", "entertainment", "events"],
+  "scope": "/"
+}
