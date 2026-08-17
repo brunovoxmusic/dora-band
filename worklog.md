@@ -2324,3 +2324,49 @@ VERIFIED:
 GIT:
 - Commit: 7b3df27 feat(analytics): M6.1 + M6.3
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 42 (M2.2 + M3.1 + M3.4 + M4.2 — Venue/Org + Content + hreflang + AI Tools)
+Agent: Main (Z.ai Code)
+Task: Venue/Organization entities + Structured Content + hreflang + AI Tool System
+
+IMPLEMENTED:
+
+M2.2 — Venue / Organization Entities:
+- New models: Venue (name, type, city, capacity, techInfo, rating, contacts)
+  + Organization (name, type, email, phone, vatId, notes)
+- Gig.venueId FK + Contact.organizationId FK (both optional, backward compat)
+- APIs: /api/admin/venues + /api/admin/organizations (GET, POST, PATCH, DELETE)
+- Created test venue: Klub Underground (Bratislava, 200)
+
+M3.1 — Structured Content Entity:
+- New model: ContentItem (title, slug, type, status, language, body,
+  excerpt, SEO fields, tags, aiGenerated, aiQualityScore, publishAt,
+  publishedAt, version, approvedBy)
+- Workflow: idea → draft → ai_generated → ... → published → analyzed
+- API: /api/admin/content-items (GET, POST, PATCH, DELETE)
+- Auto-slug generation
+- Created test content: 'D.O.R.A. potvrdzuje koncert na Crossover Fest'
+
+M3.4 — hreflang:
+- layout.tsx: alternates.languages with sk-SK (self) + en (future)
+
+M4.2 — AI Tool System:
+- New src/lib/ai/tools.ts: 7 tools with permission model
+- search_crm, get_upcoming_gigs, get_urgent_tasks, get_new_inquiries,
+  get_knowledge, get_analytics_summary, create_task
+- Each tool has permissions (READ/WRITE/CREATE/DELETE/SEND) + category
+- Foundation for agent tool-calling + RBAC (M4.4)
+
+VERIFIED:
+- 17 admin API endpoints: all 200
+- Lint: 0 errors
+- 15 JSON-LD types
+- No regressions
+
+Prisma models: 25 total
+Admin tabs: 18 in 8 groups
+
+GIT:
+- Commit: 5000fa8 feat(seo+ai): M3.4 hreflang + M4.2 AI Tool System
+- Pushed to: https://github.com/brunovoxmusic/dora-band
