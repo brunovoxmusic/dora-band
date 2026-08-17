@@ -521,3 +521,40 @@ model GigFinance {
 
   @@index([gigId])
 }
+
+/// M4.5: AI Cost Tracking — logovanie AI volaní (tokeny, latencia, cena).
+/// Používa sa na sledovanie nákladov a výkonu AI operácií naprieč systémom.
+model AiUsageLog {
+  id               String   @id @default(cuid())
+  /// Ktorý provider (groq, openai, none)
+  provider         String
+  /// Meno modelu (llama-3.3-70b-versatile, gpt-4o-mini, ...)
+  model            String
+  /// Kategória tasku (writing, analysis, fast, copilot, market-report, seo, content)
+  task             String
+  /// Počet tokenov v prompte
+  promptTokens     Int      @default(0)
+  /// Počet tokenov v odpovedi
+  completionTokens Int      @default(0)
+  /// Spolu tokenov
+  totalTokens      Int      @default(0)
+  /// Latencia v ms
+  latencyMs        Int      @default(0)
+  /// Odhadovaná cena v USD
+  costUsd          Float    @default(0)
+  /// Úspech alebo chyba
+  success          Boolean  @default(true)
+  /// Chybové hlásenie ak fail
+  errorMessage     String?  @db.Text
+  /// Voliteľné ID admina, ktorý spustil operáciu
+  userId           String?
+  /// Skrátený preview promptu (prvých 200 znakov)
+  promptPreview    String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  @@index([provider])
+  @@index([model])
+  @@index([task])
+  @@index([createdAt])
+  @@index([success])
+}

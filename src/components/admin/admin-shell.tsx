@@ -5,7 +5,7 @@ import {
   Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink,
   LayoutDashboard, Mail, FileText, Search, Sparkles, Users,
   CheckSquare, Zap, TrendingUp, Settings, Menu, X, ChevronRight,
-  Command as CommandIcon, Brain, Music, Activity, ListMusic,
+  Command as CommandIcon, Brain, Music, Activity, ListMusic, DollarSign, Mic2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
   | "stats" | "analytics" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "knowledge" | "songs" | "rehearsals" | "setlists" | "campaigns" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "ai-usage" | "knowledge" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -65,6 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "ai", label: "AI nástroje", icon: Sparkles },
       { id: "automations", label: "AI Agenti", icon: Zap },
+      { id: "ai-usage", label: "AI Náklady", icon: DollarSign },
       { id: "knowledge", label: "Knowledge", icon: Brain },
     ],
   },
@@ -74,6 +75,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "songs", label: "Skladby", icon: Music },
       { id: "rehearsals", label: "Skúšky", icon: CalendarDays },
       { id: "setlists", label: "Setlisty", icon: ListMusic },
+      { id: "concert-mode", label: "Concert Mode", icon: Mic2 },
     ],
   },
   {

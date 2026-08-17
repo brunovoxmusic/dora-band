@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { getModel } from "@/lib/ai";
+import { getModel, getModelName } from "@/lib/ai";
 import { streamText } from "ai";
+import { trackStreamUsage } from "@/lib/ai/usage";
 
 /**
  * M4.3 — D.O.R.A. AI Copilot
@@ -156,10 +157,18 @@ export async function POST(req: NextRequest) {
     const fullPrompt = `KONTEXT Z DATABÁZY:\n${context}\n\n---\n\nOTÁZKA ADMINA:\n${userMessage}`;
 
     // Stream response
+    const startMs = Date.now();
     const result = streamText({
       model: getModel("writing"),
       system: SYSTEM_PROMPT,
       prompt: fullPrompt,
+    });
+
+    // M4.5: Log usage asynchronously (fire-and-forget, after stream is consumed)
+    void trackStreamUsage(result as never, "copilot", getModelName("writing"), {
+      userId: "admin",
+      promptPreview: userMessage,
+      startMs,
     });
 
     return result.toTextStreamResponse();

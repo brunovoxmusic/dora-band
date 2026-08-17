@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { getModel } from "@/lib/ai";
+import { getModel, getModelName } from "@/lib/ai";
 import { generateText } from "ai";
+import { withUsageTracking } from "@/lib/ai/usage";
 
 /**
  * M6.4 — Marketing Intelligence
@@ -58,11 +59,14 @@ Vygeneruj market report v slovenčine s týmito sekciami:
 
 Buď stručný, konkrétny a úderný. Punkový tón.`;
 
-    const result = await generateText({
-      model: getModel("writing"),
-      system: "Si marketing stratég pre slovenskú funky-punkovú kapelu D.O.R.A. Analyzuj dáta a navrhni konkrétne akcie. Píš v slovenčine.",
-      prompt: context,
-    });
+    const result = await withUsageTracking("market-report", getModelName("writing"), () =>
+      generateText({
+        model: getModel("writing"),
+        system: "Si marketing stratég pre slovenskú funky-punkovú kapelu D.O.R.A. Analyzuj dáta a navrhni konkrétne akcie. Píš v slovenčine.",
+        prompt: context,
+      }),
+      { userId: "admin", promptPreview: context.slice(0, 200) },
+    );
 
     // Log the report generation
     await db.automationLog.create({

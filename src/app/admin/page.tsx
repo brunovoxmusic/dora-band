@@ -10,6 +10,7 @@ import { SubscribersTab } from "@/components/admin/subscribers-tab";
 import { ContentTab } from "@/components/admin/content-tab";
 import { SeoTab } from "@/components/admin/seo-tab";
 import { AiTab } from "@/components/admin/ai-tab";
+import { AiUsageTab } from "@/components/admin/ai-usage-tab";
 import { CrmTab } from "@/components/admin/crm-tab";
 import { TasksTab } from "@/components/admin/tasks-tab";
 import { AutomationsTab } from "@/components/admin/automations-tab";
@@ -21,6 +22,7 @@ import { CampaignsTab } from "@/components/admin/campaigns-tab";
 import { RehearsalsTab } from "@/components/admin/rehearsals-tab";
 import { AnalyticsTab } from "@/components/admin/analytics-tab";
 import { SetlistsTab } from "@/components/admin/setlists-tab";
+import { ConcertModeTab } from "@/components/admin/concert-mode-tab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("stats");
@@ -61,10 +63,12 @@ export default function AdminPage() {
       {tab === "content" && <ContentTab />}
       {tab === "seo" && <SeoTab />}
       {tab === "ai" && <AiTab />}
+      {tab === "ai-usage" && <AiUsageTab />}
       {tab === "knowledge" && <KnowledgeTab />}
       {tab === "songs" && <SongsTab />}
       {tab === "rehearsals" && <RehearsalsTab />}
       {tab === "setlists" && <SetlistsTab />}
+      {tab === "concert-mode" && <ConcertModeTab />}
       {tab === "campaigns" && <CampaignsTab />}
       {tab === "settings" && <SettingsTab />}
     </AdminShell>

@@ -5,7 +5,7 @@ import { Command } from "cmdk";
 import {
   LayoutDashboard, Inbox, CalendarDays, TrendingUp, Users, Mail,
   CheckSquare, FileText, Images, Search, Sparkles, Zap, Settings,
-  ExternalLink, LogOut, Brain, Music, Activity, ListMusic,
+  ExternalLink, LogOut, Brain, Music, Activity, ListMusic, DollarSign, Mic2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -76,11 +76,13 @@ export function CommandPalette({
     { id: "nav-media", label: "Médiá", icon: Images, group: "Navigácia", action: () => navigate("media"), keywords: "media médiá fotky" },
     { id: "nav-seo", label: "SEO", icon: Search, group: "Navigácia", action: () => navigate("seo") },
     { id: "nav-ai", label: "AI nástroje", icon: Sparkles, group: "Navigácia", action: () => navigate("ai"), keywords: "ai nástroje tools" },
+    { id: "nav-ai-usage", label: "AI Náklady", icon: DollarSign, group: "Navigácia", action: () => navigate("ai-usage"), keywords: "ai cost tracking náklady tokeny usage" },
     { id: "nav-automations", label: "AI Agenti", icon: Zap, group: "Navigácia", action: () => navigate("automations"), keywords: "agenti automations" },
     { id: "nav-knowledge", label: "Knowledge Base", icon: Brain, group: "Navigácia", action: () => navigate("knowledge"), keywords: "knowledge fakty base brain" },
     { id: "nav-songs", label: "Skladby", icon: Music, group: "Navigácia", action: () => navigate("songs"), keywords: "songs skladby music" },
     { id: "nav-rehearsals", label: "Skúšky", icon: CalendarDays, group: "Navigácia", action: () => navigate("rehearsals"), keywords: "rehearsals skúšky rehearsals" },
     { id: "nav-setlists", label: "Setlisty", icon: ListMusic, group: "Navigácia", action: () => navigate("setlists"), keywords: "setlists setlisty zostava" },
+    { id: "nav-concert-mode", label: "Concert Mode (Live OS)", icon: Mic2, group: "Navigácia", action: () => navigate("concert-mode"), keywords: "concert live mode koncert stage live performance" },
     { id: "nav-campaigns", label: "Kampane", icon: Mail, group: "Navigácia", action: () => navigate("campaigns"), keywords: "campaigns kampane segments" },
     { id: "nav-settings", label: "Nastavenia", icon: Settings, group: "Navigácia", action: () => navigate("settings"), keywords: "nastavenia settings" },
     // Actions
