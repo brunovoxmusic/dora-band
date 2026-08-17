@@ -7,7 +7,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   try {
     const b = await req.json();
-    const item = await db.booking.update({ where: { id }, data: { ...b, updatedAt: new Date() } });
+    // P0-5: Whitelist povolených polí — zabráni mass-assignment
+    const data: Record<string, unknown> = { updatedAt: new Date() };
+    if (typeof b.contactId === "string") data.contactId = b.contactId || null;
+    if (typeof b.gigId === "string") data.gigId = b.gigId || null;
+    if (typeof b.status === "string") data.status = b.status;
+    if (typeof b.aiMatchScore === "number") data.aiMatchScore = b.aiMatchScore;
+    if (typeof b.aiAnalysis === "string") data.aiAnalysis = b.aiAnalysis || null;
+    if (typeof b.proposedFee === "string") data.proposedFee = b.proposedFee || null;
+    if (typeof b.actualFee === "string") data.actualFee = b.actualFee || null;
+
+    const item = await db.booking.update({ where: { id }, data });
     return NextResponse.json({ ok: true, item });
   } catch { return NextResponse.json({ error: "Nenájdené." }, { status: 404 }); }
 }

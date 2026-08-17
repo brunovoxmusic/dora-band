@@ -1,21 +1,39 @@
-// Seed script for D.O.R.A. — creates default admin user, sample gigs, and media items.
+// Seed script for D.O.R.A. — creates admin user, sample gigs, and media items.
 // Run with: bun run src/lib/seed.ts
+//
+// P0 SECURITY: Admin credentials from env vars, password hashed with bcrypt.
+// Required env: ADMIN_EMAIL, ADMIN_PASSWORD
 import { db } from "./db";
+import { hashPassword } from "./password";
 
 async function main() {
-  // Default admin user (password: dora2026)
-  // NOTE: in production this would be hashed with bcrypt. Kept simple for demo.
-  const existing = await db.adminUser.findUnique({ where: { email: "admin@dora.band" } });
+  // P0-4: Admin credentials from env, hashed, no plaintext in code
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      "ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required.\n" +
+        "Example: ADMIN_EMAIL=admin@dora.band ADMIN_PASSWORD=your-strong-password bun run seed"
+    );
+  }
+
+  if (adminPassword.length < 8) {
+    throw new Error("ADMIN_PASSWORD must be at least 8 characters long.");
+  }
+
+  const existing = await db.adminUser.findUnique({ where: { email: adminEmail.toLowerCase() } });
   if (!existing) {
+    const passwordHash = await hashPassword(adminPassword);
     await db.adminUser.create({
       data: {
-        email: "admin@dora.band",
-        password: "dora2026",
+        email: adminEmail.toLowerCase(),
+        passwordHash,
         name: "D.O.R.A. Admin",
         role: "admin",
       },
     });
-    console.log("✓ Created default admin: admin@dora.band / dora2026");
+    console.log(`✓ Created admin user: ${adminEmail}`);
   } else {
     console.log("• Admin user already exists");
   }

@@ -44,6 +44,10 @@ model Gig {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // P0-6: Added FK relations (were orphan String fields)
+  bookings    Booking[]
+  tasks       Task[]
+
   @@index([date])
   @@index([status])
 }
@@ -71,13 +75,13 @@ model MediaItem {
 
 /// Admin users for the /admin dashboard.
 model AdminUser {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("admin")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   // bcrypt hash (P0: migrated from plaintext `password`)
+  name         String?
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 /// Newsletter subscribers (public signup).
@@ -175,9 +179,11 @@ model Booking {
   updatedAt     DateTime @updatedAt
 
   contact       Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  gig           Gig?     @relation(fields: [gigId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([contactId])
+  @@index([gigId])
 }
 
 /// AI-generated and manual tasks with deadlines.
@@ -193,9 +199,12 @@ model Task {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  gig         Gig?     @relation(fields: [gigId], references: [id], onDelete: SetNull)
+
   @@index([status])
   @@index([dueDate])
   @@index([priority])
+  @@index([gigId])
 }
 
 /// Automation log — tracks AI agent executions.
@@ -222,6 +231,8 @@ model FanSegment {
   aiGenerated   Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  campaigns     Campaign[]
 }
 
 /// Marketing campaigns (newsletter, social).
@@ -239,6 +250,9 @@ model Campaign {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  segment     FanSegment? @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+
   @@index([status])
   @@index([type])
+  @@index([segmentId])
 }

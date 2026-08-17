@@ -13,12 +13,9 @@ export async function POST(req: NextRequest) {
       user = await authenticate(email, password);
     } catch (dbErr) {
       console.error("[auth/login] DB error:", dbErr);
+      // P1-6: No info disclosure — generic error message
       return NextResponse.json(
-        {
-          error:
-            "Databáza nie je dostupná. Na dokončenie nasadenia: 1) Vytvorte Neon Postgres 2) Pridajte DATABASE_URL do Vercel env vars 3) Spustite bun run db:push && bun run seed",
-          dbError: true,
-        },
+        { error: "Služba je momentálne nedostupná. Skúste to prosím neskôr." },
         { status: 503 }
       );
     }

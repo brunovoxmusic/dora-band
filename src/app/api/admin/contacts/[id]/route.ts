@@ -15,12 +15,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   try {
     const b = await req.json();
-    // Convert tags array → JSON string (field is String in schema, not String[])
-    const { tags, ...rest } = b;
-    const data: Record<string, unknown> = { ...rest, updatedAt: new Date() };
-    if (tags !== undefined) {
-      data.tags = JSON.stringify(parseTags(tags));
-    }
+    // P0-5: Whitelist povolených polí — zabráni mass-assignment
+    const data: Record<string, unknown> = { updatedAt: new Date() };
+    if (typeof b.name === "string") data.name = b.name;
+    if (typeof b.email === "string") data.email = b.email || null;
+    if (typeof b.phone === "string") data.phone = b.phone || null;
+    if (typeof b.organization === "string") data.organization = b.organization || null;
+    if (typeof b.website === "string") data.website = b.website || null;
+    if (typeof b.city === "string") data.city = b.city || null;
+    if (typeof b.country === "string") data.country = b.country;
+    if (typeof b.notes === "string") data.notes = b.notes || null;
+    if (typeof b.aiScore === "number") data.aiScore = b.aiScore;
+    if (typeof b.status === "string") data.status = b.status;
+    if (typeof b.type === "string") data.type = b.type;
+    if (b.tags !== undefined) data.tags = JSON.stringify(parseTags(b.tags));
+
     const item = await db.contact.update({ where: { id }, data });
     return NextResponse.json({ ok: true, item: { ...item, tags: parseTags(item.tags) } });
   } catch { return NextResponse.json({ error: "Nenájdené." }, { status: 404 }); }
