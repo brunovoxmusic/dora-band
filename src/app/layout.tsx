@@ -63,6 +63,11 @@ export const metadata: Metadata = {
   publisher: "D.O.R.A.",
   alternates: {
     canonical: "/",
+    // M3.4: hreflang — self-referencing sk-SK + en alternate (for future i18n)
+    languages: {
+      "sk-SK": "/",
+      "en": "/",
+    },
   },
   openGraph: {
     title: "D.O.R.A. — Dnes Od Rána Abstinujem",
