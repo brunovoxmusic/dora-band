@@ -2088,3 +2088,46 @@ VERIFIED:
 GIT:
 - Commit: 957939f feat(booking): Fáza 2
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 35 (M2.4 + Fáza 3 SEO — booking score v2 + dynamic sitemap + PWA)
+Agent: Main (Z.ai Code)
+Task: Booking Score v2 (explainable/re-scoreable) + Dynamic sitemap + PWA manifest + vercel.json fix
+
+IMPLEMENTED:
+
+M2.4 — Booking Score v2:
+- New API: POST /api/admin/bookings/[id]/rescore
+- AI analýza s 5 faktormi: genreFit, locationFit, commercialFit, contactQuality, timing
+- Returns: score 0-100, factor breakdown, priority, recommendation, reasoning
+- BookingDetail modal: overall score badge, factor progress bars (color-coded),
+  recommendation box, reasoning text, re-score button s loading state
+- Auto-parses existing aiAnalysis JSON
+- Logs to AutomationLog
+
+M3.3 — Dynamic Sitemap:
+- sitemap.ts: async, fetches gigs from DB (up to 50)
+- Static entries (homepage + 9 sections + /archiv) + dynamic gig entries
+- Graceful fallback if DB unavailable
+
+M3.5 — PWA Manifest:
+- public/manifest.json: name, short_name, theme_color (#E63946),
+  background_color (#0A0A0A), standalone display, icons
+- layout.tsx: manifest + icons + themeColor metadata
+
+M3.6 — vercel.json Fix:
+- Removed 5 dead routes (upload, ai/generate, ai/alttext, ai/seo-audit, ai/keywords)
+- Added real routes: ai/route, ai/variants, ai/seo-score, bookings/[id]/rescore, chat
+- All maxDuration: 30s
+
+VERIFIED (Quality Gate):
+- Home: 200, Admin: 200, Sitemap: 200, Manifest: 200
+- Login: ✓, Admin API (5 endpoints): all 200
+- Structured data: MusicGroup, MusicEvent, MusicRecording, FAQPage + 7 ďalších
+- Sitemap: 11+ entries (static + dynamic gigs)
+- Manifest: valid JSON
+- Lint: 0 errors, no regressions
+
+GIT:
+- Commit: db58929 feat(booking+seo): M2.4 + M3.3-3.6
+- Pushed to: https://github.com/brunovoxmusic/dora-band
