@@ -2002,3 +2002,56 @@ REMAINING P0 (M0.7-M0.10):
 GIT:
 - Commit: 3051b1c fix(security): P0 security fixes
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 33 (Fáza 1 — Admin UX Foundation, M1.1-M1.4)
+Agent: Main (Z.ai Code)
+Task: Transform admin from "collection of tabs" to Command Center
+
+IMPLEMENTED:
+
+M1.1 — Sidebar Layout:
+- New src/components/admin/admin-shell.tsx: AdminShell component
+- Fixed sidebar (240px) with 7 grouped navigation sections:
+  Command Center (Prehľad), Live (Dopyty, Koncerty, Pipeline),
+  CRM (Kontakty, Newsletter), Práca (Úlohy), Obsah (CMS, Médiá, SEO),
+  AI (AI nástroje, AI Agenti), Systém (Nastavenia)
+- Mobile drawer with hamburger menu + backdrop overlay
+- Sidebar footer: user email, logout, view website
+- Mobile top bar with hamburger
+- Count badges on Dopyty, Koncerty, Médiá, Newsletter
+
+M1.2 — Command Palette (⌘K):
+- New src/components/admin/command-palette.tsx using cmdk library
+- Opens with Cmd+K / Ctrl+K / sidebar ⌘K button
+- 15 actions: all 13 admin tab navigations + open website + logout
+- Searchable with keywords (booking, gigs, contacts, etc.)
+- Grouped: Navigácia + Akcie
+- ESC to close
+- VLM verified: clean dark theme, icons, secondary info in grey
+
+M1.3 — Dashboard → "Čo má D.O.R.A. urobiť teraz?":
+- stats-tab.tsx: added Command Center priority section at top
+- Surfaces: new inquiries, urgent tasks, next concert (days countdown),
+  high-priority AI suggestions
+- Animated pulse indicator (neon-red)
+- VLM verified: shows "6 dni do Punk Night Showcase"
+
+M1.4 — Empty/Error States:
+- New src/components/admin/empty-state.tsx: EmptyState + ErrorState
+- EmptyState: icon + title + description + optional action button
+- ErrorState: alert icon + message + retry button
+- stats-tab.tsx: replaced silent error with ErrorState + retry
+
+VERIFICATION (Quality Gate):
+- Lint: 0 errors ✓
+- Home: 200, Admin: 200, Admin login: 200 ✓
+- Login (bcrypt): ✓
+- Admin API (12 endpoints): all 200 ✓
+- Structured data: MusicGroup, MusicEvent, MusicRecording, FAQPage ✓
+- Old password rejected: ✓
+- No regressions ✓
+
+GIT:
+- Commits: 2870d32 (sidebar+palette+empty states), dff9fd1 (command center)
+- Pushed to: https://github.com/brunovoxmusic/dora-band
