@@ -11,8 +11,11 @@ import {
   MapPin,
   ArrowRight,
   Activity,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/admin/empty-state";
 
 type Stats = {
   counts: {
@@ -85,8 +88,11 @@ export function StatsTab() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
+    setError(false);
     Promise.all([
       fetch("/api/admin/stats").then(r => r.json()),
       fetch("/api/admin/ai/suggestions").then(r => r.json()).catch(() => ({ items: [] })),
@@ -94,8 +100,10 @@ export function StatsTab() {
       if (statsData.counts) setStats(statsData);
       setSuggestions(sugData.items || []);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+    }).catch(() => { setError(true); setLoading(false); });
+  };
+
+  useEffect(() => { load(); }, []);
 
   if (loading) {
     return (
@@ -107,8 +115,33 @@ export function StatsTab() {
     );
   }
 
-  if (!stats) {
-    return <p className="text-sm text-silver">Nepodarilo sa načítať štatistiky.</p>;
+  if (error || !stats) {
+    return (
+      <ErrorState
+        message="Nepodarilo sa načítať štatistiky."
+        onRetry={load}
+      />
+    );
+  }
+
+  // Compute "What needs to happen now" items
+  const urgentTasks = stats.recentTasks?.filter(t => t.priority === "high" || t.priority === "urgent") ?? [];
+  const highPrioritySuggestions = suggestions.filter(s => s.priority === "high");
+  const nextGig = stats.upcomingGigs[0];
+  const daysToNextGig = nextGig ? Math.ceil((new Date(nextGig.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+
+  const todayItems: { icon: typeof Inbox; label: string; count: number; color: string; detail?: string }[] = [];
+  if (stats.counts.newInquiries > 0) {
+    todayItems.push({ icon: Inbox, label: "Nové dopyty", count: stats.counts.newInquiries, color: "neon-red", detail: "čakajú na odpoveď" });
+  }
+  if (urgentTasks.length > 0) {
+    todayItems.push({ icon: Clock, label: "Urgentné úlohy", count: urgentTasks.length, color: "neon-red", detail: "vyžadujú pozornosť" });
+  }
+  if (nextGig && daysToNextGig !== null && daysToNextGig <= 30) {
+    todayItems.push({ icon: CalendarDays, label: "Najbližší koncert", count: daysToNextGig, color: "warm-yellow", detail: `dni do ${nextGig.title}` });
+  }
+  if (highPrioritySuggestions.length > 0) {
+    todayItems.push({ icon: Sparkles, label: "AI návrhy", count: highPrioritySuggestions.length, color: "warm-yellow", detail: "čakajú na schválenie" });
   }
 
   const cards = [
@@ -122,6 +155,45 @@ export function StatsTab() {
 
   return (
     <div className="space-y-6">
+      {/* Command Center — "Čo má D.O.R.A. urobiť teraz?" */}
+      {todayItems.length > 0 && (
+        <div className="border border-neon-red/30 bg-neon-red/5 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-neon-red/60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-neon-red" />
+            </span>
+            <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-neon-red">
+              Čo má D.O.R.A. urobiť teraz
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {todayItems.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={i} className="flex items-center gap-3 border border-charcoal bg-dark-gray p-3">
+                  <div className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center",
+                    item.color === "neon-red" ? "bg-neon-red" : "bg-warm-yellow"
+                  )}>
+                    <Icon className={cn("h-4 w-4", item.color === "neon-red" ? "text-white" : "text-ink")} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-xl font-black text-off-white">{item.count}</p>
+                    <p className="text-xs font-semibold text-off-white/80">{item.label}</p>
+                    {item.detail && (
+                      <p className="truncate font-mono-brand text-[9px] uppercase tracking-wider text-silver/60">
+                        {item.detail}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c, i) => {
