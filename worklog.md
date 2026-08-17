@@ -2131,3 +2131,39 @@ VERIFIED (Quality Gate):
 GIT:
 - Commit: db58929 feat(booking+seo): M2.4 + M3.3-3.6
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 36 (M2.5 + M4.1 — Gig Project + Knowledge Base)
+Agent: Main (Z.ai Code)
+Task: Gig as Project Object + Knowledge Base model + admin tab
+
+IMPLEMENTED:
+
+M2.5 — Gig ako Project Object:
+- New GigProject modal in gigs-tab.tsx (FolderKanban icon button per gig)
+- Summary stats: bookings count, tasks done/total, T-X days countdown
+- Concert timeline (T-30 → T+14) with done/upcoming indicators
+- Linked bookings (status badge, AI match score, fee)
+- Linked tasks (priority color, due date, AI tag, done strikethrough)
+- Edit button → opens gig edit form
+- Empty state when no bookings/tasks linked
+- Fáza 2 (Booking OS) COMPLETE: M2.1 + M2.3 + M2.4 + M2.5
+
+M4.1 — Knowledge Base:
+- New Prisma model: KnowledgeItem (category, key, value, source, verified,
+  verifiedAt, verifiedBy, confidence)
+- 13 categories, 5 source types
+- New API: /api/admin/knowledge (GET, POST) + [id] (PATCH, DELETE)
+- PATCH with mass-assignment whitelist (P0-5 pattern)
+- New admin tab: knowledge-tab.tsx (list + filter + search + CRUD + verify toggle)
+- Added to sidebar (AI group) + Command Palette (⌘K)
+- DB synced with Neon Postgres
+
+VERIFIED:
+- Home: 200, Admin: 200, Knowledge API: 200 (GET + POST)
+- Created test item: founded_year = '1996'
+- Lint: 0 errors, no regressions
+
+GIT:
+- Commits: bb51571 (M2.5), 1645a2d (M4.1)
+- Pushed to: https://github.com/brunovoxmusic/dora-band
