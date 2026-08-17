@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Plus, Pencil, Trash2, X, Loader2, CalendarDays, MapPin } from "lucide-react";
+import {
+  Plus, Pencil, Trash2, X, Loader2, CalendarDays, MapPin,
+  TrendingUp, CheckSquare, Clock, DollarSign, FolderKanban,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +48,7 @@ export function GigsTab({ onChange }: { onChange: (n: number) => void }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [projectGig, setProjectGig] = useState<Gig | null>(null);
 
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -185,6 +189,14 @@ export function GigsTab({ onChange }: { onChange: (n: number) => void }) {
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">
+                <button
+                  onClick={() => setProjectGig(g)}
+                  className="inline-flex h-8 w-8 items-center justify-center border border-charcoal text-silver transition-colors hover:border-warm-yellow hover:text-warm-yellow"
+                  aria-label="Projekt koncertu"
+                  title="Projekt koncertu"
+                >
+                  <FolderKanban className="h-3.5 w-3.5" />
+                </button>
                 <button
                   onClick={() => openEdit(g)}
                   className="inline-flex h-8 w-8 items-center justify-center border border-charcoal text-silver transition-colors hover:border-neon-red hover:text-neon-red"
@@ -335,6 +347,11 @@ export function GigsTab({ onChange }: { onChange: (n: number) => void }) {
         </div>
       )}
 
+      {/* Gig Project modal */}
+      {projectGig && (
+        <GigProject gig={projectGig} onClose={() => setProjectGig(null)} onEdit={() => { setProjectGig(null); openEdit(projectGig); }} />
+      )}
+
       <style jsx>{`
         :global(.admin-input) {
           width: 100%;
@@ -350,6 +367,240 @@ export function GigsTab({ onChange }: { onChange: (n: number) => void }) {
           border-color: #e63946;
         }
       `}</style>
+    </div>
+  );
+}
+
+// =====================================================
+// M2.5: GigProject — koncert ako mini-projekt
+// =====================================================
+
+function GigProject({ gig, onClose, onEdit }: { gig: Gig; onClose: () => void; onEdit: () => void }) {
+  const [bookings, setBookings] = useState<Array<{ id: string; status: string; aiMatchScore: number | null; proposedFee: string | null; contact: { name: string; organization: string | null } | null }>>([]);
+  const [tasks, setTasks] = useState<Array<{ id: string; title: string; status: string; priority: string; dueDate: string | null; aiGenerated: boolean }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch bookings + tasks for this gig
+    Promise.all([
+      fetch("/api/admin/bookings").then(r => r.json()).catch(() => ({ items: [] })),
+      fetch("/api/admin/tasks").then(r => r.json()).catch(() => ({ items: [] })),
+    ]).then(([bData, tData]) => {
+      setBookings((bData.items ?? []).filter((b: { gigId: string | null }) => b.gigId === gig.id));
+      setTasks((tData.items ?? []).filter((t: { gigId: string | null }) => t.gigId === gig.id));
+      setLoading(false);
+    });
+  }, [gig.id]);
+
+  // Concert timeline (T-30 → T+14)
+  const gigDate = new Date(gig.date);
+  const now = new Date();
+  const daysToGig = Math.ceil((gigDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const timeline = [
+    { label: "T-30", desc: "Booking confirmed", done: daysToGig < -30 },
+    { label: "T-21", desc: "Promo assets", done: daysToGig < -21 },
+    { label: "T-14", desc: "Social campaign", done: daysToGig < -14 },
+    { label: "T-10", desc: "Newsletter", done: daysToGig < -10 },
+    { label: "T-7", desc: "Reminder", done: daysToGig < -7 },
+    { label: "T-3", desc: "Technical confirmation", done: daysToGig < -3 },
+    { label: "T-1", desc: "Final logistics", done: daysToGig < -1 },
+    { label: "T0", desc: "Live mode", done: daysToGig <= 0 },
+    { label: "T+1", desc: "Thank-you", done: daysToGig < -1 },
+    { label: "T+7", desc: "Post-event analysis", done: daysToGig < -7 },
+    { label: "T+14", desc: "Rebooking opportunity", done: daysToGig < -14 },
+  ];
+
+  const tasksDone = tasks.filter(t => t.status === "done").length;
+  const tasksTotal = tasks.length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-4 backdrop-blur" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto scroll-dora border border-charcoal bg-dark-gray" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-charcoal bg-dark-gray px-6 py-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <FolderKanban className="h-4 w-4 text-warm-yellow" />
+              <span className="font-mono-brand text-[10px] uppercase tracking-[0.2em] text-warm-yellow">
+                GIG PROJECT
+              </span>
+            </div>
+            <h3 className="mt-1 font-display text-lg font-bold text-off-white">{gig.title}</h3>
+            <p className="text-xs text-silver">
+              {gigDate.toLocaleDateString("sk-SK")} · {gig.venue}, {gig.city}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={onEdit} className="inline-flex items-center gap-1.5 border border-charcoal px-3 py-1.5 text-xs font-semibold text-off-white/80 hover:border-neon-red hover:text-neon-red">
+              <Pencil className="h-3 w-3" /> Upraviť
+            </button>
+            <button onClick={onClose} className="text-silver hover:text-neon-red">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-6"><Loader2 className="h-5 w-5 animate-spin text-neon-red" /></div>
+        ) : (
+          <div className="space-y-6 p-6">
+            {/* Summary stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="border border-charcoal bg-ink p-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-3.5 w-3.5 text-warm-yellow" />
+                  <span className="font-mono-brand text-[9px] uppercase text-silver">Bookings</span>
+                </div>
+                <p className="mt-1 font-display text-xl font-black text-off-white">{bookings.length}</p>
+              </div>
+              <div className="border border-charcoal bg-ink p-3">
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="h-3.5 w-3.5 text-warm-yellow" />
+                  <span className="font-mono-brand text-[9px] uppercase text-silver">Úlohy</span>
+                </div>
+                <p className="mt-1 font-display text-xl font-black text-off-white">
+                  {tasksDone}<span className="text-sm text-silver">/{tasksTotal}</span>
+                </p>
+              </div>
+              <div className="border border-charcoal bg-ink p-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-warm-yellow" />
+                  <span className="font-mono-brand text-[9px] uppercase text-silver">T-{daysToGig > 0 ? daysToGig : `+${Math.abs(daysToGig)}`}</span>
+                </div>
+                <p className="mt-1 font-display text-xl font-black text-off-white">
+                  {daysToGig > 0 ? "dni" : "odohrané"}
+                </p>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <p className="mb-3 font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+                {"// Koncertný timeline"}
+              </p>
+              <div className="space-y-1.5">
+                {timeline.map((t, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className={cn(
+                      "flex h-6 w-12 shrink-0 items-center justify-center font-mono-brand text-[9px] font-bold",
+                      t.done ? "bg-green-500/20 text-green-400" : "bg-charcoal text-silver/50"
+                    )}>
+                      {t.label}
+                    </span>
+                    <span className={cn(
+                      "flex-1 text-xs",
+                      t.done ? "text-silver/50 line-through" : "text-off-white/80"
+                    )}>
+                      {t.desc}
+                    </span>
+                    {t.done && <CheckSquare className="h-3 w-3 text-green-400" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bookings */}
+            {bookings.length > 0 && (
+              <div>
+                <p className="mb-2 font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+                  {"// Booking pipeline"}
+                </p>
+                <div className="space-y-1.5">
+                  {bookings.map(b => (
+                    <div key={b.id} className="flex items-center justify-between border border-charcoal/50 bg-ink p-2">
+                      <div>
+                        <span className={cn(
+                          "inline-block border px-1.5 py-0.5 font-mono-brand text-[9px] uppercase",
+                          b.status === "confirmed" ? "border-green-500/40 text-green-400" :
+                          b.status === "cancelled" ? "border-neon-red/40 text-neon-red" :
+                          "border-charcoal text-silver"
+                        )}>
+                          {b.status}
+                        </span>
+                        <span className="ml-2 text-xs text-off-white/80">
+                          {b.contact?.name || "Neznámy"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {b.aiMatchScore !== null && (
+                          <span className="font-mono-brand text-xs text-warm-yellow">
+                            {Math.round(b.aiMatchScore)}%
+                          </span>
+                        )}
+                        {b.proposedFee && (
+                          <span className="flex items-center gap-1 text-xs text-off-white/60">
+                            <DollarSign className="h-3 w-3 text-green-400" />
+                            {b.proposedFee}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tasks */}
+            {tasks.length > 0 && (
+              <div>
+                <p className="mb-2 font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+                  {"// Úlohy"}
+                </p>
+                <div className="space-y-1.5">
+                  {tasks.map(t => (
+                    <div key={t.id} className="flex items-center gap-3 border border-charcoal/50 bg-ink p-2">
+                      <span className={cn(
+                        "h-2 w-2 shrink-0 rounded-full",
+                        t.status === "done" ? "bg-green-500" :
+                        t.priority === "urgent" || t.priority === "high" ? "bg-neon-red" :
+                        "bg-warm-yellow"
+                      )} />
+                      <span className={cn(
+                        "flex-1 text-xs",
+                        t.status === "done" ? "text-silver/50 line-through" : "text-off-white/80"
+                      )}>
+                        {t.title}
+                      </span>
+                      {t.aiGenerated && (
+                        <span className="font-mono-brand text-[8px] uppercase text-warm-yellow/60">AI</span>
+                      )}
+                      {t.dueDate && (
+                        <span className="font-mono-brand text-[9px] text-silver/60">
+                          {new Date(t.dueDate).toLocaleDateString("sk-SK")}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {gig.notes && (
+              <div>
+                <p className="mb-2 font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+                  {"// Poznámky"}
+                </p>
+                <div className="border border-charcoal/50 bg-ink p-3">
+                  <p className="text-sm text-off-white/70">{gig.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {bookings.length === 0 && tasks.length === 0 && (
+              <div className="border border-dashed border-charcoal py-8 text-center">
+                <p className="text-sm text-silver/60">
+                  Tento koncert zatiaľ nemá žiadne bookings ani úlohy.
+                </p>
+                <p className="mt-1 text-xs text-silver/40">
+                  Vytvorte booking v Pipeline alebo úlohu v Úlohy a prepojte ich s týmto koncertom.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
