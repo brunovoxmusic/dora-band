@@ -2055,3 +2055,36 @@ VERIFICATION (Quality Gate):
 GIT:
 - Commits: 2870d32 (sidebar+palette+empty states), dff9fd1 (command center)
 - Pushed to: https://github.com/brunovoxmusic/dora-band
+
+---
+Task ID: 34 (Fáza 2 — Booking OS, M2.1 + M2.3)
+Agent: Main (Z.ai Code)
+Task: Extended booking pipeline + Contact 360°
+
+IMPLEMENTED:
+
+M2.1 — Extended Booking Pipeline:
+- 8-stage Kanban (was 5): lead → qualified → contacted → replied →
+  negotiated → offer_sent → confirmed → cancelled
+- Horizontal scrollable Kanban for 8 columns
+- Quick-move buttons per card (context-aware next stages)
+- Booking detail modal: contact info, AI analysis, fees, full status changer
+- AI match score progress bar (visual indicator)
+- Show/hide cancelled toggle
+- Summary bar: active + confirmed count
+- EmptyState + ErrorState with retry
+
+M2.3 — Contact 360°:
+- ContactDetail fetches bookings + tasks for the contact
+- Bookings section: status badge, AI match %, fee
+- Tasks section: status indicator (green/red/yellow), priority, due date, done strikethrough
+- 360° summary footer: comms + bookings + tasks done/total counts
+
+VERIFIED:
+- Home: 200, Admin: 200, Login: ✓
+- Bookings API: 200, Contacts API: 200
+- Lint: 0 errors, no regressions
+
+GIT:
+- Commit: 957939f feat(booking): Fáza 2
+- Pushed to: https://github.com/brunovoxmusic/dora-band
