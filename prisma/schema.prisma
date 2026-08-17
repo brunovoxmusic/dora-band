@@ -256,3 +256,23 @@ model Campaign {
   @@index([type])
   @@index([segmentId])
 }
+
+/// M4.1: Knowledge Base — structured facts for AI agents.
+/// Every important fact has source, verification status, and confidence.
+model KnowledgeItem {
+  id          String   @id @default(cuid())
+  category    String   // band_identity | history | members | songs | releases | events | venues | contacts | booking_rules | technical_rider | hospitality | pricing | brand_voice | approved_bios | approved_claims | press_quotes | media | faqs
+  key         String   // unique key within category (e.g. "founded_year")
+  value       String   @db.Text // the actual fact/value
+  source      String   @default("unverified") // band_archive | pr_document | official_website | ai_inferred | unverified
+  verified    Boolean  @default(false)
+  verifiedAt  DateTime?
+  verifiedBy  String?  // admin email
+  confidence  Float    @default(0) // 0-1, AI confidence if inferred
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, key])
+  @@index([category])
+  @@index([verified])
+}

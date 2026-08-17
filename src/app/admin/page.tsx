@@ -15,6 +15,7 @@ import { TasksTab } from "@/components/admin/tasks-tab";
 import { AutomationsTab } from "@/components/admin/automations-tab";
 import { BookingTab } from "@/components/admin/booking-tab";
 import { SettingsTab } from "@/components/admin/settings-tab";
+import { KnowledgeTab } from "@/components/admin/knowledge-tab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("stats");
@@ -54,6 +55,7 @@ export default function AdminPage() {
       {tab === "content" && <ContentTab />}
       {tab === "seo" && <SeoTab />}
       {tab === "ai" && <AiTab />}
+      {tab === "knowledge" && <KnowledgeTab />}
       {tab === "settings" && <SettingsTab />}
     </AdminShell>
   );
