@@ -5,7 +5,7 @@ import { Command } from "cmdk";
 import {
   LayoutDashboard, Inbox, CalendarDays, TrendingUp, Users, Mail,
   CheckSquare, FileText, Images, Search, Sparkles, Zap, Settings,
-  ExternalLink, LogOut, Brain, Music, Activity,
+  ExternalLink, LogOut, Brain, Music, Activity, ListMusic,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -80,6 +80,7 @@ export function CommandPalette({
     { id: "nav-knowledge", label: "Knowledge Base", icon: Brain, group: "Navigácia", action: () => navigate("knowledge"), keywords: "knowledge fakty base brain" },
     { id: "nav-songs", label: "Skladby", icon: Music, group: "Navigácia", action: () => navigate("songs"), keywords: "songs skladby music" },
     { id: "nav-rehearsals", label: "Skúšky", icon: CalendarDays, group: "Navigácia", action: () => navigate("rehearsals"), keywords: "rehearsals skúšky rehearsals" },
+    { id: "nav-setlists", label: "Setlisty", icon: ListMusic, group: "Navigácia", action: () => navigate("setlists"), keywords: "setlists setlisty zostava" },
     { id: "nav-campaigns", label: "Kampane", icon: Mail, group: "Navigácia", action: () => navigate("campaigns"), keywords: "campaigns kampane segments" },
     { id: "nav-settings", label: "Nastavenia", icon: Settings, group: "Navigácia", action: () => navigate("settings"), keywords: "nastavenia settings" },
     // Actions

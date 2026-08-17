@@ -20,6 +20,7 @@ import { SongsTab } from "@/components/admin/songs-tab";
 import { CampaignsTab } from "@/components/admin/campaigns-tab";
 import { RehearsalsTab } from "@/components/admin/rehearsals-tab";
 import { AnalyticsTab } from "@/components/admin/analytics-tab";
+import { SetlistsTab } from "@/components/admin/setlists-tab";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("stats");
@@ -63,6 +64,7 @@ export default function AdminPage() {
       {tab === "knowledge" && <KnowledgeTab />}
       {tab === "songs" && <SongsTab />}
       {tab === "rehearsals" && <RehearsalsTab />}
+      {tab === "setlists" && <SetlistsTab />}
       {tab === "campaigns" && <CampaignsTab />}
       {tab === "settings" && <SettingsTab />}
     </AdminShell>

@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import {
   TrendingUp, Users, Music, FileText, DollarSign, Loader2,
   Calendar, Star, Mail, Sparkles, MapPin, CheckCircle2, Activity,
+  RefreshCw,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/admin/empty-state";
 
@@ -22,6 +24,8 @@ export function AnalyticsTab() {
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [marketReport, setMarketReport] = useState<string | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -33,6 +37,18 @@ export function AnalyticsTab() {
   }, []);
 
   useEffect(() => { Promise.resolve().then(() => load()); }, [load]);
+
+  const generateReport = async () => {
+    setReportLoading(true);
+    try {
+      const res = await fetch("/api/admin/market-report");
+      if (!res.ok) throw new Error("Zlyhalo");
+      const d = await res.json();
+      setMarketReport(d.report);
+      toast.success("Market report vygenerovaný.");
+    } catch { toast.error("Generovanie reportu zlyhalo."); }
+    finally { setReportLoading(false); }
+  };
 
   if (loading) {
     return (
@@ -138,6 +154,36 @@ export function AnalyticsTab() {
         <KpiCard label="Knowledge Base" value={data.content.totalKnowledge} sub={`${data.content.verifiedKnowledge} overených (${data.content.knowledgeVerificationRate}%)`} />
         <KpiCard label="AI Automatizácie" value={data.content.totalAutomations} sub={`${data.content.automationsThisWeek} tento týždeň`} />
       </KpiSection>
+
+      {/* M6.4: Marketing Intelligence — Market Report */}
+      <div className="border border-charcoal bg-dark-gray p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-neon-red" />
+            <p className="font-mono-brand text-[11px] uppercase tracking-[0.2em] text-warm-yellow">
+              {"// Marketing Intelligence — Market Report"}
+            </p>
+          </div>
+          <button
+            onClick={generateReport}
+            disabled={reportLoading}
+            className="inline-flex items-center gap-2 bg-neon-red px-4 py-2 text-sm font-bold uppercase text-white disabled:opacity-50"
+          >
+            {reportLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {reportLoading ? "Generujem..." : marketReport ? "Regenerovať" : "Vygenerovať report"}
+          </button>
+        </div>
+        {marketReport && (
+          <div className="border border-charcoal/50 bg-ink p-4">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-off-white/90">{marketReport}</p>
+          </div>
+        )}
+        {!marketReport && !reportLoading && (
+          <p className="py-4 text-center text-xs text-silver/50">
+            Klikni na "Vygenerovať report" pre AI analýzu aktuálneho stavu kapely.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

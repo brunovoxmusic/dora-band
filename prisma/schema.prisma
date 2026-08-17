@@ -497,3 +497,27 @@ model ContentItem {
   @@index([language])
   @@index([publishedAt])
 }
+
+/// M7.3: Finance OS — príjmy a náklady per koncert.
+model GigFinance {
+  id            String   @id @default(cuid())
+  gigId         String   @unique
+  /// Honorár (fee)
+  fee           Float    @default(0)
+  /// Cestovné
+  travelCost    Float    @default(0)
+  /// Ubytovanie
+  accommodation Float    @default(0)
+  /// Technika / equipment
+  equipmentCost Float    @default(0)
+  /// Propagácia
+  promotionCost Float    @default(0)
+  /// Ostatné náklady
+  otherCost     Float    @default(0)
+  /// Poznámky
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([gigId])
+}
