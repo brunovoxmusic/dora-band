@@ -47,10 +47,10 @@ export const TOOLS: Tool[] = [
         const contacts = await db.contact.findMany({
           where: {
             OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { email: { contains: query, mode: "insensitive" } },
-              { organization: { contains: query, mode: "insensitive" } },
-              { city: { contains: query, mode: "insensitive" } },
+              { name: { contains: query, mode: "insensitive" as const } },
+              { email: { contains: query, mode: "insensitive" as const } },
+              { organization: { contains: query, mode: "insensitive" as const } },
+              { city: { contains: query, mode: "insensitive" as const } },
             ],
           },
           take: 10,
@@ -132,7 +132,7 @@ export const TOOLS: Tool[] = [
         const { db } = await import("@/lib/db");
         const query = String(params.query || "");
         const where = query
-          ? { OR: [{ key: { contains: query, mode: "insensitive" } }, { value: { contains: query, mode: "insensitive" } }], verified: true }
+          ? { OR: [{ key: { contains: query, mode: "insensitive" as const } }, { value: { contains: query, mode: "insensitive" as const } }], verified: true }
           : { verified: true };
         const facts = await db.knowledgeItem.findMany({
           where,

@@ -7,6 +7,7 @@ import { trackStreamUsage } from "@/lib/ai/usage";
 import { sanitizeForPrompt } from "@/lib/ai/sanitize";
 import { getAiSdkTools } from "@/lib/ai/tool-adapter";
 import { getUserPermissions } from "@/lib/ai/rbac";
+import type { ToolPermission } from "@/lib/ai/tools";
 
 /**
  * M4.3 — D.O.R.A. AI Copilot
@@ -165,7 +166,7 @@ export async function POST(req: NextRequest) {
     const startMs = Date.now();
     const session = await getSession(req);
     // B.4 RBAC: dynamické permissions podľa role usera
-    const permissions = session?.uid ? await getUserPermissions(session.uid) : ["READ"];
+    const permissions: ToolPermission[] = session?.uid ? await getUserPermissions(session.uid) : ["READ"];
     const result = streamText({
       model: getModel("writing"),
       system: SYSTEM_PROMPT,
@@ -174,9 +175,7 @@ export async function POST(req: NextRequest) {
       // admin: READ + WRITE + CREATE + DELETE + SEND
       // editor: READ + WRITE + CREATE
       // viewer: READ only
-      tools: getAiSdkTools(permissions),
-      // Povol maximálne 3 tool volania za otázku (anti nekonečná slučka)
-      maxSteps: 3,
+      tools: getAiSdkTools(permissions) as Record<string, never>,
     });
 
     // M4.5: Log usage asynchronously (fire-and-forget, after stream is consumed)
@@ -184,7 +183,7 @@ export async function POST(req: NextRequest) {
       userId: "admin",
       promptPreview: userMessage,
       startMs,
-    });
+    } as never);
 
     return result.toTextStreamResponse();
   } catch (err) {

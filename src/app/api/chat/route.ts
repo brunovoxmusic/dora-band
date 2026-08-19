@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: getModel(),
-      messages: sanitizedMessages,
+      messages: sanitizedMessages as never,
       system:
         "Si asistent pre slovenskú funky-punkovú kapelu D.O.R.A. (Dnes Od Rána Abstinujem) z Púchova. Píšeš v slovenčine, si nápomocný a stručný. Odpovedaj IBA na otázky o kapele D.O.R.A., hudbe, koncertoch, booking-u. Ak otázka nie je relevantná, slušne odmietni.",
     });

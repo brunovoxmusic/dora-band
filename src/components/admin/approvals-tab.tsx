@@ -250,7 +250,7 @@ export function ApprovalsTab() {
                           </div>
                           {/* Payload preview */}
                           <div className="text-sm font-medium mt-1">
-                            {item.payload.title || item.payload.name || item.action}
+                            {String(item.payload.title || item.payload.name || item.action)}
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
                             {fmtPayload(item.payload)}
@@ -319,7 +319,7 @@ export function ApprovalsTab() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="p-3 rounded-md bg-muted/50 text-sm">
-              <div className="font-medium">{rejecting?.payload.title || rejecting?.action}</div>
+              <div className="font-medium">{String(rejecting?.payload.title || rejecting?.action)}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {rejecting && fmtPayload(rejecting.payload)}
               </div>

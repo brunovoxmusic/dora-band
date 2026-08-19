@@ -13,8 +13,8 @@ export function getModel(task: AITask = "writing"): LanguageModel {
   return getProvider().getModel(task);
 }
 
-export function getModelName(): string {
-  return getProvider().getModelName("writing");
+export function getModelName(task: AITask = "writing"): string {
+  return getProvider().getModelName(task);
 }
 
 export function isAIConfigured(): boolean {

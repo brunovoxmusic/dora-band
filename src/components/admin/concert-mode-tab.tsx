@@ -55,7 +55,7 @@ type Gig = {
   ticketUrl?: string | null;
   ticketPrice?: string | null;
   notes?: string | null;
-  venue?: { name: string; city?: string; capacity?: number; techInfo?: string | null } | null;
+  venueEntity?: { name: string; city?: string; capacity?: number; techInfo?: string | null } | null;
 };
 
 type UpcomingGig = {
@@ -681,16 +681,16 @@ export function ConcertModeTab() {
       </div>
 
       {/* Venue info / tech rider */}
-      {gig?.venue?.techInfo && (
+      {gig?.venueEntity?.techInfo && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Settings2 className="h-4 w-4" />
-              Tech rider — {gig.venue?.name}
+              Tech rider — {gig.venueEntity?.name}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">{gig.venue.techInfo}</pre>
+            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">{gig.venueEntity.techInfo}</pre>
           </CardContent>
         </Card>
       )}

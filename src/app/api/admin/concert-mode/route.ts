@@ -41,9 +41,9 @@ export async function GET(req: NextRequest) {
 
       if (!gig) return NextResponse.json({ error: "Koncert nebol nájdený." }, { status: 404 });
 
-      // Map venueRef -> venue for frontend consistency
+      // Map venueRef -> venueEntity for frontend (avoid collision with venue string field)
       const { venueRef, ...gigRest } = gig;
-      const gigWithVenue = { ...gigRest, venue: venueRef };
+      const gigWithVenue = { ...gigRest, venueEntity: venueRef };
 
       // Parse setlist items JSON
       const parsedSetlists = setlists.map(s => ({

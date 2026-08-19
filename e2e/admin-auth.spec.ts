@@ -18,7 +18,7 @@ test.describe("Admin Login", () => {
     await page.goto("/admin/login");
     await page.fill('input[placeholder*="E-MAIL"]', "wrong@test.com");
     await page.fill('input[placeholder*="HESLO"]', "wrongpassword");
-    await page.click("button", { hasText: /PRIHLÁSIŤ/i });
+    await page.getByRole("button", { name: /PRIHLÁSIŤ/i }).click();
     // Mali by ostať na login page alebo vidieť chybu
     await page.waitForTimeout(1000);
     // Neobjaví sa admin dashboard
@@ -28,7 +28,7 @@ test.describe("Admin Login", () => {
   test("vyžaduje email aj heslo", async ({ page }) => {
     await page.goto("/admin/login");
     // Skús odoslať prázdne polia
-    await page.click("button", { hasText: /PRIHLÁSIŤ/i });
+    await page.getByRole("button", { name: /PRIHLÁSIŤ/i }).click();
     // HTML5 validation by zablokovalo odoslanie
     await expect(page).toHaveURL(/\/admin\/login/);
   });
