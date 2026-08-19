@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { MEMBERS } from "@/lib/band-data";
+import { useState, useEffect } from "react";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/site/reveal";
 import { MicVocal, Guitar, Drum, Music2, Plus, Minus, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type Member = {
+  id: string;
+  name: string;
+  role: string;
+  roleEn?: string | null;
+  bio?: string | null;
+  initials: string;
+  since: string;
+  photo?: string | null;
+  order: number;
+};
 
 function roleIcon(role: string) {
   const r = role.toLowerCase();
@@ -17,7 +28,24 @@ function roleIcon(role: string) {
 }
 
 export function MembersSection() {
-  const [expanded, setExpanded] = useState<number | null>(0); // prvý otvorený defaultne
+  const [expanded, setExpanded] = useState<number | null>(0);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/members")
+      .then(r => r.ok ? r.json() : { items: [] })
+      .then(d => {
+        setMembers(d.items || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setMembers([]);
+        setLoading(false);
+      });
+  }, []);
+
+  if (!loading && members.length === 0) return null;
 
   return (
     <section id="clenovia" className="relative scroll-mt-20 border-t border-charcoal bg-dark-gray py-20 sm:py-28">
@@ -37,7 +65,11 @@ export function MembersSection() {
 
         {/* Full-width grid — 4 columns on desktop */}
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {MEMBERS.map((m, i) => {
+          {loading ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="h-96 animate-pulse border border-charcoal bg-ink/50" />
+            ))
+          ) : members.map((m, i) => {
             const Icon = roleIcon(m.role);
             const isOpen = expanded === i;
             return (

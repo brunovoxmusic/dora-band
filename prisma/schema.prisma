@@ -707,3 +707,23 @@ model ApprovalQueue {
   @@index([entityType])
   @@index([createdAt])
 }
+
+/// Band members — editovateľné cez admin CMS.
+model BandMember {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  roleEn      String?
+  bio         String?  @db.Text
+  initials    String   @default("")
+  since       String   @default("—")
+  photo       String?
+  /// Poradie zobrazenia (1 = prvý)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([order])
+}

@@ -15,7 +15,7 @@ import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
   | "stats" | "analytics" | "predictions" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "content-items" | "blog" | "seo" | "ai" | "ai-usage" | "knowledge" | "approvals" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "content-items" | "blog" | "members" | "seo" | "ai" | "ai-usage" | "knowledge" | "approvals" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -57,6 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "content", label: "CMS", icon: FileText },
       { id: "blog", label: "Blog & Novinky", icon: Newspaper },
+      { id: "members", label: "Členovia kapely", icon: Users },
       { id: "media", label: "Médiá", icon: Images, hasCount: true },
       { id: "seo", label: "SEO", icon: Search },
       { id: "campaigns", label: "Kampane", icon: Mail },

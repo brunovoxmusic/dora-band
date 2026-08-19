@@ -10,6 +10,7 @@ import { SubscribersTab } from "@/components/admin/subscribers-tab";
 import { ContentTab } from "@/components/admin/content-tab";
 import { ContentItemsTab } from "@/components/admin/content-items-tab";
 import { BlogTab } from "@/components/admin/blog-tab";
+import { MembersTab } from "@/components/admin/members-tab";
 import { SeoTab } from "@/components/admin/seo-tab";
 import { AiTab } from "@/components/admin/ai-tab";
 import { AiUsageTab } from "@/components/admin/ai-usage-tab";
@@ -69,6 +70,7 @@ export default function AdminPage() {
       {tab === "content" && <ContentTab />}
       {tab === "content-items" && <ContentItemsTab />}
       {tab === "blog" && <BlogTab />}
+      {tab === "members" && <MembersTab />}
       {tab === "seo" && <SeoTab />}
       {tab === "ai" && <AiTab />}
       {tab === "ai-usage" && <AiUsageTab />}

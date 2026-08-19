@@ -1,12 +1,8 @@
 // D.O.R.A. band website — Prisma schema (SQLite for LOCAL DEVELOPMENT ONLY)
-// Production (Vercel) uses prisma/schema.prisma (PostgreSQL).
-// Generated from schema.prisma with @db.Text stripped for SQLite compat.
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
 }
-
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
@@ -708,4 +704,24 @@ model ApprovalQueue {
   @@index([agentType])
   @@index([entityType])
   @@index([createdAt])
+}
+
+/// Band members — editovateľné cez admin CMS.
+model BandMember {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  roleEn      String?
+  bio         String? 
+  initials    String   @default("")
+  since       String   @default("—")
+  photo       String?
+  /// Poradie zobrazenia (1 = prvý)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([order])
 }

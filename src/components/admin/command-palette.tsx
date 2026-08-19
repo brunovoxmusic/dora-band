@@ -76,6 +76,7 @@ export function CommandPalette({
     { id: "nav-content", label: "CMS obsah", icon: FileText, group: "Navigácia", action: () => navigate("content"), keywords: "content cms obsah" },
     { id: "nav-content-items", label: "Structured Content", icon: FileText, group: "Navigácia", action: () => navigate("content-items"), keywords: "content items structured blog news press workflow" },
     { id: "nav-blog", label: "Blog & Novinky (AI)", icon: Newspaper, group: "Navigácia", action: () => navigate("blog"), keywords: "blog news articles ai generate content" },
+    { id: "nav-members", label: "Členovia kapely", icon: Users, group: "Navigácia", action: () => navigate("members"), keywords: "members členovia kapela band photos" },
     { id: "nav-media", label: "Médiá", icon: Images, group: "Navigácia", action: () => navigate("media"), keywords: "media médiá fotky" },
     { id: "nav-seo", label: "SEO", icon: Search, group: "Navigácia", action: () => navigate("seo") },
     { id: "nav-ai", label: "AI nástroje", icon: Sparkles, group: "Navigácia", action: () => navigate("ai"), keywords: "ai nástroje tools" },
