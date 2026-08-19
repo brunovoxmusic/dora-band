@@ -1,6 +1,7 @@
 import { streamText } from "ai";
 import { getModel, isAIConfigured, buildSystemPrompt, type PromptType } from "@/lib/ai";
 import { getSession } from "@/lib/auth";
+import { ensureAIAvailable } from "@/lib/ai/provider";
 
 /**
  * POST /api/admin/ai
@@ -36,6 +37,17 @@ export async function POST(req: Request) {
       {
         error:
           "AI nie je nakonfigurované. Nastavte GROQ_API_KEY v environment variables (Vercel Dashboard → Settings → Environment Variables).",
+      },
+      { status: 503 }
+    );
+  }
+
+  // Model probe — over, že AI je dostupná PRED streamovaním
+  const isAvailable = await ensureAIAvailable();
+  if (!isAvailable) {
+    return Response.json(
+      {
+        error: "AI model nie je dostupný — žiadny Groq model nefunguje. Skontrolujte GROQ_API_KEY.",
       },
       { status: 503 }
     );

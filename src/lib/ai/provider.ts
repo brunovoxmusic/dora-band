@@ -1,21 +1,20 @@
 import type { LanguageModel } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
+import { generateText } from "ai";
 
 /**
  * AI Provider Adapter (M0-7)
  *
- * Abstrahuje AI poskytovateľov (Groq, OpenAI, ...) za spoločné rozhranie.
- * Provider sa volí podľa env var AI_PROVIDER (default: "groq").
+ * KEY FEATURE: Model Probe + Fallback Chain
  *
- * KEY FEATURE: Model Fallback Chain
- * Groq často mení/deprecated modely. Provider skúša modely v poradí:
- * 1. User-configured model (AI_MODEL env var)
- * 2. Fallback modely z GROQ_MODEL_CHAIN
- * 3. Pri prvom úspechu cachuje model pre budúce použitie
+ * Groq často deprecated/renames modely. Provider implementuje:
+ * 1. Model Probe — pri prvom použití otestuje dostupné modely (malým volaním)
+ * 2. Fallback Chain — ak prvý model nefunguje, skúsa ďalšie
+ * 3. Caching — prvý funkčný model sa cachuje pre všetky budúce volania
  *
- * Ak ŽIADNY model nefunguje (API key invalid, všetky modely deprecated),
- * isConfigured() vráti false a AI routes vrátia 503.
+ * Ak ŽIADNY model nefunguje (API key invalid), isConfigured() vráti false
+ * a AI routes vrátia 503 s user-friendly správou.
  */
 
 export type AIProviderName = "groq" | "openai" | "none";
@@ -25,6 +24,8 @@ export interface AIProvider {
   getModel(task: AITask): LanguageModel;
   getModelName(task?: AITask): string;
   isConfigured(): boolean;
+  /** Overí, či je model dostupný (probe). Vráti true ak áno. */
+  probeModel?(): Promise<boolean>;
 }
 
 export type AITask = "writing" | "analysis" | "fast";
@@ -42,52 +43,106 @@ export function getProviderName(): AIProviderName {
 // =====================================================
 
 /**
- * Zoznam Groq modelov v poradí, v akom sa skúšajú.
+ * Zoznam Groq modelov v poradí, v akom sa skúšajú pri probe.
  * Prvý funkčný model sa použije pre všetky budúce volania.
  *
- * Groq model history:
- * - llama-3.3-70b-versatile (deprecated Aug 2025)
- * - llama-3.1-8b-instant (possibly deprecated/renamed)
- * - llama3-8b-8192 (older but stable)
- * - gemma2-9b-it (stable alternative)
+ * Aktualizované August 2025 — reálne dostupné Groq modely:
+ * https://console.groq.com/docs/models
  */
 const GROQ_MODEL_CHAIN: string[] = [
-  // User-configured model (if set)
+  // User-configured model (if set via env)
   process.env.AI_MODEL || process.env.AI_MODEL_WRITING || "",
-  // Fallback chain — tried in order
+  // Production models (stable, long-term support)
   "llama-3.3-70b-versatile",
   "llama-3.1-8b-instant",
+  // Preview models (may change)
+  "llama-3.2-1b-preview",
+  "llama-3.2-3b-preview",
+  "llama-3.2-11b-vision-preview",
+  "llama-3.2-90b-vision-preview",
+  // Legacy models (older but stable)
   "llama3-8b-8192",
   "llama3-70b-8192",
+  // Alternative models
   "gemma2-9b-it",
   "mixtral-8x7b-32768",
 ].filter(Boolean) as string[];
 
-/** Cachovaný funkčný model (po prvom úspechu sa použije pre všetky budúce volania). */
+/** Cachovaný funkčný model (po prvom úspešnom probe sa použije pre všetky budúce volania). */
 let _workingModel: string | null = null;
 
-/**
- * Vráti prvý funkčný model z chain.
- * Ak už bol nájdený, vráti cachovaný.
- */
+/** Stav probe — null = neprobol, true = úspešný, false = všetky modely zlyhali */
+let _probeStatus: boolean | null = null;
+
+/** Vráti aktuálny pracovný model (cachovaný alebo prvý z chain). */
 function getWorkingModel(): string {
   if (_workingModel) return _workingModel;
-  // Vráť prvý z chain (cachovanie sa deje pri prvom úspešnom volaní)
   _workingModel = GROQ_MODEL_CHAIN[0];
   return _workingModel;
 }
 
-/** Označí model ako nefunkčný a vráti ďalší z chain. */
-function markModelFailed(failedModel: string): string {
-  const idx = GROQ_MODEL_CHAIN.indexOf(failedModel);
-  if (idx >= 0 && idx < GROQ_MODEL_CHAIN.length - 1) {
-    const next = GROQ_MODEL_CHAIN[idx + 1];
-    console.warn(`[ai] Model '${failedModel}' failed, trying '${next}'`);
-    _workingModel = next;
-    return next;
+/**
+ * Model Probe — otestuje, či je model dostupný pomocou malého volania.
+ * Vráti true ak model funguje, false ak nie.
+ */
+async function probeSingleModel(groq: ReturnType<typeof createGroq>, model: string): Promise<boolean> {
+  try {
+    const result = await generateText({
+      model: groq(model),
+      prompt: "ping",
+      maxOutputTokens: 1,
+    });
+    // Ak volanie prešlo bez chyby, model je dostupný
+    return true;
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const isModelErr = errMsg.includes("does not exist") || errMsg.includes("model_not_found");
+    if (isModelErr) {
+      console.warn(`[ai-probe] Model '${model}' NOT available`);
+      return false;
+    }
+    // Iná chyba (rate limit, network) — model môže byť dostupný, ale dočasne nedostupný
+    console.warn(`[ai-probe] Model '${model}' error (non-model):`, errMsg.slice(0, 100));
+    return true; // predpokladajme že funguje
   }
-  console.error(`[ai] All models in chain failed. Last: ${failedModel}`);
-  return failedModel; // vráť posledný (lepšie ako crash)
+}
+
+/**
+ * Probuje všetky modely z chain a cachuje prvý funkčný.
+ * Vráti true ak nájde funkčný model, false ak žiadny nefunguje.
+ */
+async function probeModels(): Promise<boolean> {
+  if (_probeStatus !== null) return _probeStatus;
+  if (!process.env.GROQ_API_KEY) {
+    _probeStatus = false;
+    return false;
+  }
+
+  const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
+
+  for (const model of GROQ_MODEL_CHAIN) {
+    const isAvailable = await probeSingleModel(groq, model);
+    if (isAvailable) {
+      console.log(`[ai-probe] Using working model: '${model}'`);
+      _workingModel = model;
+      _probeStatus = true;
+      return true;
+    }
+  }
+
+  console.error(`[ai-probe] ALL models failed. ${GROQ_MODEL_CHAIN.length} models tested.`);
+  _probeStatus = false;
+  return false;
+}
+
+/**
+ * Označí aktuálny model ako nefunkčný a zmaže cache.
+ * Pri ďalšom volaní probeModels() sa nájde nový funkčný model.
+ */
+export function handleModelFailure(modelName: string): void {
+  console.warn(`[ai] Model '${modelName}' failed during use, clearing cache for re-probe`);
+  _workingModel = null;
+  _probeStatus = null;
 }
 
 // =====================================================
@@ -95,13 +150,10 @@ function markModelFailed(failedModel: string): string {
 // =====================================================
 
 /**
- * Resilient Groq provider — skúša modely z chain, cachuje funkčný.
+ * Resilient Groq provider s model probe.
  */
 function createResilientGroqProvider(): AIProvider {
-  const groq = createGroq({
-    apiKey: process.env.GROQ_API_KEY || "",
-    // Custom error handler — pri model_not_found skús ďalší model
-  });
+  const groq = createGroq({ apiKey: process.env.GROQ_API_KEY || "" });
 
   return {
     name: "groq",
@@ -111,6 +163,9 @@ function createResilientGroqProvider(): AIProvider {
     },
     getModelName: (task: AITask = "writing") => getWorkingModel(),
     isConfigured: () => !!process.env.GROQ_API_KEY,
+    probeModel: async () => {
+      return await probeModels();
+    },
   };
 }
 
@@ -137,6 +192,7 @@ export function createProvider(): AIProvider {
         getModel: (task: AITask) => openai(OPENAI_MODELS[task]),
         getModelName: (task: AITask = "writing") => OPENAI_MODELS[task],
         isConfigured: () => !!process.env.OPENAI_API_KEY,
+        probeModel: async () => !!process.env.OPENAI_API_KEY,
       };
     }
 
@@ -148,6 +204,7 @@ export function createProvider(): AIProvider {
         },
         getModelName: () => "disabled",
         isConfigured: () => false,
+        probeModel: async () => false,
       };
 
     default:
@@ -167,9 +224,14 @@ export function getProvider(): AIProvider {
 }
 
 /**
- * Export pre error handling — ak AI volanie zlyhá s model_not_found,
- * zavolaj túto funkciu pre prepnutie na ďalší model v chain.
+ * Overí, či je AI dostupná (probe model).
+ * Používa sa pred AI volaniami na overenie dostupnosti.
  */
-export function handleModelFailure(modelName: string): void {
-  markModelFailed(modelName);
+export async function ensureAIAvailable(): Promise<boolean> {
+  const provider = getProvider();
+  if (!provider.isConfigured()) return false;
+  if (provider.probeModel) {
+    return await provider.probeModel();
+  }
+  return true;
 }

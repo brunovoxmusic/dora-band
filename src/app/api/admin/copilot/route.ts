@@ -7,7 +7,7 @@ import { trackStreamUsage } from "@/lib/ai/usage";
 import { sanitizeForPrompt } from "@/lib/ai/sanitize";
 import { getAiSdkTools } from "@/lib/ai/tool-adapter";
 import { getUserPermissions } from "@/lib/ai/rbac";
-import { handleModelFailure } from "@/lib/ai/provider";
+import { handleModelFailure, ensureAIAvailable } from "@/lib/ai/provider";
 import type { ToolPermission } from "@/lib/ai/tools";
 
 /**
@@ -169,33 +169,25 @@ export async function POST(req: NextRequest) {
     // B.4 RBAC: dynamické permissions podľa role usera
     const permissions: ToolPermission[] = session?.uid ? await getUserPermissions(session.uid) : ["READ"];
 
-    // Model fallback chain — ak model zlyhá (model_not_found), skús ďalší
-    let result;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        result = streamText({
-          model: getModel("writing"),
-          system: SYSTEM_PROMPT,
-          prompt: fullPrompt,
-          tools: getAiSdkTools(permissions) as Record<string, never>,
-        });
-        break;
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        if (errMsg.includes("does not exist") || errMsg.includes("model_not_found")) {
-          handleModelFailure(getModelName("writing"));
-          if (attempt < 2) continue;
-        }
-        throw err;
-      }
-    }
-
-    if (!result) {
+    // CRITICAL: Model probe — over, že AI je dostupná PRED streamovaním
+    // streamText() nezachytí model_not_found chybu (error sa vyskytne počas streamovania)
+    const isAvailable = await ensureAIAvailable();
+    if (!isAvailable) {
       return NextResponse.json(
-        { error: "AI Copilot nedostupný — žiadny funkčný model." },
+        {
+          error: "AI nie je dostupné — skontrolujte GROQ_API_KEY v Vercel env premenných. Žiadny funkčný model.",
+        },
         { status: 503 }
       );
     }
+
+    // Teraz, keď je model overený, spusti streamovanie
+    const result = streamText({
+      model: getModel("writing"),
+      system: SYSTEM_PROMPT,
+      prompt: fullPrompt,
+      tools: getAiSdkTools(permissions) as Record<string, never>,
+    });
 
     // M4.5: Log usage asynchronously
     void trackStreamUsage(result as never, "copilot", getModelName("writing"), {
@@ -209,6 +201,10 @@ export async function POST(req: NextRequest) {
     console.error("[copilot] error:", err);
     const errMsg = err instanceof Error ? err.message : String(err);
     const isModelErr = errMsg.includes("does not exist") || errMsg.includes("model_not_found");
+    if (isModelErr) {
+      // Zmaž cache a skús re-probe pri ďalšom volaní
+      handleModelFailure(getModelName("writing"));
+    }
     return NextResponse.json(
       {
         error: isModelErr
