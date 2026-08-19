@@ -7,6 +7,7 @@ import { trackStreamUsage } from "@/lib/ai/usage";
 import { sanitizeForPrompt } from "@/lib/ai/sanitize";
 import { getAiSdkTools } from "@/lib/ai/tool-adapter";
 import { getUserPermissions } from "@/lib/ai/rbac";
+import { handleModelFailure } from "@/lib/ai/provider";
 import type { ToolPermission } from "@/lib/ai/tools";
 
 /**
@@ -167,20 +168,38 @@ export async function POST(req: NextRequest) {
     const session = await getSession(req);
     // B.4 RBAC: dynamické permissions podľa role usera
     const permissions: ToolPermission[] = session?.uid ? await getUserPermissions(session.uid) : ["READ"];
-    const result = streamText({
-      model: getModel("writing"),
-      system: SYSTEM_PROMPT,
-      prompt: fullPrompt,
-      // B.1: AI Tool System aktivácia — Copilot môže volať tools podľa RBAC
-      // admin: READ + WRITE + CREATE + DELETE + SEND
-      // editor: READ + WRITE + CREATE
-      // viewer: READ only
-      tools: getAiSdkTools(permissions) as Record<string, never>,
-    });
 
-    // M4.5: Log usage asynchronously (fire-and-forget, after stream is consumed)
+    // Model fallback chain — ak model zlyhá (model_not_found), skús ďalší
+    let result;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        result = streamText({
+          model: getModel("writing"),
+          system: SYSTEM_PROMPT,
+          prompt: fullPrompt,
+          tools: getAiSdkTools(permissions) as Record<string, never>,
+        });
+        break;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg.includes("does not exist") || errMsg.includes("model_not_found")) {
+          handleModelFailure(getModelName("writing"));
+          if (attempt < 2) continue;
+        }
+        throw err;
+      }
+    }
+
+    if (!result) {
+      return NextResponse.json(
+        { error: "AI Copilot nedostupný — žiadny funkčný model." },
+        { status: 503 }
+      );
+    }
+
+    // M4.5: Log usage asynchronously
     void trackStreamUsage(result as never, "copilot", getModelName("writing"), {
-      userId: "admin",
+      userId: session?.uid,
       promptPreview: userMessage,
       startMs,
     } as never);
@@ -188,6 +207,16 @@ export async function POST(req: NextRequest) {
     return result.toTextStreamResponse();
   } catch (err) {
     console.error("[copilot] error:", err);
-    return NextResponse.json({ error: "AI Copilot zlyhal." }, { status: 500 });
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const isModelErr = errMsg.includes("does not exist") || errMsg.includes("model_not_found");
+    return NextResponse.json(
+      {
+        error: isModelErr
+          ? "AI model nie je dostupný. Skontrolujte GROQ_API_KEY v Vercel env premenných."
+          : "AI Copilot zlyhal.",
+        detail: errMsg,
+      },
+      { status: isModelErr ? 503 : 500 }
+    );
   }
 }

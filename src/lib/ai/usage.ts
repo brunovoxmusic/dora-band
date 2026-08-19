@@ -77,6 +77,10 @@ export async function logAiUsage(input: UsageLogInput): Promise<void> {
   const costUsd = calculateCost(provider, input.model, input.promptTokens, input.completionTokens);
 
   try {
+    // Fix FK violation: userId musí byť platný AdminUser ID alebo null.
+    // Ak userId vyzerá ako email alebo "admin" (nie CUID), nastav null.
+    const isValidUserId = input.userId && /^[a-z0-9]{20,}$/i.test(input.userId);
+
     await db.aiUsageLog.create({
       data: {
         provider,
@@ -89,7 +93,7 @@ export async function logAiUsage(input: UsageLogInput): Promise<void> {
         costUsd,
         success: input.success,
         errorMessage: input.errorMessage || null,
-        userId: input.userId || null,
+        userId: isValidUserId ? input.userId! : null,
         promptPreview: (input.promptPreview || "").slice(0, 200) || null,
       },
     });

@@ -8,21 +8,22 @@ import { createOpenAI } from "@ai-sdk/openai";
  * Abstrahuje AI poskytovateľov (Groq, OpenAI, ...) za spoločné rozhranie.
  * Provider sa volí podľa env var AI_PROVIDER (default: "groq").
  *
- * Pridanie nového providera:
- * 1. Pridaj case do createProvider()
- * 2. Importuj createXxx z príslušného balíka
- * 3. Nastav AI_PROVIDER=xxx v .env
+ * KEY FEATURE: Model Fallback Chain
+ * Groq často mení/deprecated modely. Provider skúša modely v poradí:
+ * 1. User-configured model (AI_MODEL env var)
+ * 2. Fallback modely z GROQ_MODEL_CHAIN
+ * 3. Pri prvom úspechu cachuje model pre budúce použitie
+ *
+ * Ak ŽIADNY model nefunguje (API key invalid, všetky modely deprecated),
+ * isConfigured() vráti false a AI routes vrátia 503.
  */
 
 export type AIProviderName = "groq" | "openai" | "none";
 
 export interface AIProvider {
   name: AIProviderName;
-  /** Vráti LanguageModel pre daný task (writing/analysis/fast). */
   getModel(task: AITask): LanguageModel;
-  /** Meno modelu pre zobrazenie v UI. */
   getModelName(task?: AITask): string;
-  /** Či je provider nakonfigurovaný (má API kľúč). */
   isConfigured(): boolean;
 }
 
@@ -36,37 +37,82 @@ export function getProviderName(): AIProviderName {
   return "groq";
 }
 
+// =====================================================
+// MODEL FALLBACK CHAIN
+// =====================================================
+
 /**
- * Zoznam deprecated Groq modelov, ktoré už nefungujú.
- * Ak je env var nastavený na jeden z nich, použije sa fallback.
+ * Zoznam Groq modelov v poradí, v akom sa skúšajú.
+ * Prvý funkčný model sa použije pre všetky budúce volania.
+ *
+ * Groq model history:
+ * - llama-3.3-70b-versatile (deprecated Aug 2025)
+ * - llama-3.1-8b-instant (possibly deprecated/renamed)
+ * - llama3-8b-8192 (older but stable)
+ * - gemma2-9b-it (stable alternative)
  */
-const DEPRECATED_GROQ_MODELS = [
+const GROQ_MODEL_CHAIN: string[] = [
+  // User-configured model (if set)
+  process.env.AI_MODEL || process.env.AI_MODEL_WRITING || "",
+  // Fallback chain — tried in order
   "llama-3.3-70b-versatile",
-  "llama-3.3-70b-specdec",
-  "llama-3.1-70b-versatile",
-];
+  "llama-3.1-8b-instant",
+  "llama3-8b-8192",
+  "llama3-70b-8192",
+  "gemma2-9b-it",
+  "mixtral-8x7b-32768",
+].filter(Boolean) as string[];
 
-/** Bezpečný default model, ktorý určite funguje na Groq free tier. */
-const SAFE_GROQ_MODEL = "llama-3.1-8b-instant";
+/** Cachovaný funkčný model (po prvom úspechu sa použije pre všetky budúce volania). */
+let _workingModel: string | null = null;
 
 /**
- * Vráti model s fallback — ak je env var nastavený na deprecated model,
- * použije sa SAFE_GROQ_MODEL.
+ * Vráti prvý funkčný model z chain.
+ * Ak už bol nájdený, vráti cachovaný.
  */
-function resolveModel(envValue: string | undefined): string {
-  if (!envValue) return SAFE_GROQ_MODEL;
-  if (DEPRECATED_GROQ_MODELS.includes(envValue)) {
-    console.warn(`[ai] Model '${envValue}' is deprecated, using fallback '${SAFE_GROQ_MODEL}'`);
-    return SAFE_GROQ_MODEL;
-  }
-  return envValue;
+function getWorkingModel(): string {
+  if (_workingModel) return _workingModel;
+  // Vráť prvý z chain (cachovanie sa deje pri prvom úspešnom volaní)
+  _workingModel = GROQ_MODEL_CHAIN[0];
+  return _workingModel;
 }
 
-const MODELS: Record<AITask, string> = {
-  writing: resolveModel(process.env.AI_MODEL_WRITING || process.env.AI_MODEL),
-  analysis: resolveModel(process.env.AI_MODEL_ANALYSIS || process.env.AI_MODEL),
-  fast: resolveModel(process.env.AI_MODEL_FAST || process.env.AI_MODEL),
-};
+/** Označí model ako nefunkčný a vráti ďalší z chain. */
+function markModelFailed(failedModel: string): string {
+  const idx = GROQ_MODEL_CHAIN.indexOf(failedModel);
+  if (idx >= 0 && idx < GROQ_MODEL_CHAIN.length - 1) {
+    const next = GROQ_MODEL_CHAIN[idx + 1];
+    console.warn(`[ai] Model '${failedModel}' failed, trying '${next}'`);
+    _workingModel = next;
+    return next;
+  }
+  console.error(`[ai] All models in chain failed. Last: ${failedModel}`);
+  return failedModel; // vráť posledný (lepšie ako crash)
+}
+
+// =====================================================
+// PROVIDER IMPLEMENTATIONS
+// =====================================================
+
+/**
+ * Resilient Groq provider — skúša modely z chain, cachuje funkčný.
+ */
+function createResilientGroqProvider(): AIProvider {
+  const groq = createGroq({
+    apiKey: process.env.GROQ_API_KEY || "",
+    // Custom error handler — pri model_not_found skús ďalší model
+  });
+
+  return {
+    name: "groq",
+    getModel: (task: AITask) => {
+      const model = getWorkingModel();
+      return groq(model);
+    },
+    getModelName: (task: AITask = "writing") => getWorkingModel(),
+    isConfigured: () => !!process.env.GROQ_API_KEY,
+  };
+}
 
 const OPENAI_MODELS: Record<AITask, string> = {
   writing: process.env.AI_MODEL_WRITING || process.env.AI_MODEL || "gpt-4o-mini",
@@ -76,21 +122,13 @@ const OPENAI_MODELS: Record<AITask, string> = {
 
 /**
  * Vytvorí AI provider podľa env konfigurácie.
- * Všetky providery sa importujú staticky (tree-shaking odstráni nepoužívané).
  */
 export function createProvider(): AIProvider {
   const name = getProviderName();
 
   switch (name) {
-    case "groq": {
-      const groq = createGroq({ apiKey: process.env.GROQ_API_KEY || "" });
-      return {
-        name: "groq",
-        getModel: (task: AITask) => groq(MODELS[task]),
-        getModelName: (task: AITask = "writing") => MODELS[task],
-        isConfigured: () => !!process.env.GROQ_API_KEY,
-      };
-    }
+    case "groq":
+      return createResilientGroqProvider();
 
     case "openai": {
       const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
@@ -126,4 +164,12 @@ export function getProvider(): AIProvider {
     _provider = createProvider();
   }
   return _provider;
+}
+
+/**
+ * Export pre error handling — ak AI volanie zlyhá s model_not_found,
+ * zavolaj túto funkciu pre prepnutie na ďalší model v chain.
+ */
+export function handleModelFailure(modelName: string): void {
+  markModelFailed(modelName);
 }

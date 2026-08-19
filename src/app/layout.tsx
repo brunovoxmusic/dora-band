@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Montserrat, Roboto_Condensed, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -112,7 +112,12 @@ export const metadata: Metadata = {
       { url: "/dora-mark.svg", type: "image/svg+xml" },
     ],
   },
+};
+
+// themeColor musí byť v viewport export, nie v metadata (Next.js 16)
+export const viewport: Viewport = {
   themeColor: "#E63946",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
