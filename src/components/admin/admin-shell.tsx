@@ -5,7 +5,7 @@ import {
   Loader2, LogOut, Inbox, CalendarDays, Images, ExternalLink,
   LayoutDashboard, Mail, FileText, Search, Sparkles, Users,
   CheckSquare, Zap, TrendingUp, Settings, Menu, X, ChevronRight,
-  Command as CommandIcon, Brain, Music, Activity, ListMusic, DollarSign, Mic2, ShoppingCart,
+  Command as CommandIcon, Brain, Music, Activity, ListMusic, DollarSign, Mic2, ShoppingCart, Newspaper,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
   | "stats" | "analytics" | "predictions" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "content-items" | "seo" | "ai" | "ai-usage" | "knowledge" | "approvals" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "content-items" | "blog" | "seo" | "ai" | "ai-usage" | "knowledge" | "approvals" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -56,7 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Obsah",
     items: [
       { id: "content", label: "CMS", icon: FileText },
-      { id: "content-items", label: "Obsah", icon: FileText },
+      { id: "blog", label: "Blog & Novinky", icon: Newspaper },
       { id: "media", label: "Médiá", icon: Images, hasCount: true },
       { id: "seo", label: "SEO", icon: Search },
       { id: "campaigns", label: "Kampane", icon: Mail },
