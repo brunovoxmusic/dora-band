@@ -5,6 +5,7 @@ import { CookieConsent } from "@/components/site/cookie-consent";
 import { ScrollProgress } from "@/components/site/scroll-progress";
 import { SectionDivider } from "@/components/site/section-divider";
 import { HeroSection } from "@/components/sections/hero-section";
+import { StatsSection } from "@/components/sections/stats-section";
 import { AboutSection } from "@/components/sections/about-section";
 import { MembersSection } from "@/components/sections/members-section";
 import { MusicSection } from "@/components/sections/music-section";
@@ -12,6 +13,8 @@ import { GallerySection } from "@/components/sections/gallery-section";
 import { DiscographySection } from "@/components/sections/discography-section";
 import { GigsSection } from "@/components/sections/gigs-section";
 import { SetlistSection } from "@/components/sections/setlist-section";
+import { MerchSection } from "@/components/sections/merch-section";
+import { BlogSection } from "@/components/sections/blog-section";
 import { TestimonialsSection } from "@/components/sections/testimonials-section";
 import { PressSection } from "@/components/sections/press-section";
 import { NewsletterSection } from "@/components/sections/newsletter-section";
@@ -175,6 +178,8 @@ export default async function HomePage() {
             <SectionDivider />
           </>
         )}
+        {/* NEW: Stats section — dynamické čísla z DB */}
+        <StatsSection />
         {showSection("about") && (
           <>
             <AboutSection bioLong={c["band.bioLong"]} />
@@ -183,6 +188,8 @@ export default async function HomePage() {
         )}
         {showSection("members") && <MembersSection />}
         {showSection("music") && <MusicSection />}
+        {showSection("gigs") && <GigsSection />}
+        {showSection("setlist") && <SetlistSection />}
         {showSection("gallery") && (
           <>
             <SectionDivider />
@@ -191,18 +198,11 @@ export default async function HomePage() {
           </>
         )}
         {showSection("discography") && <DiscographySection />}
-        {showSection("gigs") && <GigsSection />}
-        {showSection("setlist") && <SetlistSection />}
-        {/* TODO(DORA): Sekcia „Recenzie & referencie“ je DOČASNE SKRYTÁ.
-            Päť citovaných recenzií (Marek Hudec, Lucia Poláková, Peter Vavro,
-            Tomáš Janík, Eva Macháčová) pôsobí ako neoveriteľný placeholder obsah
-            — mená, tituly aj citácie nemajú overiteľný zdroj. Pozri
-            _audit_copy_content.docx časť 2.5.
-            Akciu: nahradiť reálnymi citátmi od reálnych organizátorov, s ktorými
-            kapela spolupracovala. Alternatíva: nahradiť sekciou „Kde sme hrali“
-            s logami/názvami reálnych podujatí bez priamych citácií.
-            Komponent testimonials-section.tsx je ponechaný v kóde — len sa
-            nevykresľuje. Až budú reálne referencie, odkomentovať blok nižšie. */}
+        {/* NEW: Merch section — dynamické produkty z admin DB */}
+        <MerchSection />
+        {/* NEW: Blog/News section — publikované ContentItems */}
+        <BlogSection />
+        {/* TODO(DORA): Sekcia „Recenzie & referencie“ je DOČASNE SKRYTÁ. */}
         {/* {showSection("testimonials") && (
           <>
             <SectionDivider />
