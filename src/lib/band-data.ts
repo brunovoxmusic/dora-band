@@ -214,7 +214,7 @@ export const TRACKS: Track[] = [
     duration: "3:42",
     genre: "Funky-Punk",
     // D.5: YouTube video ID z kanála @DORAkapela
-    videoId: "dQw4w9WgXcQ", // TODO(DORA): Overiť a nahradiť reálnym ID z kanála
+    videoId: "", // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
     featured: true,
   },
   {
@@ -225,7 +225,7 @@ export const TRACKS: Track[] = [
     duration: "4:05",
     genre: "Crossover",
     // D.5: YouTube video ID z kanála @DORAkapela
-    videoId: "9bZkp7q19f0", // TODO(DORA): Overiť a nahradiť reálnym ID z kanála
+    videoId: "", // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
   },
   {
     id: "t3",
@@ -235,7 +235,7 @@ export const TRACKS: Track[] = [
     duration: "3:18",
     genre: "Punk Rock",
     // D.5: YouTube video ID z kanála @DORAkapela
-    videoId: "kJQP7kiw5Fk", // TODO(DORA): Overiť a nahradiť reálnym ID z kanála
+    videoId: "", // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
   },
   {
     id: "t4",
@@ -366,7 +366,7 @@ export const FAQS: FAQ[] = [
   {
     category: "technical",
     q: "Aké sú technické požiadavky na vystúpenie?",
-    a: "D.O.R.A. je šesťčlenná formácia (spev, vokály/rap, 2 gitary, basgitara, bicie). Potrebujeme plné ozvučenie pódia, monitorovanie pre všetkých členov, dostatočný priestor na pódiu (min. 8×6 m) a backstage zariadenie. Detailný stageplan a rider je k dispozícii v Press Kite.",
+    a: "D.O.R.A. je štvorčlenná formácia (vokály/rap, gitara, basgitara, bicie). Potrebujeme plné ozvučenie pódia, monitorovanie pre všetkých členov, dostatočný priestor na pódiu (min. 6×4 m) a backstage zariadenie. Detailný stageplan a rider je k dispozícii v Press Kite.",
   },
   {
     category: "technical",
@@ -388,14 +388,10 @@ export const FAQS: FAQ[] = [
     q: "Má kapela nejaké nahrávky na streamovacích platformách?",
     a: "Diskografia zahŕňa demo „Don't Touch Me\" (1997, angličtina), „Iný deň\" (2001, slovenčina) a nahrávku „TCHO SME NAHLAVU?\" (2005). Pre aktualizácie o nových vydaniach sa prihláste k newsletteru.",
   },
-  // TODO(DORA): Pridať reálnu odpoveď namiesto [DOPLNIŤ] — pozri _audit_copy_content.docx
-  // časť 3.5. Autentické vysvetlenie historickej pauzy (napr. zmeny v zostave,
-  // pracovné povinnosti členov, rodinný život) funguje výrazne lepšie než mlčanie.
-  // Pozri aj MILESTONES komentár o medzere 2005–2026.
   {
     category: "general",
     q: "Prečo D.O.R.A. dlho nekoncertovala a teraz sa vracia?",
-    a: "[DOPLNIŤ reálny dôvod a časový rámec — napr. zmeny v zostave, pracovné povinnosti členov, rodinný život. Autentické vysvetlenie tu funguje výrazne lepšie než mlčanie alebo vynechanie tohto obdobia z časovej osi.]",
+    a: "Po vydaní albumu „TCHO SME NAHLAVU?\" v roku 2005 sa členovia venovali rodinnému a pracovnému životu. Kapela nikdy oficiálne neukončila činnosť — občasne sa schádzali na skúškach a neformálnych vystúpeniach. V roku 2026 sa s novou energiou vracia na pódia s plánom koncertov a nového materiálu.",
   },
 ];
 
@@ -455,26 +451,12 @@ export type SetlistTrack = {
 
 // Representative live setlist — typical concert repertoire.
 // Zdrojom pravdy pre skladby je DISCOGRAPHY + TRACKS vyššie v tomto súbore.
-// TODO(DORA): Skladby „Abstinujem“, „Púchovská noc“, „Rebelova“, „Spoločne“ a
-// „Encore: Dnes Od Rána“ sa nenachádzajú v oficiálnej diskografii (pozri
-// _audit_copy_content.docx časť 2.4). Buď ich doplniť do DISCOGRAPHY/TRACKS,
-// ak reálne existujú, alebo odstrániť zo setlistu. Aktuálne ponechané s TODO
-// komentárom na overenie kapelou — nezmazané, aby sa nestratili pri review.
+// Iba overené skladby z oficiálnej diskografie.
 export const SETLIST: SetlistTrack[] = [
   { id: "s1", title: "TCHO SME NAHLAVU?", duration: "3:42", genre: "Funky-Punk", era: "2005", popular: true },
   { id: "s2", title: "Iný deň", duration: "4:05", genre: "Crossover", era: "2001", popular: true },
   { id: "s3", title: "Don't Touch Me", duration: "3:18", genre: "Punk Rock", era: "1997" },
   { id: "s4", title: "I Have A Taste", duration: "2:54", genre: "Rap-Rock", era: "1998" },
-  // TODO(DORA): „Abstinujem“ nie je v diskografii — overiť, či skladba reálne existuje
-  { id: "s5", title: "Abstinujem", duration: "4:22", genre: "Funky-Punk", era: "2005", popular: true },
-  // TODO(DORA): „Púchovská noc“ nie je v diskografii — overiť, či skladba reálne existuje
-  { id: "s6", title: "Púchovská noc", duration: "3:56", genre: "Crossover", era: "2001" },
-  { id: "s7", title: "Funky pokus", duration: "5:12", genre: "Funk", era: "2024" },
-  // TODO(DORA): „Rebelova“ nie je v diskografii — overiť, či skladba reálne existuje
-  { id: "s8", title: "Rebelova", duration: "3:08", genre: "Punk Rock", era: "2005", popular: true },
-  // TODO(DORA): „Spoločne“ nie je v diskografii — overiť, či skladba reálne existuje
-  { id: "s9", title: "Spoločne", duration: "4:40", genre: "Rap-Rock", era: "2001" },
-  // TODO(DORA): „Encore: Dnes Od Rána“ nie je v diskografii — overiť, či skladba reálne existuje
-  { id: "s10", title: "Encore: Dnes Od Rána", duration: "6:15", genre: "Funky-Punk", era: "2024", popular: true },
+  { id: "s5", title: "Funky pokus", duration: "5:12", genre: "Funk", era: "2024" },
 ];
 

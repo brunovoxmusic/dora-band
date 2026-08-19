@@ -70,7 +70,7 @@ export function StatsSection() {
   const s = stats || { yearsActive: 30, gigsPlayed: 0, songsReleased: 0, fansCount: 0 };
 
   return (
-    <section className="relative border-t border-charcoal bg-dark-gray py-16 sm:py-20">
+    <section id="stats" className="relative scroll-mt-20 border-t border-charcoal bg-dark-gray py-16 sm:py-20">
       {/* Background noise + gradient */}
       <div className="absolute inset-0 bg-noise opacity-20" />
       <div className="absolute inset-0 bg-gradient-to-b from-ink/30 via-transparent to-ink/30" />

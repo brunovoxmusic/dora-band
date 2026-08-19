@@ -172,11 +172,10 @@ export function HeroSection({
         {/* Stat strip */}
         <div className="mt-16 grid max-w-3xl grid-cols-2 gap-px border border-charcoal bg-charcoal sm:grid-cols-4">
           {[
-            // Hodnoty podľa _audit_copy_content.docx časť 2.1
             { k: "1996", v: "Založená" },
             { k: "30+", v: "Rokov na scéne" },
-            { k: "5", v: "Nahrávky / Demá" },
-            { k: "4", v: "Žánrov" },
+            { k: "3", v: "Nahrávky / Demá" },
+            { k: "5", v: "Žánrov" },
           ].map((s) => (
             <StatCell key={s.v} value={s.k} label={s.v} />
           ))}

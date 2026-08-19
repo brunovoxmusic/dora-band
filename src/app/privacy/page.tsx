@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   const bandLocation = BAND.origin || "Púchov, Slovenská republika";
-  const responsiblePerson = "Braňo Vox — líder kapely";
+  const responsiblePerson = "Branislav Guzma — líder kapely";
   return (
     <>
       <ScrollProgress />
@@ -52,9 +52,9 @@ export default function PrivacyPage() {
                 </ul>
                 <h3 className="text-white font-semibold mt-6 mb-2">1.2 Účel spracovania</h3>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Vybavenie bookingových požiadaviek (zmluvný záujem, § 13 ods. 1 písm. b GDPR)</li>
+                  <li>Vybavenie bookingových požiadaviek (zmluvný záujem, čl. 6 ods. 1 písm. b GDPR)</li>
                   <li>Newsletter — odosielanie informácií o koncertoch (súhlas, odhlásiteľný kedykoľvek)</li>
-                  <li>Ochrana pred spamom a zneužitím (oprávnený záujem, § 13 ods. 1 písm. f GDPR)</li>
+                  <li>Ochrana pred spamom a zneužitím (oprávnený záujem, čl. 6 ods. 1 písm. f GDPR)</li>
                   <li>Analýza návštevnosti (súhlas cez cookie banner)</li>
                 </ul>
                 <h3 className="text-white font-semibold mt-6 mb-2">1.3 Doba uchovávania</h3>

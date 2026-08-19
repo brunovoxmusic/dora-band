@@ -22,7 +22,7 @@ export function MusicSection() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <SectionHeading
-            number="04b"
+            number="04"
             eyebrow="Hudba & Video"
             title="Vypočujte si D.O.R.A."
             description="Vyberte skladbu z tracklistu a pozrite si živé vystúpenie. Reprezentatívny výber z celej diskografie."

@@ -59,11 +59,11 @@ export function GigsSection() {
   }, [view]);
 
   return (
-    <section className="relative border-t border-charcoal bg-ink py-20 sm:py-24">
+    <section id="gigs" className="relative scroll-mt-20 border-t border-charcoal bg-ink py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <SectionHeading
-            number="06b"
+            number="06"
             eyebrow="Koncerty"
             title="Vystúpenia D.O.R.A."
             description="Nadchádzajúce koncerty a archív odohraných vystúpení. Kliknite na koncert pre detail."

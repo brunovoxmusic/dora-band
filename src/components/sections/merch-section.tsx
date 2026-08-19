@@ -71,7 +71,7 @@ export function MerchSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <SectionHeading
-            number="07"
+            number="10"
             eyebrow="Merch & Obchod"
             title="Vezmi si kúsok D.O.R.A. domov"
             description="Tričká, vinyly, plagáty a ďalší merch priamo od kapely. Kúp na koncerte alebo objednaj online."

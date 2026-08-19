@@ -63,10 +63,9 @@ export const metadata: Metadata = {
   publisher: "D.O.R.A.",
   alternates: {
     canonical: "/",
-    // M3.4: hreflang — self-referencing sk-SK + en alternate (for future i18n)
+    // hreflang — iba sk-SK (stránka je iba v slovenčine, EN verzia neexistuje)
     languages: {
       "sk-SK": "/",
-      "en": "/",
     },
   },
   openGraph: {

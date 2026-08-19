@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       select: { id: true, date: true, updatedAt: true },
     });
     gigEntries = gigs.map(g => ({
-      url: `${SITE_URL}/#koncerty`,
+      url: `${SITE_URL}/#gigs`,
       lastModified: g.updatedAt || g.date,
       changeFrequency: "weekly" as const,
       priority: 0.6,

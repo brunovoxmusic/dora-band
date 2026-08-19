@@ -77,7 +77,7 @@ export function BlogSection() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <SectionHeading
-              number="08"
+              number="11"
               eyebrow="Blog & Novinky"
               title="Čo je nové u D.O.R.A."
               description="Najnovšie články, novinky, tlačové správy a recenzie koncertov."
