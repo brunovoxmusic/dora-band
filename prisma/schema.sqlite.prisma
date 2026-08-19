@@ -1,6 +1,5 @@
 // D.O.R.A. band website — Prisma schema (SQLite for LOCAL DEVELOPMENT ONLY)
 // Production (Vercel) uses prisma/schema.prisma (PostgreSQL).
-// Local dev: switch via `bun run db:push:dev` (uses this file).
 // Generated from schema.prisma with @db.Text stripped for SQLite compat.
 
 generator client {
@@ -646,5 +645,39 @@ model MerchOrder {
   @@index([productId])
   @@index([status])
   @@index([type])
+  @@index([createdAt])
+}
+
+/// B.2 — ApprovalQueue: Human-in-the-loop pre AI agentov.
+/// AI agenti (taskAgent, contentAgent, ...) vytvárajú návrhy sem namiesto auto-create.
+/// Admin schváli/zamietne → ak schválené, príslušný záznam sa vytvorí.
+model ApprovalQueue {
+  id            String   @id @default(cuid())
+  /// Ktorý agent vytvoril návrh (task, content, booking, email, social)
+  agentType     String
+  /// Typ entity ktorá sa má vytvoriť (Task, ContentItem, Contact, ...)
+  entityType    String
+  /// Názov akcie (napr. "create_task", "draft_email")
+  action        String
+  /// JSON payload s návrhom dát (title, description, ...)
+  payload       String  
+  /// AI reasoning — prečo bol návrh vytvorený
+  reasoning     String? 
+  /// Status: pending → approved | rejected
+  status        String   @default("pending")
+  /// Kto schválil/zamietol
+  approvedBy    String?
+  /// Kedy
+  approvedAt    DateTime?
+  /// Voliteľné poznámky admina pri zamietnutí
+  reviewNotes   String? 
+  /// Voliteľné prepojenie na gig (ak je návrh gig-specific)
+  gigId         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([agentType])
+  @@index([entityType])
   @@index([createdAt])
 }

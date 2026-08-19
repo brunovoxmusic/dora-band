@@ -8,9 +8,11 @@ import { MediaTab } from "@/components/admin/media-tab";
 import { StatsTab } from "@/components/admin/stats-tab";
 import { SubscribersTab } from "@/components/admin/subscribers-tab";
 import { ContentTab } from "@/components/admin/content-tab";
+import { ContentItemsTab } from "@/components/admin/content-items-tab";
 import { SeoTab } from "@/components/admin/seo-tab";
 import { AiTab } from "@/components/admin/ai-tab";
 import { AiUsageTab } from "@/components/admin/ai-usage-tab";
+import { ApprovalsTab } from "@/components/admin/approvals-tab";
 import { CrmTab } from "@/components/admin/crm-tab";
 import { TasksTab } from "@/components/admin/tasks-tab";
 import { AutomationsTab } from "@/components/admin/automations-tab";
@@ -64,9 +66,11 @@ export default function AdminPage() {
         }
       }} />}
       {tab === "content" && <ContentTab />}
+      {tab === "content-items" && <ContentItemsTab />}
       {tab === "seo" && <SeoTab />}
       {tab === "ai" && <AiTab />}
       {tab === "ai-usage" && <AiUsageTab />}
+      {tab === "approvals" && <ApprovalsTab />}
       {tab === "knowledge" && <KnowledgeTab />}
       {tab === "songs" && <SongsTab />}
       {tab === "rehearsals" && <RehearsalsTab />}

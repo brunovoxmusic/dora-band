@@ -4,6 +4,9 @@ import { getSession } from "@/lib/auth";
 import { getModel, getModelName } from "@/lib/ai";
 import { streamText } from "ai";
 import { trackStreamUsage } from "@/lib/ai/usage";
+import { sanitizeForPrompt } from "@/lib/ai/sanitize";
+import { getAiSdkTools } from "@/lib/ai/tool-adapter";
+import { getUserPermissions } from "@/lib/ai/rbac";
 
 /**
  * M4.3 — D.O.R.A. AI Copilot
@@ -153,15 +156,27 @@ export async function POST(req: NextRequest) {
     const context = await gatherContext();
 
     // Build the user message with context
-    const userMessage = question || (Array.isArray(messages) ? messages[messages.length - 1]?.content : "") || "";
+    // B.9: Sanitizuj user message proti prompt injection
+    const rawMessage = question || (Array.isArray(messages) ? messages[messages.length - 1]?.content : "") || "";
+    const userMessage = sanitizeForPrompt(rawMessage, 2000);
     const fullPrompt = `KONTEXT Z DATABÁZY:\n${context}\n\n---\n\nOTÁZKA ADMINA:\n${userMessage}`;
 
     // Stream response
     const startMs = Date.now();
+    const session = await getSession(req);
+    // B.4 RBAC: dynamické permissions podľa role usera
+    const permissions = session?.uid ? await getUserPermissions(session.uid) : ["READ"];
     const result = streamText({
       model: getModel("writing"),
       system: SYSTEM_PROMPT,
       prompt: fullPrompt,
+      // B.1: AI Tool System aktivácia — Copilot môže volať tools podľa RBAC
+      // admin: READ + WRITE + CREATE + DELETE + SEND
+      // editor: READ + WRITE + CREATE
+      // viewer: READ only
+      tools: getAiSdkTools(permissions),
+      // Povol maximálne 3 tool volania za otázku (anti nekonečná slučka)
+      maxSteps: 3,
     });
 
     // M4.5: Log usage asynchronously (fire-and-forget, after stream is consumed)

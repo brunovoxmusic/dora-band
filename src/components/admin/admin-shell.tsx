@@ -15,7 +15,7 @@ import { AiCopilot } from "./ai-copilot";
 
 export type AdminTab =
   | "stats" | "analytics" | "predictions" | "inquiries" | "gigs" | "crm" | "tasks" | "automations"
-  | "booking" | "media" | "subscribers" | "content" | "seo" | "ai" | "ai-usage" | "knowledge" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
+  | "booking" | "media" | "subscribers" | "content" | "content-items" | "seo" | "ai" | "ai-usage" | "knowledge" | "approvals" | "songs" | "rehearsals" | "setlists" | "concert-mode" | "merch" | "campaigns" | "settings";
 
 type NavGroup = {
   label: string;
@@ -56,6 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Obsah",
     items: [
       { id: "content", label: "CMS", icon: FileText },
+      { id: "content-items", label: "Obsah", icon: FileText },
       { id: "media", label: "Médiá", icon: Images, hasCount: true },
       { id: "seo", label: "SEO", icon: Search },
       { id: "campaigns", label: "Kampane", icon: Mail },
@@ -66,6 +67,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "ai", label: "AI nástroje", icon: Sparkles },
       { id: "automations", label: "AI Agenti", icon: Zap },
+      { id: "approvals", label: "Schválenia", icon: CheckSquare },
       { id: "ai-usage", label: "AI Náklady", icon: DollarSign },
       { id: "knowledge", label: "Knowledge", icon: Brain },
     ],
@@ -269,7 +271,7 @@ export function AdminShell({
               Zobraziť web
             </a>
             <div className="flex items-center justify-between">
-              <p className="truncate text-xs text-silver">{userEmail}</p>
+              <p className="truncate text-xs text-silver">{email || userEmail || "admin"}</p>
               <button
                 onClick={logout}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-silver hover:text-neon-red"

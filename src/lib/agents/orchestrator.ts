@@ -65,9 +65,29 @@ Vráť IBA JSON.`;
   let tasks: Array<{ title: string; dueDate: string; priority: string }> = [];
   try { tasks = JSON.parse(result.text.replace(/```json\n?/g, "").replace(/\n?```/g, "")); } catch { /* fallback */ }
 
-  const created = await Promise.all(tasks.map(t => db.task.create({ data: { title: t.title, dueDate: new Date(t.dueDate), priority: t.priority || "medium", status: "todo", gigId: gig.id, aiGenerated: true } })));
+  // B.2 Human-in-the-Loop: NO auto-create Task záznamov.
+  // Namiesto toho vytvor ApprovalQueue návrhy pre každú úlohu.
+  // Admin schváli → Task sa vytvorí cez /api/admin/approvals/[id]/approve.
+  const created = await Promise.all(tasks.map(t =>
+    db.approvalQueue.create({
+      data: {
+        agentType: "task",
+        entityType: "Task",
+        action: "create_task",
+        payload: JSON.stringify({
+          title: t.title,
+          dueDate: t.dueDate,
+          priority: t.priority || "medium",
+          gigId: gig.id,
+        }),
+        reasoning: `Auto-generované pre koncert "${gig.title}" (${gigDate.toLocaleDateString("sk-SK")})`,
+        gigId: gig.id,
+        status: "pending",
+      },
+    })
+  ));
 
-  await db.automationLog.create({ data: { agentType: "task", trigger: "gig_created", input: JSON.stringify(gig), output: JSON.stringify(tasks), status: "success" } });
+  await db.automationLog.create({ data: { agentType: "task", trigger: "gig_created", input: JSON.stringify(gig), output: JSON.stringify({ pendingApprovals: created.length, tasks }), status: "success" } });
   return created;
 }
 

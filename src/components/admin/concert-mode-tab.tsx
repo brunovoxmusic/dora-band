@@ -69,14 +69,24 @@ type UpcomingGig = {
   notes?: string | null;
 };
 
-type MerchItem = { name: string; price: number; count: number; emoji: string };
+type MerchItem = { id: string; name: string; price: number; count: number; emoji: string };
 
-const DEFAULT_MERCH: MerchItem[] = [
-  { name: "Tričká", price: 15, count: 0, emoji: "👕" },
-  { name: "Vinyly / CD", price: 12, count: 0, emoji: "💿" },
-  { name: "Plagáty", price: 5, count: 0, emoji: "🖼️" },
-  { name: "Nálepky", price: 3, count: 0, emoji: "✨" },
+// B.5: Nahradené hardcoded merch s dynamic fetch z /api/admin/merch/products
+// Fallback ak API nie je dostupné
+const FALLBACK_MERCH: MerchItem[] = [
+  { id: "fallback-1", name: "Tričká", price: 15, count: 0, emoji: "👕" },
+  { id: "fallback-2", name: "Vinyly / CD", price: 12, count: 0, emoji: "💿" },
 ];
+
+// Mapovanie produkt kategórií na emoji
+const CATEGORY_EMOJI: Record<string, string> = {
+  "t-shirt": "👕",
+  "vinyl": "💿",
+  "cd": "🎵",
+  "poster": "🖼️",
+  "sticker": "✨",
+  "other": "📦",
+};
 
 const STORAGE_KEY = "dora-concert-mode";
 
@@ -99,7 +109,7 @@ const DEFAULT_STATE: SessionState = {
   setElapsed: 0,
   startedAt: null,
   notes: "",
-  merch: DEFAULT_MERCH,
+  merch: FALLBACK_MERCH,
 };
 
 function loadState(): SessionState {
@@ -185,6 +195,31 @@ export function ConcertModeTab() {
     void loadData(state.gigId);
   }, [state.gigId, loadData]);
 
+  // B.5: Fetch merch products z API keď sa vyberie gig
+  useEffect(() => {
+    if (!state.gigId) return;
+    fetch("/api/admin/merch/products?active=true")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data?.items?.length) return;
+        const merchItems: MerchItem[] = data.items.map((p: { id: string; name: string; price: number; category: string }) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          count: 0,
+          emoji: CATEGORY_EMOJI[p.category] || "📦",
+        }));
+        // Iba ak sa zmenil zoznam produktov (anti prepísanie počítadiel)
+        setState((s) => {
+          if (s.merch.length === merchItems.length && s.merch.every((m, i) => m.id === merchItems[i].id)) {
+            return s; // zachovaj count
+          }
+          return { ...s, merch: merchItems };
+        });
+      })
+      .catch(() => {/* fallback už je nastavený */});
+  }, [state.gigId]);
+
   // Timer tick (1 sekunda)
   useEffect(() => {
     if (!state.isPlaying) return;
@@ -205,7 +240,7 @@ export function ConcertModeTab() {
 
   const selectGig = (gigId: string) => {
     setLoadingGig(true);
-    setState((s) => ({ ...s, gigId, currentSongIndex: 0, songElapsed: 0, setElapsed: 0, startedAt: null, isPlaying: false, notes: "", merch: DEFAULT_MERCH }));
+    setState((s) => ({ ...s, gigId, currentSongIndex: 0, songElapsed: 0, setElapsed: 0, startedAt: null, isPlaying: false, notes: "", merch: FALLBACK_MERCH }));
   };
 
   const exitGig = () => {

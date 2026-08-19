@@ -57,7 +57,10 @@ export function Footer({ content }: { content?: Record<string, string> }) {
                 { Icon: Instagram, href: social.instagram, label: "Instagram" },
                 { Icon: Youtube, href: social.youtube, label: "YouTube" },
                 { Icon: Music2, href: social.spotify, label: "Spotify" },
-              ].map(({ Icon, href, label }) => (
+              ]
+                // B.10: Filter out social links with empty href (anti reload bug)
+                .filter(({ href }) => href && href.length > 0)
+                .map(({ Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
