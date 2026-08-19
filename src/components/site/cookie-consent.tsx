@@ -50,7 +50,17 @@ export function CookieConsent() {
           <p className="text-sm font-semibold text-off-white">Súbory cookies &amp; ochrana súkromia</p>
           <p className="mt-1 text-xs leading-relaxed text-off-white/70">
             Používame cookies na zlepšenie vášho zážitku a anonymnú analýzu návštevnosti. Súhlas
-            môžete kedykoľvek odvolať. Niektoré cookies sú nevyhnutné pre fungovanie stránky.
+            môžete kedykoľvek odvolať. Niektoré cookies sú nevyhnutné pre fungovanie stránky.{" "}
+            {/* C.8: Pridaný link na Privacy Policy */}
+            <a
+              href="/privacy#cookies"
+              className="text-warm-yellow underline hover:text-neon-red transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Viac informácií
+            </a>
+            .
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button

@@ -25,6 +25,9 @@ model BookingInquiry {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // C.3: Back-relation to Booking (ak z dopytu vznikol booking)
+  bookings      Booking[]
+
   @@index([status])
   @@index([createdAt])
 }
@@ -58,6 +61,8 @@ model Gig {
   @@index([date])
   @@index([status])
   @@index([venueId])
+  // C.4: Composite index pre častý query "upcoming gigs ordered by date"
+  @@index([status, date])
 }
 
 /// Gallery / media items managed in admin (Media tab).
@@ -90,6 +95,9 @@ model AdminUser {
   role         String   @default("admin")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // C.5: Back-relation for AiUsageLog
+  aiUsageLogs  AiUsageLog[]
 }
 
 /// M6.1: Fan 360° — rozšírený Subscriber s profilom a engagement.
@@ -123,6 +131,8 @@ model Subscriber {
   @@index([journeyStage])
   @@index([segment])
   @@index([city])
+  // C.4: Composite index pre growth rate query (active + createdAt)
+  @@index([active, createdAt])
 }
 
 /// Editable site content (CMS key-value store) — also stores settings.* keys.
@@ -180,6 +190,8 @@ model Contact {
   @@index([aiScore])
   @@index([status])
   @@index([organizationId])
+  // C.4: Composite index pre booking probability query (active + aiScore)
+  @@index([status, aiScore])
 }
 
 /// M2.2: Venue — samostatná entita pre kluby, festivaly, miesta.
@@ -258,6 +270,8 @@ model Booking {
   id            String   @id @default(cuid())
   contactId     String?
   gigId         String?
+  /// C.3: FK na BookingInquiry (ak booking vznikol z verejného dopytu)
+  inquiryId     String?
   status        String   @default("lead") // lead | contacted | negotiated | confirmed | cancelled
   aiMatchScore  Float?
   aiAnalysis    String?  @db.Text
@@ -268,10 +282,12 @@ model Booking {
 
   contact       Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
   gig           Gig?     @relation(fields: [gigId], references: [id], onDelete: SetNull)
+  inquiry       BookingInquiry? @relation(fields: [inquiryId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([contactId])
   @@index([gigId])
+  @@index([inquiryId])
 }
 
 /// AI-generated and manual tasks with deadlines.
@@ -293,6 +309,8 @@ model Task {
   @@index([dueDate])
   @@index([priority])
   @@index([gigId])
+  // C.4: Composite index pre urgent tasks query (status + priority + dueDate)
+  @@index([status, priority, dueDate])
 }
 
 /// Automation log — tracks AI agent executions.
@@ -558,11 +576,19 @@ model AiUsageLog {
   promptPreview    String?  @db.Text
   createdAt        DateTime @default(now())
 
+  // C.5: FK relation to AdminUser (optional, SetNull on delete)
+  user             AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([provider])
   @@index([model])
   @@index([task])
   @@index([createdAt])
   @@index([success])
+  @@index([userId])
+  // C.4: Composite index pre provider cost queries
+  @@index([provider, createdAt])
+  // C.4: Composite index pre task cost queries
+  @@index([task, createdAt])
 }
 
 /// M7.4: Merchandise Management — produkty a objednávky.
@@ -635,7 +661,7 @@ model MerchOrder {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  product     MerchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     MerchProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
   // A.7: FK relation to Gig (optional, SetNull on delete — zachováme históriu predaja)
   gig         Gig?        @relation(fields: [gigId], references: [id], onDelete: SetNull)
 
@@ -644,6 +670,8 @@ model MerchOrder {
   @@index([status])
   @@index([type])
   @@index([createdAt])
+  // C.4: Composite index pre monthly revenue aggregation
+  @@index([status, createdAt])
 }
 
 /// B.2 — ApprovalQueue: Human-in-the-loop pre AI agentov.

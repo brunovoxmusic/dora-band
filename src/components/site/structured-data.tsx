@@ -158,6 +158,21 @@ export async function StructuredData() {
     })),
   };
 
+  // C.9: VideoObject schema pre skladby s YouTube videoId
+  const videoObjects = TRACKS
+    .filter((t) => t.videoId && t.videoId.length > 0)
+    .map((t) => ({
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      name: t.title,
+      description: `Hudobné video kapely D.O.R.A. — ${t.title}`,
+      uploadDate: t.year ? `${t.year}-01-01` : undefined,
+      thumbnailUrl: `${SITE_URL}/gallery/hero-banner.jpg`,
+      contentUrl: `https://www.youtube.com/watch?v=${t.videoId}`,
+      embedUrl: `https://www.youtube.com/embed/${t.videoId}`,
+      byArtist: { "@type": "MusicGroup", name: "D.O.R.A." },
+    }));
+
   return (
     <>
       <script
@@ -181,6 +196,14 @@ export async function StructuredData() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPage) }}
         />
       )}
+      {/* C.9: VideoObject pre skladby s YouTube videoId */}
+      {videoObjects.map((video, i) => (
+        <script
+          key={`video-${i}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(video) }}
+        />
+      ))}
     </>
   );
 }

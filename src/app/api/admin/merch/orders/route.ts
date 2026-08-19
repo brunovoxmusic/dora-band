@@ -46,6 +46,15 @@ export async function POST(req: NextRequest) {
     const unitPrice = b.unitPrice !== undefined ? parseFloat(b.unitPrice) : product.price;
     const quantity = parseInt(b.quantity, 10);
 
+    // C.2: Stock sufficiency check — over dostupnosť skladu pred objednávkou
+    const orderStatus = (b.status as string) || "confirmed";
+    if (orderStatus === "confirmed" && !b.skipStockUpdate && product.stock < quantity) {
+      return NextResponse.json(
+        { error: `Nedostatok skladom. Dostupné: ${product.stock} ks, požadované: ${quantity} ks.` },
+        { status: 422 }
+      );
+    }
+
     // Use transaction: create order + decrement stock
     const order = await db.$transaction(async (tx) => {
       const newOrder = await tx.merchOrder.create({
@@ -67,10 +76,15 @@ export async function POST(req: NextRequest) {
 
       // Decrement stock (only for confirmed orders)
       if (newOrder.status === "confirmed" && !b.skipStockUpdate) {
+        // C.2: Atomic stock check + decrement (anti race condition)
         const updated = await tx.merchProduct.update({
           where: { id: b.productId },
           data: { stock: { decrement: quantity } },
         });
+        // Ak stock po decremente je záporný, rollback (nemalo by sa stať kvôli pre-checku)
+        if (updated.stock < 0) {
+          throw new Error("Stock insufficiency detected post-decrement — rolling back");
+        }
         // Auto-mark as bestseller if sold > 20 units total
         const totalSold = await tx.merchOrder.aggregate({
           where: { productId: b.productId, status: "confirmed" },
