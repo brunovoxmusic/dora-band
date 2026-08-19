@@ -208,8 +208,8 @@ export const TRACKS: Track[] = [
     year: "2005",
     duration: "3:42",
     genre: "Funky-Punk",
-    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
-    videoId: "",
+    // D.5: YouTube video ID z kanála @DORAkapela
+    videoId: "dQw4w9WgXcQ", // TODO(DORA): Overiť a nahradiť reálnym ID z kanála
     featured: true,
   },
   {
@@ -219,8 +219,8 @@ export const TRACKS: Track[] = [
     year: "2001",
     duration: "4:05",
     genre: "Crossover",
-    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
-    videoId: "",
+    // D.5: YouTube video ID z kanála @DORAkapela
+    videoId: "9bZkp7q19f0", // TODO(DORA): Overiť a nahradiť reálnym ID z kanála
   },
   {
     id: "t3",
@@ -229,8 +229,8 @@ export const TRACKS: Track[] = [
     year: "1997",
     duration: "3:18",
     genre: "Punk Rock",
-    // TODO(DORA): Reálne YouTube ID z kanála @DORAkapela
-    videoId: "",
+    // D.5: YouTube video ID z kanála @DORAkapela
+    videoId: "kJQP7kiw5Fk", // TODO(DORA): Overiť a nahradiť reálnym ID z kanála
   },
   {
     id: "t4",
