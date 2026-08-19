@@ -48,19 +48,24 @@ export function getProviderName(): AIProviderName {
  *
  * Aktualizované August 2025 — reálne dostupné Groq modely:
  * https://console.groq.com/docs/models
+ *
+ * Groq deprecations (August 2025):
+ * - llama-3.1-8b-instant → decommissioned, náhrada: openai/gpt-oss-20b
+ * - llama-3.3-70b-versatile → decommissioned, náhrada: openai/gpt-oss-120b
+ * - llama-3.2-1b-preview → decommissioned
+ * - llama-3.2-3b-preview → decommissioned
+ *
+ * Aktuálne dostupné modely (Groq Cloud, August 2025):
  */
 const GROQ_MODEL_CHAIN: string[] = [
   // User-configured model (if set via env)
   process.env.AI_MODEL || process.env.AI_MODEL_WRITING || "",
-  // Production models (stable, long-term support)
+  // Current production models (August 2025)
+  "openai/gpt-oss-20b",           // náhrada za llama-3.1-8b-instant
+  "openai/gpt-oss-120b",          // náhrada za llama-3.3-70b-versatile
+  "qwen/qwen3.6-27b",             // alternatíva
+  // Legacy models (may still work)
   "llama-3.3-70b-versatile",
-  "llama-3.1-8b-instant",
-  // Preview models (may change)
-  "llama-3.2-1b-preview",
-  "llama-3.2-3b-preview",
-  "llama-3.2-11b-vision-preview",
-  "llama-3.2-90b-vision-preview",
-  // Legacy models (older but stable)
   "llama3-8b-8192",
   "llama3-70b-8192",
   // Alternative models
@@ -96,13 +101,17 @@ async function probeSingleModel(groq: ReturnType<typeof createGroq>, model: stri
     return true;
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    const isModelErr = errMsg.includes("does not exist") || errMsg.includes("model_not_found");
+    // Rozpoznaj model errors: "does not exist", "model_not_found", "decommissioned"
+    const isModelErr = errMsg.includes("does not exist") ||
+                       errMsg.includes("model_not_found") ||
+                       errMsg.includes("decommissioned") ||
+                       errMsg.includes("no longer supported");
     if (isModelErr) {
-      console.warn(`[ai-probe] Model '${model}' NOT available`);
+      console.warn(`[ai-probe] Model '${model}' NOT available: ${errMsg.slice(0, 100)}`);
       return false;
     }
     // Iná chyba (rate limit, network) — model môže byť dostupný, ale dočasne nedostupný
-    console.warn(`[ai-probe] Model '${model}' error (non-model):`, errMsg.slice(0, 100));
+    console.warn(`[ai-probe] Model '${model}' error (non-model, assuming available):`, errMsg.slice(0, 100));
     return true; // predpokladajme že funguje
   }
 }

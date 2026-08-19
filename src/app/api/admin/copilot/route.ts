@@ -200,7 +200,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[copilot] error:", err);
     const errMsg = err instanceof Error ? err.message : String(err);
-    const isModelErr = errMsg.includes("does not exist") || errMsg.includes("model_not_found");
+    const isModelErr = errMsg.includes("does not exist") ||
+                       errMsg.includes("model_not_found") ||
+                       errMsg.includes("decommissioned") ||
+                       errMsg.includes("no longer supported");
     if (isModelErr) {
       // Zmaž cache a skús re-probe pri ďalšom volaní
       handleModelFailure(getModelName("writing"));
