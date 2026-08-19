@@ -72,6 +72,7 @@ export const CONTENT_DEFAULTS: Record<string, { value: string; category: string;
 
   // Section visibility (per public section)
   "settings.sections.hero": { value: "true", category: "settings", label: "Sekcia — Hero (úvod)", type: "text" },
+  "settings.sections.stats": { value: "true", category: "settings", label: "Sekcia — Štatistiky", type: "text" },
   "settings.sections.about": { value: "true", category: "settings", label: "Sekcia — O kapele", type: "text" },
   "settings.sections.members": { value: "true", category: "settings", label: "Sekcia — Členovia kapely", type: "text" },
   "settings.sections.music": { value: "true", category: "settings", label: "Sekcia — Hudba & Videá", type: "text" },
@@ -79,6 +80,8 @@ export const CONTENT_DEFAULTS: Record<string, { value: string; category: string;
   "settings.sections.discography": { value: "true", category: "settings", label: "Sekcia — Diskografia", type: "text" },
   "settings.sections.gigs": { value: "true", category: "settings", label: "Sekcia — Koncerty", type: "text" },
   "settings.sections.setlist": { value: "true", category: "settings", label: "Sekcia — Setlist", type: "text" },
+  "settings.sections.merch": { value: "true", category: "settings", label: "Sekcia — Merch & Obchod", type: "text" },
+  "settings.sections.blog": { value: "true", category: "settings", label: "Sekcia — Blog & Novinky", type: "text" },
   "settings.sections.testimonials": { value: "true", category: "settings", label: "Sekcia — Recenzie", type: "text" },
   "settings.sections.press": { value: "true", category: "settings", label: "Sekcia — PR / Press Kit", type: "text" },
   "settings.sections.faq": { value: "true", category: "settings", label: "Sekcia — FAQ", type: "text" },
