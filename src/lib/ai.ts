@@ -238,14 +238,26 @@ export async function generateVariants(params: {
     "Vygeneruj 3 rôzne varianty. Každý variant oddiel s '===VARIANT==='. Každý variant musí byť štýlom aj prístupom odlišný.",
   ].join("\n");
 
-  const result = await generateText({
-    model: getModel("writing"),
-    system: systemPrompt,
-    prompt: userPrompt,
-  });
+  try {
+    const result = await generateText({
+      model: getModel("writing"),
+      system: systemPrompt,
+      prompt: userPrompt,
+    });
 
-  const variants = result.text.split("===VARIANT===").map(v => v.trim()).filter(Boolean);
-  return variants.length >= 1 ? variants : [result.text];
+    const variants = result.text.split("===VARIANT===").map(v => v.trim()).filter(Boolean);
+    return variants.length >= 1 ? variants : [result.text];
+  } catch (err) {
+    // Fallback — ak AI zlyhá (model not found, API key, rate limit),
+    // vráti mock varianty namiesto throw
+    console.error("[ai] generateVariants failed, returning fallback:", err);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const isModelErr = errMsg.includes("does not exist") || errMsg.includes("model_not_found");
+    const fallbackMsg = isModelErr
+      ? "AI model nie je dostupný. Skontrolujte GROQ_API_KEY a AI_MODEL v env premenných."
+      : `AI chyba: ${errMsg}`;
+    return [fallbackMsg];
+  }
 }
 
 // =====================================================

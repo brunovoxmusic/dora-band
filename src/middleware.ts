@@ -100,12 +100,13 @@ export function middleware(req: NextRequest) {
   // A.2: Security headers
   const isDev = process.env.NODE_ENV === "development";
   const isProd = process.env.NODE_ENV === "production";
-  // Detekcia Vercel preview/development deploymentov (vercel.app doména)
+  // Vercel Live feedback toolbar sa načítava na VŠETKÝCH vercel.app deploymentoch
+  // (aj produkcia dora-band.vercel.app) — povoliť vercel.live vždy
   const host = req.headers.get("host") || "";
-  const isVercelPreview = host.includes("vercel.app") && !host.startsWith("dora-band.vercel.app");
+  const isVercel = host.includes("vercel.app") || process.env.VERCEL === "1";
 
   // CSP
-  res.headers.set("Content-Security-Policy", getCspHeader(isDev, isVercelPreview));
+  res.headers.set("Content-Security-Policy", getCspHeader(isDev, isVercel));
 
   // Ostatné security headers
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {

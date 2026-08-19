@@ -36,12 +36,36 @@ export function getProviderName(): AIProviderName {
   return "groq";
 }
 
+/**
+ * Zoznam deprecated Groq modelov, ktoré už nefungujú.
+ * Ak je env var nastavený na jeden z nich, použije sa fallback.
+ */
+const DEPRECATED_GROQ_MODELS = [
+  "llama-3.3-70b-versatile",
+  "llama-3.3-70b-specdec",
+  "llama-3.1-70b-versatile",
+];
+
+/** Bezpečný default model, ktorý určite funguje na Groq free tier. */
+const SAFE_GROQ_MODEL = "llama-3.1-8b-instant";
+
+/**
+ * Vráti model s fallback — ak je env var nastavený na deprecated model,
+ * použije sa SAFE_GROQ_MODEL.
+ */
+function resolveModel(envValue: string | undefined): string {
+  if (!envValue) return SAFE_GROQ_MODEL;
+  if (DEPRECATED_GROQ_MODELS.includes(envValue)) {
+    console.warn(`[ai] Model '${envValue}' is deprecated, using fallback '${SAFE_GROQ_MODEL}'`);
+    return SAFE_GROQ_MODEL;
+  }
+  return envValue;
+}
+
 const MODELS: Record<AITask, string> = {
-  // Groq model — llama-3.3-70b-versatile deprecated, fallback na llama-3.1-8b-instant
-  // Ak máš paid Groq plan, nastav AI_MODEL_WRITING=llama-3.3-70b-versatile v env
-  writing: process.env.AI_MODEL_WRITING || process.env.AI_MODEL || "llama-3.1-8b-instant",
-  analysis: process.env.AI_MODEL_ANALYSIS || process.env.AI_MODEL || "llama-3.1-8b-instant",
-  fast: process.env.AI_MODEL_FAST || "llama-3.1-8b-instant",
+  writing: resolveModel(process.env.AI_MODEL_WRITING || process.env.AI_MODEL),
+  analysis: resolveModel(process.env.AI_MODEL_ANALYSIS || process.env.AI_MODEL),
+  fast: resolveModel(process.env.AI_MODEL_FAST || process.env.AI_MODEL),
 };
 
 const OPENAI_MODELS: Record<AITask, string> = {
