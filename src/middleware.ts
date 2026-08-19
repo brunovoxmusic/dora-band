@@ -32,18 +32,19 @@ const SECURITY_HEADERS: Record<string, string> = {
 
 // CSP — Content Security Policy
 // Next.js dev mode potrebuje 'unsafe-eval' a 'unsafe-inline' pre HMR
-// V produkcii obmedzujeme
-function getCspHeader(isDev: boolean): string {
+// V produkcii obmedzujeme, ale Vercel preview potrebuje vercel.live
+function getCspHeader(isDev: boolean, isVercelPreview: boolean): string {
   const directives = [
     "default-src 'self'",
     // Next.js potrebuje 'unsafe-inline' pre štýly a 'unsafe-eval' v dev mode
-    `script-src 'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : " 'unsafe-inline'"}`,
-    `style-src 'self' 'unsafe-inline'`,
+    // Vercel preview potrebuje vercel.live pre feedback toolbar
+    `script-src 'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : " 'unsafe-inline'"}${isVercelPreview ? " https://vercel.live" : ""}`,
+    `style-src 'self' 'unsafe-inline'${isVercelPreview ? " https://vercel.live" : ""}`,
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https:",
+    `connect-src 'self' https:${isVercelPreview ? " wss:" : ""}`,
     "media-src 'self' https:",
-    "frame-src 'self' https:",
+    `frame-src 'self' https:${isVercelPreview ? " https://vercel.live" : ""}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -99,9 +100,12 @@ export function middleware(req: NextRequest) {
   // A.2: Security headers
   const isDev = process.env.NODE_ENV === "development";
   const isProd = process.env.NODE_ENV === "production";
+  // Detekcia Vercel preview/development deploymentov (vercel.app doména)
+  const host = req.headers.get("host") || "";
+  const isVercelPreview = host.includes("vercel.app") && !host.startsWith("dora-band.vercel.app");
 
   // CSP
-  res.headers.set("Content-Security-Policy", getCspHeader(isDev));
+  res.headers.set("Content-Security-Policy", getCspHeader(isDev, isVercelPreview));
 
   // Ostatné security headers
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {

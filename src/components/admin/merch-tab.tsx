@@ -893,10 +893,10 @@ function OrderFormDialog({
           {selectedProduct && selectedProduct.sizes.length > 0 && (
             <div>
               <Label className="text-sm">Veľkosť</Label>
-              <Select value={size} onValueChange={setSize}>
+              <Select value={size || "__none__"} onValueChange={(v) => setSize(v === "__none__" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="__none__">—</SelectItem>
                   {selectedProduct.sizes.map(s => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
@@ -907,10 +907,10 @@ function OrderFormDialog({
           {selectedProduct && selectedProduct.colors.length > 0 && (
             <div>
               <Label className="text-sm">Farba</Label>
-              <Select value={color} onValueChange={setColor}>
+              <Select value={color || "__none__"} onValueChange={(v) => setColor(v === "__none__" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="__none__">—</SelectItem>
                   {selectedProduct.colors.map(c => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}

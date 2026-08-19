@@ -81,8 +81,18 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("[api/admin/ai] error:", error);
     const message = error instanceof Error ? error.message : "Neznáma chyba";
+    // AI SDK error: model not found / API key invalid
+    const isModelError = message.includes("does not exist") || message.includes("model_not_found");
+    const isApiKeyError = message.includes("API key") || message.includes("401");
     return Response.json(
-      { error: `AI generovanie zlyhalo: ${message}` },
+      {
+        error: isModelError
+          ? "AI model nie je dostupný. Skontrolujte AI_MODEL env premenné."
+          : isApiKeyError
+            ? "AI API kľúč je neplatný. Skontrolujte GROQ_API_KEY."
+            : `AI generovanie zlyhalo: ${message}`,
+        detail: message,
+      },
       { status: 500 }
     );
   }

@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ variants });
   } catch (error) {
     console.error("[ai/variants] error:", error);
-    return NextResponse.json({ error: "Generovanie variantov zlyhalo." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Generovanie variantov zlyhalo.",
+        detail: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
