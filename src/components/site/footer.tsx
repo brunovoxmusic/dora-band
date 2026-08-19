@@ -124,7 +124,22 @@ export function Footer({ content }: { content?: Record<string, string> }) {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-charcoal pt-6 text-xs text-silver/60 sm:flex-row sm:items-center">
+        {/* A.4: Legal links — GDPR, Impressum */}
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-charcoal pt-6 text-xs">
+          <a href="/privacy" className="text-silver/70 transition-colors hover:text-warm-yellow hover:underline underline-offset-4">
+            Ochrana osobných údajov
+          </a>
+          <span className="text-charcoal">·</span>
+          <a href="/privacy#cookies" className="text-silver/70 transition-colors hover:text-warm-yellow hover:underline underline-offset-4">
+            Cookies
+          </a>
+          <span className="text-charcoal">·</span>
+          <a href="/privacy#impressum" className="text-silver/70 transition-colors hover:text-warm-yellow hover:underline underline-offset-4">
+            Impressum
+          </a>
+        </div>
+
+        <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-charcoal pt-6 text-xs text-silver/60 sm:flex-row sm:items-center">
           <p>{copyright}</p>
           <p className="font-mono-brand text-[10px] uppercase tracking-[0.2em]">{tagline}</p>
         </div>

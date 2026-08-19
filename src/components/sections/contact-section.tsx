@@ -14,6 +14,8 @@ type FormState = {
   eventLocation: string;
   eventType: string;
   message: string;
+  gdprConsent: boolean;
+  website: string; // honeypot — musí ostať prázdne
 };
 
 const empty: FormState = {
@@ -24,6 +26,8 @@ const empty: FormState = {
   eventLocation: "",
   eventType: EVENT_TYPES[0],
   message: "",
+  gdprConsent: false,
+  website: "",
 };
 
 export function ContactSection({ content }: { content?: Record<string, string> }) {
@@ -35,7 +39,7 @@ export function ContactSection({ content }: { content?: Record<string, string> }
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
-  const update = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const update = (k: keyof FormState, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,6 +232,38 @@ export function ContactSection({ content }: { content?: Record<string, string> }
                     placeholder="Očakávaný začiatok vystúpenia, dĺžka setu, kapacita, technické požiadavky..."
                   />
                 </Field>
+
+                {/* A.4: Honeypot — skryté pole pre boty (ľudia ho nevidia) */}
+                <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", top: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}>
+                  <label>
+                    Webstránka (nevyplňovať)
+                    <input
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={form.website}
+                      onChange={(e) => update("website", e.target.value)}
+                    />
+                  </label>
+                </div>
+
+                {/* A.4: GDPR Consent — required checkbox */}
+                <label className="flex items-start gap-3 p-3 border border-charcoal bg-ink cursor-pointer hover:border-neon-red/40 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={form.gdprConsent}
+                    onChange={(e) => update("gdprConsent", e.target.checked)}
+                    required
+                    className="mt-0.5 h-4 w-4 accent-neon-red"
+                  />
+                  <span className="text-xs text-silver leading-relaxed">
+                    Súhlasím so spracovaním osobných údajov (meno, e-mail, telefón) za účelom vybavenia mojej bookingovej požiadavky.{" "}
+                    <a href="/privacy" className="text-warm-yellow underline hover:text-neon-red transition-colors" target="_blank" rel="noopener">
+                      Viac informácií
+                    </a>
+                    .<span className="text-neon-red"> *</span>
+                  </span>
+                </label>
 
                 <div className="flex items-center justify-between gap-4 pt-2">
                   <p className="flex items-center gap-1.5 text-xs text-silver">

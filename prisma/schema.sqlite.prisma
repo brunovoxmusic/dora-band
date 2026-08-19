@@ -54,6 +54,9 @@ model Gig {
   tasks       Task[]
   // M2.2: Relation to Venue entity
   venueRef    Venue?   @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  // A.7: Back-relations for Setlist and MerchOrder
+  setlists    Setlist[]
+  merchOrders MerchOrder[]
 
   @@index([date])
   @@index([status])
@@ -452,6 +455,9 @@ model Setlist {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // A.7: FK relation to Gig (optional, SetNull on delete)
+  gig         Gig?     @relation(fields: [gigId], references: [id], onDelete: SetNull)
+
   @@index([gigId])
   @@index([status])
 }
@@ -633,6 +639,8 @@ model MerchOrder {
   updatedAt   DateTime @updatedAt
 
   product     MerchProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // A.7: FK relation to Gig (optional, SetNull on delete — zachováme históriu predaja)
+  gig         Gig?        @relation(fields: [gigId], references: [id], onDelete: SetNull)
 
   @@index([gigId])
   @@index([productId])

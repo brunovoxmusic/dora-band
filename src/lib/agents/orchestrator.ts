@@ -1,6 +1,7 @@
 import { generateText, streamText } from "ai";
 import { getModel } from "@/lib/ai";
 import { db } from "@/lib/db";
+import { sanitizeForPrompt } from "@/lib/ai/sanitize";
 
 /**
  * AI Agent Framework for D.O.R.A. Band Management OS.
@@ -11,29 +12,11 @@ import { db } from "@/lib/db";
  *   Instead, stores AI analysis as a "pending" AutomationLog for admin review.
  *   Admin approves → records are created manually or via approval workflow.
  * - Prompt injection defense: all user-provided text is sanitized before
- *   insertion into LLM prompts.
+ *   insertion into LLM prompts (sanitized via @/lib/ai/sanitize).
  */
 
 type Gig = { id: string; title: string; date: Date; venue: string; city: string };
 type Inquiry = { id: string; organizer: string; email: string; phone: string; eventDate: string; eventLocation: string; eventType: string; message: string };
-
-/**
- * M0-9: Sanitize user input before insertion into LLM prompts.
- * Strips prompt injection patterns, control chars, and truncates length.
- */
-function sanitizeForPrompt(input: string, maxLength = 500): string {
-  if (!input || typeof input !== "string") return "";
-  let s = input.slice(0, maxLength);
-  // Strip control characters (except newlines/tabs)
-  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-  // Neutralize common prompt injection patterns (case-insensitive)
-  // Replace with [REDACTED] so the LLM sees something was there
-  s = s.replace(/(?:ignore|disregard|forget)\s+(?:all\s+)?(?:previous|prior|above)\s+instructions?/gi, "[REDACTED]");
-  s = s.replace(/(?:system|assistant|user)\s*:/gi, "[REDACTED]");
-  s = s.replace(/(?:you are|act as|pretend to be)\s+(?:now|a)\s/gi, "[REDACTED] ");
-  s = s.replace(/```[\s\S]*?```/g, "[CODE BLOCK REMOVED]");
-  return s;
-}
 
 /** Content Agent — generates content bundles for events */
 export async function contentAgent(gig: Gig) {

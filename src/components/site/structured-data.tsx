@@ -134,12 +134,14 @@ export async function StructuredData() {
       name: "D.O.R.A.",
       email: BAND.contact.email,
     },
-    ...(gig.ticketUrl && gig.ticketUrl !== "#contact"
-      ? { offers: { "@type": "Offer", url: gig.ticketUrl, availability: "https://schema.org/InStock" } }
-      : {}),
-    ...(gig.ticketPrice
-      ? { offers: { "@type": "Offer", price: gig.ticketPrice, availability: "https://schema.org/InStock" } }
-      : {}),
+    // A.5 BUGFIX: Combined offers (url + price) namiesto prepisovania
+    ...(gig.ticketUrl && gig.ticketUrl !== "#contact" && gig.ticketPrice
+      ? { offers: { "@type": "Offer", url: gig.ticketUrl, price: gig.ticketPrice, availability: "https://schema.org/InStock" } }
+      : gig.ticketUrl && gig.ticketUrl !== "#contact"
+        ? { offers: { "@type": "Offer", url: gig.ticketUrl, availability: "https://schema.org/InStock" } }
+        : gig.ticketPrice
+          ? { offers: { "@type": "Offer", price: gig.ticketPrice, availability: "https://schema.org/InStock" } }
+          : {}),
   }));
 
   // FAQPage schema

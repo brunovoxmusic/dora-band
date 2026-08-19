@@ -13,6 +13,10 @@
     "db:generate": "prisma generate",
     "db:generate:dev": "prisma generate --schema=prisma/schema.sqlite.prisma",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
+    "db:migrate:resolve": "prisma migrate resolve",
+    "db:migrate:diff": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/baseline.sql",
     "db:reset": "prisma migrate reset",
     "seed": "bun run src/lib/seed.ts",
     "postinstall": "prisma generate"
