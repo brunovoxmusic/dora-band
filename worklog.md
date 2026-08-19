@@ -2655,3 +2655,140 @@ FINAL PROJECT STATE:
 
 STATUS: M7.4 + M7.5 FULLY COMPLETE AND VERIFIED
 
+
+---
+Task ID: 46 (Komplexný audit 2026-2027)
+Agent: Main (Z.ai Code)
+Task: Analýza priložených dokumentov (D.O.R.A. komplexný audit a roadmapa) + porovnanie s aktuálnym stavom + vytvorenie auditu a plánu
+
+ZDROJOVÉ DOKUMENTY:
+- /home/z/my-project/upload/D.O.R.A.-komplexny-audit-a-roadmap-2026-2027-prompt.md (1892 riadkov)
+  — špecifikácia "D.O.R.A. BAND OS" s 48 sekciami (security, db, admin, AI, booking, CRM,
+  content, knowledge, copilot, agents, permissions, HITL, tools, booking intelligence,
+  event-as-project, live mode, rehearsal, music OS, SEO/GEO/AEO, media, analytics,
+  performance, accessibility, testing, regression, deployment, git discipline)
+- /home/z/my-project/upload/D.O.R.A.-komplexny-audit-a-roadmap-2026-2027.pdf (781 KB)
+- Pôvodný DORA-IMPLEMENTATION-GAP-ANALYSIS.md (z 2026-08-17)
+- Aktuálny repozitár: 25 Prisma modelov, 22 admin tabov, 68 API routes, 35/38 míľnikov
+
+VYKONANÉ AUDITY (4 paralelné subagenti):
+
+AUDIT-1 — SECURITY (/home/z/my-project/upload/AUDIT-1-SECURITY.md, 772 riadkov):
+- P0: 0 nezostali ✅ (M0.1-M0.10 všetko vyriešené: bcrypt, env-only secret, Z.AI token
+  zmazaný, mass-assignment whitelist, orphan FK, AI provider adapter, HITL pre
+  inquiryAgent, sanitizeForPrompt, MusicEvent JSON-LD)
+- P1: 10 nedostatkov:
+  1. /api/chat verejný — cost abuse Groq API
+  2. Žiadny rate limit (login, chat, booking, newsletter)
+  3. Žiadna CSRF ochrana
+  4. Žiadne security headers (CSP, X-Frame, HSTS)
+  5. Žiadny middleware.ts
+  6. .env.example obsahuje ADMIN_PASSWORD="dora2026"
+  7. taskAgent auto-vytvára bez HITL
+  8. sanitizeForPrompt neaplikuje sa na copilot
+  9. Stateless session — nemožno zneplatniť
+  10. AdminUser.role sa nepoužíva pre RBAC
+- P2: 11 (verify length check, RBAC, next-auth unused)
+- P3: 7 (functional bug: getSession() bez req v venues/organizations routes)
+
+AUDIT-2 — DATABASE (/home/z/my-project/upload/AUDIT-2-DATABASE.md, 619 riadkov):
+- P0: 3 kritické:
+  1. Žiadne migrácie — iba prisma db push, riziko straty dát
+  2. Setlist.gigId orphan FK bez @relation
+  3. MerchOrder.gigId orphan FK bez @relation
+- P1: 4:
+  4. MerchOrder.productId onDelete:Cascade — deštruktívne!
+  5. Stock decrement bez sufficiency checku
+  6. BookingInquiry ↔ Booking neprepojené
+  7. 35 string-encoded enums bez DB validácie
+- Správne: 25 modelov, 56 indexov, 8 unique constraints, postgres↔sqlite sync OK
+
+AUDIT-3 — ADMIN/AI (/home/z/my-project/upload/AUDIT-3-ADMIN-AI.md, 732 riadkov):
+- Implementované: 35/38 míľnikov (92%)
+- Kritické:
+  1. AI Tool System (M4.2) je MŔTVY KÓD — tools.ts má 0 importov
+  2. HITL (M0.8) polovičatý — iba inquiryAgent, taskAgent auto-create
+  3. ApprovalQueue model + UI neexistuje
+  4. Structured Content (M3.1) — model + API bez admin tabu
+  5. RBAC pre agentov neexistuje
+- Vysoké:
+  6. Concert Mode merch hardcoded (neprepojený s MerchProduct)
+  7. userEmail prop vždy null
+  8. 11/22 tabov bez EmptyState/ErrorState
+- Dead code: tools.ts, AIChat.tsx, useChat.ts
+
+AUDIT-4 — WEB/SEO (/home/z/my-project/upload/AUDIT-4-WEB-SEO.md, 948 riadkov):
+- Skóre 5.4/10
+- P0 (10):
+  1. Prázdne videoId na skladbách (sticky player neplní účel)
+  2. Booking form bez GDPR consent
+  3. Chýba /privacy route (Privacy Policy + Cookie Policy + Impressum)
+  4. Chýba Impressum v footeri (SK zákon)
+  5. Žiadne rate limiting
+  6. Žiadny honeypot v booking
+  7. NO Zod .strict() validácia (mass-assignment risk)
+  8. NO CSRF protection
+  9. Bug v MusicEvent JSON-LD (offers sa prepíše)
+  10. Spotify empty href reloadne stránku
+- Pozitíva: punk/grunge identity silná (8.5/10), 13 sekcií, Ken Burns hero,
+  sticky player, 4 JSON-LD schemas, dynamic OG image, skip-link, reduced-motion
+
+SYNTÉZA — KOMPLEXNÝ AUDIT DOKUMENT:
+/home/z/my-project/DORA-COMPLEX-AUDIT-2026.md
+
+PLÁN IMPLEMENTÁCIE (4 fázy, 40+ úloh, 10-14 dní):
+
+FAZA A — P0 SECURITY & LEGAL FIX (2-3 dni, KRITICKÉ):
+- A.1 /api/chat auth gate + rate limiting
+- A.2 Security headers (CSP, HSTS) + middleware.ts
+- A.3 CSRF protection (Origin validation)
+- A.4 GDPR compliance (consent checkbox, /privacy route, Impressum)
+- A.5 MusicEvent JSON-LD bug fix
+- A.6 Database migrations setup
+- A.7 Orphan FK fix (Setlist + MerchOrder)
+- A.8 .env.example cleanup
+
+FAZA B — P1 AI/ADMIN FIX (3-4 dni, VYSOKÉ):
+- B.1 AI Tool System aktivácia (M4.2 → tools v copilot)
+- B.2 ApprovalQueue model + UI (M0.8 dokončenie)
+- B.3 Structured Content admin tab (M3.1)
+- B.4 RBAC pre agentov (M4.4)
+- B.5 Concert Mode ↔ Merch integration
+- B.6 Admin email fix
+- B.7 EmptyState/ErrorState konzistencia (11 tabov)
+- B.8 Functional bug: getSession() bez req
+- B.9 Prompt injection defense na copilot
+- B.10 Booking form Zod validácia + honeypot
+- B.11 Spotify empty href fix
+
+FAZA C — P2 DATABASE & UX (2-3 dni, STREDNÉ):
+- C.1 MerchOrder cascade fix (Cascade → SetNull/Restrict)
+- C.2 Stock sufficiency check
+- C.3 BookingInquiry ↔ Booking prepojenie
+- C.4 Composite indexes (6)
+- C.5 AiUsageLog.userId FK
+- C.6 Focus trap v modaloch
+- C.7 Performance: client → server components
+- C.8 Cookie consent + privacy link
+- C.9 VideoObject + FAQPage JSON-LD
+- C.10 Dead code cleanup
+
+FAZA D — TESTING & POLISH (3-4 dni, NÍZKE):
+- D.1 Unit testy (Vitest) — 80% coverage pre lib
+- D.2 E2E testy (Playwright) — 10+ critical flows
+- D.3 BACKLOG.md + CHANGELOG.md
+- D.4 Performance audit (Lighthouse, Core Web Vitals)
+- D.5 Song audio sources (reálne YouTube videoId)
+
+VERDIKT:
+- Aplikácia je v pokročilom štádiu (92% míľnikov), ale obsahuje:
+  1. Kritické bezpečnostné medzery (P0) — blokujú produkčné nasadenie
+  2. Mŕtvy AI kód (tools.ts M4.2)
+  3. Polovičatý HITL
+  4. Chýbajúci admin tab (Structured Content M3.1)
+  5. Nula testov
+  6. Právne riziká (GDPR, Impressum)
+- Odporúčaný postup: Fáza A → B → C → D, každá úloha musí prejsť Quality Gate
+
+STATUS: AUDIT DOKONČENÝ, PLÁN PRIPRAVENÝ, ČAKÁ SA NA SCHVÁLENIE P0 FIXOV
+
