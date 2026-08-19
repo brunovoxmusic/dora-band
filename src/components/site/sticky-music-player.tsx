@@ -28,7 +28,20 @@ export function StickyMusicPlayer() {
   const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [inMusicSection, setInMusicSection] = useState(false);
+  const [musicSectionVisible, setMusicSectionVisible] = useState(true); // default true
   const prevInMusicSection = useRef(false);
+
+  // Fetch section visibility — ak je music sekcia skrytá, skry aj sticky player
+  useEffect(() => {
+    fetch("/api/sections")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.sections) {
+          setMusicSectionVisible(d.sections.music !== false);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Sledujeme, či je viditeľná hlavná MusicSection — ak áno a prehrávač
   // nehrá, skryjeme sticky player (vyhneme sa duplikácii).
@@ -91,6 +104,9 @@ export function StickyMusicPlayer() {
       document.body.style.overflow = "";
     };
   }, [expanded]);
+
+  // Ak je music sekcia skrytá v admin, nerenderuj sticky player vôbec
+  if (!musicSectionVisible) return null;
 
   // Ak je collapsed a nie je v music section, stále ukáž mini-tlačidlo
   if (collapsed) {

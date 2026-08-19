@@ -24,6 +24,22 @@ export function HeroSection({
 }) {
   const c = content ?? {};
   const [scrollY, setScrollY] = useState(0);
+  const [sections, setSections] = useState<Record<string, boolean> | null>(null);
+
+  // Fetch section visibility pre podmienené zobrazenie buttonov
+  useEffect(() => {
+    fetch("/api/sections")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.sections) setSections(d.sections); })
+      .catch(() => {});
+  }, []);
+
+  const isSectionVisible = (id: string): boolean => {
+    if (!sections) return true; // fallback — všetky viditeľné
+    return sections[id] !== false;
+  };
+  const showBooking = isSectionVisible("contact");
+  const showPress = isSectionVisible("press");
 
   useEffect(() => {
     let raf = 0;
@@ -121,22 +137,36 @@ export function HeroSection({
           </p>
         </div>
 
-        {/* CTAs */}
+        {/* CTAs — podmienené podľa section visibility */}
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <a
-            href="#kontakt"
-            className="group inline-flex items-center justify-center gap-2 bg-neon-red px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white clip-corner-lg glow-red transition-all hover:bg-deep-red hover:glow-red"
-          >
-            <Calendar className="h-4 w-4" />
-            {c["hero.ctaPrimary"] || "Rezervovať koncert / Booking"}
-          </a>
-          <a
-            href="#press"
-            className="group inline-flex items-center justify-center gap-2 border border-charcoal bg-charcoal/40 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-off-white backdrop-blur transition-all hover:border-off-white/60 hover:bg-charcoal/60"
-          >
-            <Download className="h-4 w-4" />
-            {c["hero.ctaSecondary"] || "PR Materiály na stiahnutie"}
-          </a>
+          {showBooking && (
+            <a
+              href="#kontakt"
+              className="group inline-flex items-center justify-center gap-2 bg-neon-red px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white clip-corner-lg glow-red transition-all hover:bg-deep-red hover:glow-red"
+            >
+              <Calendar className="h-4 w-4" />
+              {c["hero.ctaPrimary"] || "Rezervovať koncert / Booking"}
+            </a>
+          )}
+          {showPress && (
+            <a
+              href="#press"
+              className="group inline-flex items-center justify-center gap-2 border border-charcoal bg-charcoal/40 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-off-white backdrop-blur transition-all hover:border-off-white/60 hover:bg-charcoal/60"
+            >
+              <Download className="h-4 w-4" />
+              {c["hero.ctaSecondary"] || "PR Materiály na stiahnutie"}
+            </a>
+          )}
+          {/* Fallback: ak sú oba skryté, zobraz scroll indicator */}
+          {!showBooking && !showPress && (
+            <a
+              href="#o-kapele"
+              className="group inline-flex items-center justify-center gap-2 border border-charcoal bg-charcoal/40 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-off-white backdrop-blur transition-all hover:border-off-white/60 hover:bg-charcoal/60"
+            >
+              <ArrowDown className="h-4 w-4" />
+              Spoznať kapelu
+            </a>
+          )}
         </div>
 
         {/* Stat strip */}
