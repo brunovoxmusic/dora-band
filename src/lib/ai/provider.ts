@@ -37,8 +37,10 @@ export function getProviderName(): AIProviderName {
 }
 
 const MODELS: Record<AITask, string> = {
-  writing: process.env.AI_MODEL_WRITING || process.env.AI_MODEL || "llama-3.3-70b-versatile",
-  analysis: process.env.AI_MODEL_ANALYSIS || process.env.AI_MODEL || "llama-3.3-70b-versatile",
+  // Groq model — llama-3.3-70b-versatile deprecated, fallback na llama-3.1-8b-instant
+  // Ak máš paid Groq plan, nastav AI_MODEL_WRITING=llama-3.3-70b-versatile v env
+  writing: process.env.AI_MODEL_WRITING || process.env.AI_MODEL || "llama-3.1-8b-instant",
+  analysis: process.env.AI_MODEL_ANALYSIS || process.env.AI_MODEL || "llama-3.1-8b-instant",
   fast: process.env.AI_MODEL_FAST || "llama-3.1-8b-instant",
 };
 

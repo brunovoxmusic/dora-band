@@ -16,26 +16,45 @@ import { getSession } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   if (!(await getSession(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
 
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status") || "pending";
-  const agentType = searchParams.get("agentType");
+  try {
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status") || "pending";
+    const agentType = searchParams.get("agentType");
 
-  const where: Record<string, unknown> = { status };
-  if (agentType) where.agentType = agentType;
+    const where: Record<string, unknown> = { status };
+    if (agentType) where.agentType = agentType;
 
-  const items = await db.approvalQueue.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+    const items = await db.approvalQueue.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
 
-  // Parse payload JSON pre frontend
-  const parsed = items.map((item) => ({
-    ...item,
-    payload: typeof item.payload === "string" ? JSON.parse(item.payload) : item.payload,
-  }));
+    // Parse payload JSON pre frontend (safe — handle null/invalid)
+    const parsed = items.map((item) => ({
+      ...item,
+      payload: safeJsonParse(item.payload, {}),
+    }));
 
-  return NextResponse.json({ items: parsed });
+    return NextResponse.json({ items: parsed });
+  } catch (err) {
+    console.error("[approvals GET]", err);
+    return NextResponse.json(
+      { error: "Načítanie schválení zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+/** Safe JSON parse — vráti fallback ak je hodnota null alebo ak parse zlyhá */
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
 }
 
 export async function POST(req: NextRequest) {

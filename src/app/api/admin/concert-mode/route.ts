@@ -45,10 +45,10 @@ export async function GET(req: NextRequest) {
       const { venueRef, ...gigRest } = gig;
       const gigWithVenue = { ...gigRest, venueEntity: venueRef };
 
-      // Parse setlist items JSON
+      // Parse setlist items JSON (safe — falls back to [] on parse error)
       const parsedSetlists = setlists.map(s => ({
         ...s,
-        items: typeof s.items === "string" ? JSON.parse(s.items) : s.items,
+        items: safeJsonParse(s.items, []),
       }));
 
       return NextResponse.json({
@@ -81,8 +81,21 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ upcomingGigs });
   } catch (err) {
-    console.error("[concert-mode GET] error:", err);
-    return NextResponse.json({ error: "Načítanie Concert Mode zlyhalo." }, { status: 500 });
+    console.error("[concert-mode GET]", err);
+    return NextResponse.json(
+      { error: "Načítanie Concert Mode zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
   }
 }
 

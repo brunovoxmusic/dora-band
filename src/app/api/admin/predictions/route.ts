@@ -259,7 +259,20 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[predictions] error:", err);
-    return NextResponse.json({ error: "Generovanie predikcií zlyhalo." }, { status: 500 });
+    console.error("[predictions GET]", err);
+    return NextResponse.json(
+      { error: "Generovanie predikcií zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
   }
 }

@@ -16,29 +16,49 @@ function slugify(s: string): string {
 
 export async function GET(req: NextRequest) {
   if (!(await getSession(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
-  const { searchParams } = new URL(req.url);
-  const category = searchParams.get("category");
-  const activeOnly = searchParams.get("active") === "true";
 
-  const where: Record<string, unknown> = {};
-  if (category) where.category = category;
-  if (activeOnly) where.active = true;
+  try {
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get("category");
+    const activeOnly = searchParams.get("active") === "true";
 
-  const items = await db.merchProduct.findMany({
-    where,
-    orderBy: [{ bestSeller: "desc" }, { createdAt: "desc" }],
-    include: { _count: { select: { orders: true } } },
-    take: 200,
-  });
+    const where: Record<string, unknown> = {};
+    if (category) where.category = category;
+    if (activeOnly) where.active = true;
 
-  return NextResponse.json({
-    items: items.map(p => ({
-      ...p,
-      sizes: typeof p.sizes === "string" ? JSON.parse(p.sizes) : p.sizes,
-      colors: typeof p.colors === "string" ? JSON.parse(p.colors) : p.colors,
-      orderCount: p._count.orders,
-    })),
-  });
+    const items = await db.merchProduct.findMany({
+      where,
+      orderBy: [{ bestSeller: "desc" }, { createdAt: "desc" }],
+      include: { _count: { select: { orders: true } } },
+      take: 200,
+    });
+
+    return NextResponse.json({
+      items: items.map(p => ({
+        ...p,
+        sizes: safeJsonParse(p.sizes, []),
+        colors: safeJsonParse(p.colors, []),
+        orderCount: p._count.orders,
+      })),
+    });
+  } catch (err) {
+    console.error("[merch/products GET]", err);
+    return NextResponse.json(
+      { error: "Načítanie produktov zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+/** Safe JSON parse — vráti fallback ak je hodnota null alebo ak parse zlyhá */
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
 }
 
 export async function POST(req: NextRequest) {

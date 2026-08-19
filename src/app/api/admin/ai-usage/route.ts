@@ -176,7 +176,20 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (err) {
-    console.error("[ai-usage] error:", err);
-    return NextResponse.json({ error: "Načítanie AI usage zlyhalo." }, { status: 500 });
+    console.error("[ai-usage GET]", err);
+    return NextResponse.json(
+      { error: "Načítanie AI usage zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
   }
 }

@@ -154,7 +154,20 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (err) {
-    console.error("[merch/stats] error:", err);
-    return NextResponse.json({ error: "Načítanie štatistík zlyhalo." }, { status: 500 });
+    console.error("[merch/stats GET]", err);
+    return NextResponse.json(
+      { error: "Načítanie štatistík zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
   }
 }

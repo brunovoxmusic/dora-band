@@ -12,24 +12,45 @@ import { getSession } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   if (!(await getSession(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
-  const { searchParams } = new URL(req.url);
-  const type = searchParams.get("type");
-  const status = searchParams.get("status");
-  const gigId = searchParams.get("gigId");
 
-  const where: Record<string, unknown> = {};
-  if (type) where.type = type;
-  if (status) where.status = status;
-  if (gigId) where.gigId = gigId;
+  try {
+    const { searchParams } = new URL(req.url);
+    const type = searchParams.get("type");
+    const status = searchParams.get("status");
+    const gigId = searchParams.get("gigId");
 
-  const items = await db.merchOrder.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: { product: { select: { id: true, name: true, category: true, imageUrl: true } } },
-    take: 200,
-  });
+    const where: Record<string, unknown> = {};
+    if (type) where.type = type;
+    if (status) where.status = status;
+    if (gigId) where.gigId = gigId;
 
-  return NextResponse.json({ items });
+    const orders = await db.merchOrder.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: { product: { select: { id: true, name: true, category: true, imageUrl: true, sizes: true, colors: true } } },
+      take: 200,
+    });
+
+    // Safe-parse JSON String fields on related product (sizes/colors sú JSON-encoded array)
+    const items = orders.map(o => ({
+      ...o,
+      product: o.product
+        ? {
+            ...o.product,
+            sizes: safeJsonParse<string[]>(o.product.sizes, []),
+            colors: safeJsonParse<string[]>(o.product.colors, []),
+          }
+        : o.product,
+    }));
+
+    return NextResponse.json({ items });
+  } catch (err) {
+    console.error("[merch/orders GET]", err);
+    return NextResponse.json(
+      { error: "Načítanie objednávok zlyhalo.", detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -101,5 +122,15 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[merch/orders POST]", err);
     return NextResponse.json({ error: "Vytvorenie objednávky zlyhalo." }, { status: 500 });
+  }
+}
+
+function safeJsonParse<T>(value: unknown, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
   }
 }
