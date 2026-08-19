@@ -33,22 +33,23 @@ const SECURITY_HEADERS: Record<string, string> = {
 // CSP — Content Security Policy
 // Next.js dev mode potrebuje 'unsafe-eval' a 'unsafe-inline' pre HMR
 // V produkcii obmedzujeme, ale Vercel preview potrebuje vercel.live
-function getCspHeader(isDev: boolean, isVercelPreview: boolean): string {
+function getCspHeader(isDev: boolean, isVercel: boolean): string {
+  const v = isVercel ? " https://vercel.live" : "";
   const directives = [
     "default-src 'self'",
     // Next.js potrebuje 'unsafe-inline' pre štýly a 'unsafe-eval' v dev mode
-    // Vercel preview potrebuje vercel.live pre feedback toolbar
-    `script-src 'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : " 'unsafe-inline'"}${isVercelPreview ? " https://vercel.live" : ""}`,
-    `style-src 'self' 'unsafe-inline'${isVercelPreview ? " https://vercel.live" : ""}`,
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data:",
-    `connect-src 'self' https:${isVercelPreview ? " wss:" : ""}`,
-    "media-src 'self' https:",
-    `frame-src 'self' https:${isVercelPreview ? " https://vercel.live" : ""}`,
+    // Vercel Live potrebuje vercel.live pre feedback toolbar (script, style, font, connect, img)
+    `script-src 'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : " 'unsafe-inline'"}${v}`,
+    `style-src 'self' 'unsafe-inline'${v}`,
+    `img-src 'self' data: blob: https:${v}`,
+    `font-src 'self' data:${v}`,
+    `connect-src 'self' https:${isVercel ? " wss: https://vercel.live" : ""}`,
+    `media-src 'self' https:${v}`,
+    `frame-src 'self' https:${v}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'", // ekvivalent X-Frame-Options: DENY
+    "frame-ancestors 'none'",
     "upgrade-insecure-requests",
   ];
   return directives.join("; ");
