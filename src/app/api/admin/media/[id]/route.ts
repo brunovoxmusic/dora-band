@@ -7,7 +7,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   try {
     const b = await req.json().catch(() => ({}));
-    const { title, url, thumbnailUrl, category, caption, altText, credits, featured, heroBackground } = b;
+    const { title, url, thumbnailUrl, category, caption, altText, credits, featured, heroBackground, fileType, linkedSections, fileSize, fileName } = b;
     const item = await db.mediaItem.update({
       where: { id },
       data: {
@@ -20,6 +20,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(credits !== undefined && { credits }),
         ...(featured !== undefined && { featured: !!featured }),
         ...(heroBackground !== undefined && { heroBackground: !!heroBackground }),
+        ...(fileType !== undefined && { fileType }),
+        ...(linkedSections !== undefined && { linkedSections: JSON.stringify(linkedSections || []) }),
+        ...(fileSize !== undefined && { fileSize }),
+        ...(fileName !== undefined && { fileName }),
       },
     });
     return NextResponse.json({ ok: true, item });

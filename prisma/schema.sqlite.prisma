@@ -64,15 +64,25 @@ model Gig {
 }
 
 /// Gallery / media items managed in admin (Media tab).
+/// Podporuje obrázky aj iné typy súborov (PDF, SVG, MD, TXT).
 model MediaItem {
   id             String   @id @default(cuid())
   title          String
   url            String
   thumbnailUrl   String?
+  /// Kategória: concert, portrait, press, logo, stageplan, document, other
   category       String   @default("concert")
+  /// Typ súboru: image, pdf, svg, markdown, text, other
+  fileType       String   @default("image")
   caption        String?
   altText        String?
   credits        String   @default("Foto: archív D.O.R.A.")
+  /// Pre ktoré sekcie je súbor určený (JSON array: ["press", "stageplan"])
+  linkedSections String?  @default("[]")
+  /// Veľkosť súboru v bytes (pre zobrazenie v UI)
+  fileSize       Int?
+  /// Originálny názov súboru
+  fileName       String?
   featured       Boolean  @default(false)
   heroBackground Boolean  @default(false)
   order          Int      @default(0)
@@ -80,6 +90,7 @@ model MediaItem {
   updatedAt      DateTime @updatedAt
 
   @@index([category])
+  @@index([fileType])
   @@index([order])
   @@index([heroBackground])
 }

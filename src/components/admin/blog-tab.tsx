@@ -248,7 +248,27 @@ export function BlogTab() {
 
       {/* AI generate dialog */}
       <AIGenerateDialog open={showAI} onOpenChange={setShowAI} onGenerated={(article) => {
-        setEditing(article as ContentItem);
+        // Vytvor nový ContentItem z AI article (bez ID = nový článok)
+        const newItem: ContentItem = {
+          id: "",
+          title: article.title || "",
+          slug: article.slug || "",
+          type: article.type || "blog",
+          status: "ai_generated",
+          language: "sk",
+          body: article.body || "",
+          excerpt: article.excerpt || null,
+          seoTitle: article.seoTitle || null,
+          seoDescription: article.seoDescription || null,
+          keywords: article.keywords || null,
+          aiGenerated: true,
+          author: null,
+          publishAt: null,
+          publishedAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setEditing(newItem);
         setShowAI(false);
         setShowForm(true);
       }} />
@@ -306,14 +326,16 @@ function ArticleFormDialog({ open, onOpenChange, item, onSaved }: {
         seoDescription: seoDescription || undefined, keywords: keywords || undefined,
         aiGenerated: item?.aiGenerated,
       };
-      const url = item ? `/api/admin/content-items/${item.id}` : "/api/admin/content-items";
-      const method = item ? "PATCH" : "POST";
+      // Ak máme item s ID → PATCH (uprav existujúci), inak POST (vytvor nový)
+      const hasId = item && item.id && item.id.length > 0;
+      const url = hasId ? `/api/admin/content-items/${item!.id}` : "/api/admin/content-items";
+      const method = hasId ? "PATCH" : "POST";
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Uloženie zlyhalo");
       }
-      toast.success(item ? "Článok aktualizovaný" : "Článok vytvorený");
+      toast.success(hasId ? "Článok aktualizovaný" : "Článok vytvorený");
       onSaved();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Chyba");
@@ -322,11 +344,60 @@ function ArticleFormDialog({ open, onOpenChange, item, onSaved }: {
     }
   };
 
+  const [aiRegenerating, setAiRegenerating] = useState(false);
+
+  // AI Regenerate — regeneruje obsah existujúceho článku
+  const handleAIRegenerate = async () => {
+    if (!title) { toast.error("Najprv zadaj nadpis"); return; }
+    setAiRegenerating(true);
+    try {
+      const res = await fetch("/api/admin/blog/generate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type, topic: title, tone: "punk", length: "medium",
+          context: excerpt || body.slice(0, 200),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "AI regenerácia zlyhala");
+      }
+      const d = await res.json();
+      if (d.article) {
+        setBody(d.article.body || body);
+        setExcerpt(d.article.excerpt || excerpt);
+        setSeoTitle(d.article.seoTitle || seoTitle);
+        setSeoDescription(d.article.seoDescription || seoDescription);
+        setKeywords(d.article.keywords || keywords);
+        setStatus("ai_generated");
+        toast.success("Obsah regenerovaný AI");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Chyba");
+    } finally {
+      setAiRegenerating(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{item ? "Upraviť článok" : "Nový článok"}</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>{item && item.id ? "Upraviť článok" : "Nový článok"}</span>
+            {item && item.id && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAIRegenerate}
+                disabled={aiRegenerating || !title}
+                className="border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
+              >
+                {aiRegenerating ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                AI Regenerovať
+              </Button>
+            )}
+          </DialogTitle>
           <DialogDescription>
             {item?.aiGenerated && <span className="flex items-center gap-1 text-violet-400"><Sparkles className="h-3 w-3" /> AI generovaný obsah — skontrolujte pred publikovaním</span>}
           </DialogDescription>
