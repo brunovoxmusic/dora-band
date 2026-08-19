@@ -178,8 +178,7 @@ export default async function HomePage() {
             <SectionDivider />
           </>
         )}
-        {/* NEW: Stats section — dynamické čísla z DB */}
-        <StatsSection />
+        {showSection("stats") && <StatsSection />}
         {showSection("about") && (
           <>
             <AboutSection bioLong={c["band.bioLong"]} />
@@ -198,10 +197,8 @@ export default async function HomePage() {
           </>
         )}
         {showSection("discography") && <DiscographySection />}
-        {/* NEW: Merch section — dynamické produkty z admin DB */}
-        <MerchSection />
-        {/* NEW: Blog/News section — publikované ContentItems */}
-        <BlogSection />
+        {showSection("merch") && <MerchSection />}
+        {showSection("blog") && <BlogSection />}
         {/* TODO(DORA): Sekcia „Recenzie & referencie“ je DOČASNE SKRYTÁ. */}
         {/* {showSection("testimonials") && (
           <>

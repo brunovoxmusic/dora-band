@@ -1,5 +1,21 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, Music2 } from "lucide-react";
 import { BAND } from "@/lib/band-data";
+
+/** Mapovanie footer linkov na SectionId pre visibility kontrolu */
+const FOOTER_LINK_SECTION_MAP: Record<string, string> = {
+  "#press": "press",
+  "#diskografia": "discography",
+  "#galeria": "gallery",
+  "#merch": "merch",
+  "#blog": "blog",
+  "#clenovia": "members",
+  "#hudba": "music",
+  "#kontakt": "contact",
+  "#faq": "faq",
+};
 
 export function Footer({ content }: { content?: Record<string, string> }) {
   const c = content ?? {};
@@ -14,6 +30,36 @@ export function Footer({ content }: { content?: Record<string, string> }) {
     youtube: c["social.youtube"] || BAND.social.youtube,
     spotify: c["social.spotify"] || BAND.social.spotify,
   };
+
+  const [sections, setSections] = useState<Record<string, boolean> | null>(null);
+
+  useEffect(() => {
+    fetch("/api/sections")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.sections) setSections(d.sections);
+      })
+      .catch(() => {/* fallback: všetky viditeľné */});
+  }, []);
+
+  /** Skontroluje či je sekcia viditeľná */
+  const isVisible = (href: string): boolean => {
+    if (!sections) return true;
+    const sectionId = FOOTER_LINK_SECTION_MAP[href];
+    if (!sectionId) return true;
+    return sections[sectionId] !== false;
+  };
+
+  // Dynamické linky pre "Pre partnerov" — filter podľa visibility
+  const partnerLinks = [
+    { href: "#press", label: "PR materiály na stiahnutie" },
+    { href: "#diskografia", label: "Diskografia & žánre" },
+    { href: "#galeria", label: "Fotoportfólio" },
+    { href: "#merch", label: "Merch & Obchod" },
+    { href: "#blog", label: "Blog & Novinky" },
+    { href: "/admin/login", label: "Admin prihlásenie" },
+  ].filter(l => isVisible(l.href));
+
   return (
     <footer className="mt-auto border-t border-charcoal bg-ink bg-noise">
       {/* Top ticker / marquee */}
@@ -58,7 +104,7 @@ export function Footer({ content }: { content?: Record<string, string> }) {
                 { Icon: Youtube, href: social.youtube, label: "YouTube" },
                 { Icon: Music2, href: social.spotify, label: "Spotify" },
               ]
-                // B.10: Filter out social links with empty href (anti reload bug)
+                // B.10: Filter out social links with empty href
                 .filter(({ href }) => href && href.length > 0)
                 .map(({ Icon, href, label }) => (
                 <a
@@ -104,16 +150,11 @@ export function Footer({ content }: { content?: Record<string, string> }) {
             </ul>
           </div>
 
-          {/* Quick links */}
+          {/* Quick links — dynamické, filter podľa section visibility */}
           <div>
             <p className="font-mono-brand text-[11px] uppercase tracking-[0.3em] text-warm-yellow">{"// Pre partnerov"}</p>
             <ul className="mt-4 space-y-2 text-sm">
-              {[
-                { href: "#press", label: "PR materiály na stiahnutie" },
-                { href: "#diskografia", label: "Diskografia & žánre" },
-                { href: "#galeria", label: "Fotoportfólio" },
-                { href: "/admin/login", label: "Admin prihlásenie" },
-              ].map((l) => (
+              {partnerLinks.map((l) => (
                 <li key={l.href}>
                   <a
                     href={l.href}

@@ -46,6 +46,7 @@ export type BannerState = {
 
 export type SectionId =
   | "hero"
+  | "stats"
   | "about"
   | "members"
   | "music"
@@ -53,6 +54,8 @@ export type SectionId =
   | "discography"
   | "gigs"
   | "setlist"
+  | "merch"
+  | "blog"
   | "testimonials"
   | "press"
   | "faq"
@@ -61,13 +64,14 @@ export type SectionId =
   | "contact";
 
 export const ALL_SECTION_IDS: SectionId[] = [
-  "hero", "about", "members", "music", "gallery", "discography",
-  "gigs", "setlist", "testimonials", "press", "faq", "social",
-  "newsletter", "contact",
+  "hero", "stats", "about", "members", "music", "gallery", "discography",
+  "gigs", "setlist", "merch", "blog", "testimonials", "press", "faq",
+  "social", "newsletter", "contact",
 ];
 
 export const SECTION_LABELS: Record<SectionId, string> = {
   hero: "Hero (úvod)",
+  stats: "Štatistiky (čísla kapely)",
   about: "O kapele",
   members: "Členovia kapely",
   music: "Hudba & Videá",
@@ -75,6 +79,8 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   discography: "Diskografia",
   gigs: "Koncerty",
   setlist: "Setlist",
+  merch: "Merch & Obchod",
+  blog: "Blog & Novinky",
   testimonials: "Recenzie",
   press: "PR / Press Kit",
   faq: "FAQ",
@@ -161,7 +167,10 @@ export async function getAllSettingsStructured(): Promise<AllSettings> {
 
   const sections = {} as Record<SectionId, boolean>;
   for (const s of ALL_SECTION_IDS) {
-    sections[s] = parseBool(map[`settings.sections.${s}`], true);
+    // Fix: getContentMap vracia "" pre chýbajúce keys, ale parseBool("", true) vracia false.
+    // Preto kontrolujeme či key skutočne existuje v raw DB mape.
+    const rawValue = map[`settings.sections.${s}`];
+    sections[s] = rawValue === "" ? true : parseBool(rawValue, true);
   }
 
   return {

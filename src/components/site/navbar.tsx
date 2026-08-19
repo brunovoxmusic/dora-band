@@ -5,9 +5,21 @@ import { Menu, X, ChevronRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/band-data";
 import { cn } from "@/lib/utils";
 
+/** Mapovanie NAV_LINKS href na SectionId pre visibility kontrolu */
+const NAV_LINK_SECTION_MAP: Record<string, string> = {
+  "#o-kapele": "about",
+  "#clenovia": "members",
+  "#hudba": "music",
+  "#galeria": "gallery",
+  "#diskografia": "discography",
+  "#faq": "faq",
+  "#kontakt": "contact",
+};
+
 export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [sections, setSections] = useState<Record<string, boolean> | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -15,6 +27,27 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Fetch section visibility z API (pre skrývanie navbar linkov)
+  useEffect(() => {
+    fetch("/api/sections")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.sections) setSections(d.sections);
+      })
+      .catch(() => {/* fallback: všetky viditeľné */});
+  }, []);
+
+  /** Skontroluje či je sekcia viditeľná (ak nie je v response, predpokladáme viditeľnú) */
+  const isVisible = (href: string): boolean => {
+    if (!sections) return true; // fallback — všetky viditeľné
+    const sectionId = NAV_LINK_SECTION_MAP[href];
+    if (!sectionId) return true; // link nie je viazaný na sekciu
+    return sections[sectionId] !== false; // true ak nie je explicitne false
+  };
+
+  const visibleLinks = NAV_LINKS.filter(link => isVisible(link.href));
+  const showBookingButton = isVisible("#kontakt");
 
   return (
     <header
@@ -40,9 +73,9 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
           </div>
         </a>
 
-        {/* Desktop nav */}
+        {/* Desktop nav — iba viditeľné linky */}
         <nav className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((link) => (
+          {visibleLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -55,12 +88,14 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href="#kontakt"
-            className="hidden items-center gap-2 bg-neon-red px-4 py-2 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm transition-all hover:bg-deep-red hover:glow-red sm:inline-flex"
-          >
-            Booking
-          </a>
+          {showBookingButton && (
+            <a
+              href="#kontakt"
+              className="hidden items-center gap-2 bg-neon-red px-4 py-2 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm transition-all hover:bg-deep-red hover:glow-red sm:inline-flex"
+            >
+              Booking
+            </a>
+          )}
           <button
             onClick={() => setOpen((v) => !v)}
             className="inline-flex h-10 w-10 items-center justify-center text-off-white lg:hidden"
@@ -72,11 +107,11 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — iba viditeľné linky */}
       {open && (
         <div className="fixed inset-0 top-16 z-40 bg-ink/98 backdrop-blur-xl lg:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col px-4 py-4">
-            {NAV_LINKS.map((link) => (
+            {visibleLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -87,13 +122,15 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
                 <ChevronRight className="h-4 w-4 text-silver/40" />
               </a>
             ))}
-            <a
-              href="#kontakt"
-              onClick={() => setOpen(false)}
-              className="mt-4 inline-flex items-center justify-center gap-2 bg-neon-red px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm"
-            >
-              Rezervovať koncert
-            </a>
+            {showBookingButton && (
+              <a
+                href="#kontakt"
+                onClick={() => setOpen(false)}
+                className="mt-4 inline-flex items-center justify-center gap-2 bg-neon-red px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white clip-corner glow-red-sm"
+              >
+                Rezervovať koncert
+              </a>
+            )}
           </nav>
         </div>
       )}
