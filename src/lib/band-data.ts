@@ -101,6 +101,7 @@ export type Member = {
   bio: string;
   initials: string;
   since: string;
+  photo?: string;
 };
 
 export const MEMBERS: Member[] = [
@@ -115,6 +116,7 @@ export const MEMBERS: Member[] = [
     bio: "Prínos crossoverového rapu do zvuku kapely. Prináša hip-hopový element, ktorý D.O.R.A. odlišuje od klasickej punkovej formácie.",
     initials: "MA",
     since: "—",
+    photo: "/gallery/portrait/portrait-01.jpg",
   },
   {
     name: "Branislav Guzma",
@@ -123,6 +125,7 @@ export const MEMBERS: Member[] = [
     bio: "Zakladajúci člen, ktorý prešiel z basgitary na šesťstrunový nástroj, čím priniesol kapelnému zvuku novú dimenziu a hustotu.",
     initials: "BG",
     since: "1996",
+    photo: "/gallery/portrait/portrait-02.jpg",
   },
   {
     name: "Matúš Dobeš",
@@ -131,6 +134,7 @@ export const MEMBERS: Member[] = [
     bio: "Pridal sa v roku 2005 a významne prispel k nahrávke ‚TCHO SME NAHLAVU?‘. Stabilná basová linka je základom funky-punkového groovu.",
     initials: "MD",
     since: "2005",
+    photo: "/gallery/portrait/portrait-03.jpg",
   },
   {
     name: "Július Flimmel",
@@ -139,6 +143,7 @@ export const MEMBERS: Member[] = [
     bio: "Zakladajúci bubeník, ktorého energické a presné bicie sú srdcom rytmickej sekcie kapely.",
     initials: "JF",
     since: "1996",
+    photo: "/gallery/portrait/portrait-04.jpg",
   },
 ];
 
