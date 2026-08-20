@@ -3491,3 +3491,66 @@ Stage Summary:
 - Lint: 0 errors ✓
 - End-to-end test cez agent-browser: všetky 5 testy prešli ✓
 - Photo picker podporuje: 16 koncertných + 5 portréty + 0 PR/Logo/Stage/Dokument (galéria ich zatiaľ neobsahuje, ale UI je pripravené)
+
+---
+Task ID: 53 (GitHub push + Vercel deploy)
+Agent: Main (Z.ai Code)
+Task: Commitni zmeny na GitHub a publikuj nový deploy na Vercel.
+
+WORK LOG:
+
+1. Skontroliraný git status:
+   - Branch: main, ahead of origin/main by 2 commits
+   - Pôvodné commity mali UUID správy (cb00b9f1..., d837e76b...)
+   - Working tree clean
+
+2. Reset --soft HEAD~2 a re-commit s popisnými správami:
+   - cbbab1a: fix(fouc): server-side section visibility cez React Context
+     - Files: sections-provider.tsx (new), layout.tsx, settings.ts, navbar.tsx,
+       footer.tsx, hero-section.tsx, sticky-music-player.tsx
+     - 7 files changed, 135 insertions(+), 84 deletions(-)
+
+   - 9254932: feat(members): photo picker z celej galérie + bug fix persistencie
+     - Files: media-picker-dialog.tsx (new), members-tab.tsx, worklog.md
+     - 3 files changed, 737 insertions(+), 63 deletions(-)
+
+3. Push na GitHub:
+   - git push origin main → 080c0d4..9254932 main -> main ✓
+   - Remote: https://github.com/brunovoxmusic/dora-band.git
+   - Sync status: main...origin/main (up to date) ✓
+
+4. Vercel auto-deploy (GitHub integration):
+   - Push na main branch spustil automatický Vercel build
+   - Production URL: https://dora-band.vercel.app/
+   - Deployment ID sa mení (cc5m2 → nqtnq → hp9hl → 7nj7w → zcjgh)
+   - Build trval ~2-3 minúty
+
+VERIFIKÁCIA:
+
+1. GitHub:
+   - 2 nové commity pushed s popisnými správami ✓
+   - git status -sb: ## main...origin/main (synced) ✓
+
+2. Vercel production:
+   - HTTP 200 na https://dora-band.vercel.app/ ✓
+   - x-vercel-id: zcjgh-1787204118996-b4a35210071b (nový deployment) ✓
+   - x-vercel-cache: MISS (čerstvý build) ✓
+
+3. FOUC fix overenie na produkcii:
+   - curl /privacy | grep -c "fetch.*api/sections" → 0 ✓
+   - Žiadne client-side fetch volania v HTML (FOUC fix je nasadený)
+   - Navbar linky sú server-rendered priamo v HTML ✓
+
+4. Production section visibility (DB state):
+   - Viditeľné: hero, about, members, gallery, contact
+   - Skryté (admin nastavenia): stats, music, discography, gigs, setlist,
+     merch, blog, testimonials, press, faq, social, newsletter
+   - Toto je DB state z predchádzajúcich admin testov, nie code issue
+
+Stage Summary:
+- 2 commity pushed na GitHub main branch
+- Vercel auto-deploy spustený a dokončený
+- Nový kód je live na https://dora-band.vercel.app/
+- FOUC fix overený na produkcii (0 client-side fetch volaní)
+- Production DB má mnoho sekcií skrytých z predchádzajúcich admin testov
+  (admin ich môže kedykoľvek re-enable v /admin → Nastavenia)
