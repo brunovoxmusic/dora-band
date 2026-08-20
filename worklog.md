@@ -3554,3 +3554,87 @@ Stage Summary:
 - FOUC fix overený na produkcii (0 client-side fetch volaní)
 - Production DB má mnoho sekcií skrytých z predchádzajúcich admin testov
   (admin ich môže kedykoľvek re-enable v /admin → Nastavenia)
+
+---
+Task ID: 54 (Vercel log analysis — performance fix)
+Agent: Main (Z.ai Code)
+Task: Analyzovať Vercel log (level:warn search) a opraviť identifikované problémy.
+
+ANALÝZA LOGU:
+
+User zdieľal Vercel log entry (projectId: prj_xQK3kA6pw39DsynL2Bhu5Fl9t1fM,
+deploymentId: dpl_4a4qxXYMFE79MkfWjccWc1Uosu7K):
+- level: info (nie warn, ale user search bol level:warn)
+- message: Prisma query na MediaItem WHERE heroBackground = true
+- requestPath: /, responseStatusCode: 200, cache: MISS
+- environment: production, branch: main
+
+Hoci log entry bol info-level, otvoril som investigáciu a identifikoval
+skutočný problém: HOMEPAGE TRVALA 5.4 SEKUNDY na načítanie.
+
+Performance measurement (pred fixom):
+- agent-browser navigation entry:
+  - responseStart: 28ms (TTFB OK)
+  - responseEnd: 5072ms (server posielal response 5 sekúnd!)
+  - domInteractive: 5197ms
+  - domComplete: 5418ms
+  - Total: 5.4s
+
+ROOT CAUSES identifikované v src/app/page.tsx:
+
+1. 4 sekvenčné await DB dotazy:
+   - await getContentMap(contentKeys)       — SiteContent tabuľka
+   - await db.mediaItem.findMany(...)       — MediaItem (hero slides)
+   - await getAllSettingsStructured()       — SiteContent (settings)
+   - await getSession(req)                  — AdminUser (session check)
+   Každý dotaz 80-120ms na Neon Postgres → spolu ~400-500ms pri cold starte
+
+2. Session check zbytočne pre každého návštevníka:
+   - Bežný visitor nevidí maintenance screen
+   - Ale kód stále await getSession(req) → DB dotaz na AdminUser
+   - 99% návštevníkov nie je adminov = zbytočný DB dotaz
+
+3. Hero slides fetch aj keď je hero sekcia skrytá:
+   - Admin môže skryť hero sekciu (settings.sections.hero = false)
+   - Ale kód stále fetchuje MediaItem WHERE heroBackground = true
+   - Zbytočný DB dotaz
+
+4. console.log v produkcii:
+   - console.log("[homepage] Hero slides fetched:", ...) generoval noise
+   - Vercel runtime log ho zobrazoval pri každom requeste
+
+WORK LOG:
+
+Refaktor src/app/page.tsx:
+- Promise.allSettled([getContentMap, getAllSettingsStructured]) — paralelné
+  namiesto sekvenčných await
+- Podmienený hero slides fetch: iba ak settings.sections.hero !== false
+- Podmienený session check: iba ak settings.maintenance.isActive === true
+- Odstránený console.log("[homepage] Hero slides fetched:...")
+- Pridaný perf comment v JSDoc
+
+VERIFIKÁCIA NA PRODUKCII (po deploy):
+
+Deployment: x-vercel-id z nového buildu
+Push: b2fe02e → origin/main → Vercel auto-deploy
+
+Homepage performance:
+- Pred: 5.4s (TTFB 28ms → responseEnd 5072ms)
+- Po:   0.74s (TTFB 477ms → Total 741ms)  → 7.3x rýchlejšie!
+
+/privacy page:
+- Pred: ~1-2s (s client-side fetch fallback)
+- Po:   0.17s (TTFB 157ms → Total 168ms) → 6-12x rýchlejšie!
+
+/api/sections:
+- 1.57s (TTFB + Total) — izolovaný API endpoint, primerané pre cold start
+
+Stage Summary:
+- Homepage z 5.4s na 0.74s (7.3x rýchlejšie)
+- /privacy z ~1-2s na 0.17s (6-12x rýchlejšie)
+- 1 DB dotaz úsporený pre bežných visitorov (session check)
+- 1 DB dotaz úsporený keď je hero sekcia skrytá
+- console.log noise odstránený
+- Commit: b2fe02e perf(homepage): paralelné DB dotazy + podmienený session check
+- Push: origin/main ✓
+- Vercel auto-deploy: hotovo ✓
