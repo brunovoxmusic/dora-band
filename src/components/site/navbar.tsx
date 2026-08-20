@@ -61,7 +61,7 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <a href="#top" className="group flex items-center gap-3" aria-label="D.O.R.A. — domov">
+        <a href="/" className="group flex items-center gap-3" aria-label="D.O.R.A. — domov">
           <img src="/dora-mark.svg" alt="" className="h-9 w-9" />
           <div className="flex flex-col leading-none">
             <span className="font-display text-lg font-extrabold tracking-tight text-neon-red text-glow-red">

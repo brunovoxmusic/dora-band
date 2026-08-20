@@ -4,6 +4,7 @@ import { Footer } from "@/components/site/footer";
 import { Navbar } from "@/components/site/navbar";
 import { BackToTop } from "@/components/site/back-to-top";
 import { ScrollProgress } from "@/components/site/scroll-progress";
+import { ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
   title: `Ochrana osobných údajov — ${BAND.name}`,
@@ -20,6 +21,10 @@ export default function PrivacyPage() {
       <Navbar />
       <main className="min-h-screen bg-dark-gray pt-24 pb-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <a href="/" className="mb-6 inline-flex items-center gap-2 text-sm text-silver/60 hover:text-neon-red transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Späť na hlavnú stránku
+          </a>
           <article className="prose prose-invert prose-sm sm:prose-base max-w-none">
             <header className="mb-12 border-b border-charcoal pb-8">
               <p className="font-mono-brand text-xs uppercase tracking-[0.3em] text-neon-red mb-2">

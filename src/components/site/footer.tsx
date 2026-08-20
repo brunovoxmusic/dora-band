@@ -83,8 +83,9 @@ export function Footer({ content }: { content?: Record<string, string> }) {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-3">
           {/* Brand */}
-          <div>
-            <div className="flex items-center gap-3">
+        {/* Brand */}
+        <div>
+          <a href="/" className="flex items-center gap-3">
               <img src="/dora-mark.svg" alt="" className="h-10 w-10" />
               <div>
                 <p className="font-display text-xl font-extrabold text-neon-red">D.O.R.A.</p>
@@ -92,7 +93,7 @@ export function Footer({ content }: { content?: Record<string, string> }) {
                   Dnes Od Rána Abstinujem
                 </p>
               </div>
-            </div>
+          </a>
             <p className="mt-4 max-w-xs text-sm text-off-white/60">
               Legendárna funky-punková formácia z Púchova. Aktívna od roku {BAND.founded}. Energické koncerty,
               autentický zvuk, spoločensky angažované texty.
@@ -180,6 +181,10 @@ export function Footer({ content }: { content?: Record<string, string> }) {
           <span className="text-charcoal">·</span>
           <a href="/privacy#impressum" className="text-silver/70 transition-colors hover:text-warm-yellow hover:underline underline-offset-4">
             Impressum
+          </a>
+          <span className="text-charcoal">·</span>
+          <a href="/" className="text-neon-red/80 transition-colors hover:text-neon-red hover:underline underline-offset-4 font-medium">
+            ← Späť na hlavnú stránku
           </a>
         </div>
 
