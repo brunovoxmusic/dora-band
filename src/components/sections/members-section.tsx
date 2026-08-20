@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { MEMBERS } from "@/lib/band-data";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/site/reveal";
 import { MicVocal, Guitar, Drum, Music2, Plus, Minus, Calendar } from "lucide-react";
@@ -36,11 +37,40 @@ export function MembersSection() {
     fetch("/api/members")
       .then(r => r.ok ? r.json() : { items: [] })
       .then(d => {
-        setMembers(d.items || []);
+        const apiMembers = d.items || [];
+        // Fallback: ak DB je prázdna, použi statické MEMBERS z band-data.ts
+        if (apiMembers.length === 0) {
+          const staticMembers: Member[] = MEMBERS.map((m, i) => ({
+            id: `static-${i}`,
+            name: m.name,
+            role: m.role,
+            roleEn: m.roleEn,
+            bio: m.bio,
+            initials: m.initials,
+            since: m.since,
+            photo: m.photo,
+            order: i,
+          }));
+          setMembers(staticMembers);
+        } else {
+          setMembers(apiMembers);
+        }
         setLoading(false);
       })
       .catch(() => {
-        setMembers([]);
+        // Fallback pri chybe siete
+        const staticMembers: Member[] = MEMBERS.map((m, i) => ({
+          id: `static-${i}`,
+          name: m.name,
+          role: m.role,
+          roleEn: m.roleEn,
+          bio: m.bio,
+          initials: m.initials,
+          since: m.since,
+          photo: m.photo,
+          order: i,
+        }));
+        setMembers(staticMembers);
         setLoading(false);
       });
   }, []);
