@@ -89,6 +89,7 @@ async function main() {
       url: `/gallery/concert/concert-${String(i + 1).padStart(2, "0")}.jpg`,
       thumbnailUrl: `/gallery/concert/concert-${String(i + 1).padStart(2, "0")}-thumb.jpg`,
       category: "concert",
+      fileType: "image",
       caption: "Energické vystúpenie na koncertnom pódiu",
       credits: "Foto: archív D.O.R.A.",
       featured: i === 0,
@@ -98,6 +99,7 @@ async function main() {
       url: `/gallery/portrait/portrait-${String(i + 1).padStart(2, "0")}.jpg`,
       thumbnailUrl: `/gallery/portrait/portrait-${String(i + 1).padStart(2, "0")}-thumb.jpg`,
       category: "portrait",
+      fileType: "image",
       caption: "Portrét / zákulisie",
       credits: "Foto: archív D.O.R.A.",
     }));

@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
-    "vercel-build": "prisma generate && prisma db push && (bun run seed || true) && next build",
+    "vercel-build": "prisma generate && (prisma db push || prisma db push --accept-data-loss) && (bun run seed || true) && next build",
     "db:push": "prisma db push",
     "db:push:dev": "prisma db push --schema=prisma/schema.sqlite.prisma",
     "db:push:pg": "prisma db push",
