@@ -102,16 +102,19 @@ export function MembersTab() {
   const handleSeed = async () => {
     setSeeding(true);
     try {
-      const res = await fetch("/api/admin/seed", { method: "POST" });
+      const res = await fetch("/api/admin/db-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
       const d = await res.json();
       if (d.ok) {
-        toast.success("Seed dokončený", { description: d.results?.join(", ") });
+        toast.success("Databáza synchronizovaná", { description: d.results?.join(" · ") });
         void load();
       } else {
-        toast.error(d.error || "Seed zlyhal");
+        toast.error(d.error || "Synchronizácia zlyhala");
       }
     } catch {
-      toast.error("Seed zlyhal");
+      toast.error("Synchronizácia zlyhala");
     } finally {
       setSeeding(false);
     }
