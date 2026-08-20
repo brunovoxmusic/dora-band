@@ -3638,3 +3638,132 @@ Stage Summary:
 - Commit: b2fe02e perf(homepage): paralelné DB dotazy + podmienený session check
 - Push: origin/main ✓
 - Vercel auto-deploy: hotovo ✓
+
+---
+Task ID: 55 (HERO Slideshow — Crossfade + Ken Burns fix)
+Agent: Main (Z.ai Code)
+Task: Kompletná analýza a oprava HERO sekcie slideshow — crossfade a Ken Burns animácie.
+
+ANALÝZA PÔVODNÉHO STAVU:
+
+1. src/components/site/hero-slideshow.tsx — komplexná implementácia s:
+   - 4 slides v DB (Koncertný záchyt 1-4)
+   - SlideElement podkomponent so stable key + ref-based reflow restart
+   - Interval 7s, crossfade 2000ms
+   - IntersectionObserver pre inView detection
+   - prevActive tracking pre z-index overlap
+
+2. src/app/globals.css — Ken Burns @keyframes:
+   - kenBurns: scale(1) translate(0,0) → scale(1.5) translate(-6%, -5%)
+   - kenBurnsAlt: scale(1) → scale(1.5) translate(6%, 5%)
+   - .hero-slide-active: opacity + z-index
+   - prefers-reduced-motion media query
+
+IDENTIFIKOVANÉ CHYBY (11):
+
+1. KRITICKÉ: Ken Burns aplikovaný na WRAPPER (.hero-slide), nie na <img>
+   - Scale 1.5 + translate(-6%, -5%) na wrapperi posúval celým panelom
+   - Viditeľné okraje a 'skoky' panelu pri crossfade
+   - Wrapper mal inset:0 + position:absolute → translate ho posunul mimo viewport
+
+2. KRITICKÉ: @keyframes mali translate(±6%, ±5%) pri scale 1.0 → 1.5
+   - Pri scale 1.0 sa obrázok už posunul mimo viewport (6% z 1920px = 115px)
+   - Wrapper mal overflow:hidden ale translate na wrappere to nevyriešilo
+
+3. will-change konflikt
+   - .hero-slide mal will-change: opacity
+   - JS nastavoval will-change: transform na rovnaký element
+   - Prehliadač mohol ignorovať GPU optimalizáciu
+
+4. Žiadny preloader pre ďalšie slajdy
+   - Keď sa slide zmenil na nový, obrázok ešte nebol načítaný
+   - Biely blesk počas crossfade
+
+5. Žiadne backface-visibility pre Safari
+   - Safari má problém s opacity transition + transform na rovnakom elemente
+   - Flicker na iOS/macOS Safari
+
+6. Žiadne GPU layer promotion (translateZ(0))
+   - Chrome/Firefox mohli paintovať na main thread
+   - Nie plynulé na low-end zariadeniach
+
+7. Interval bežal aj keď bol tab neaktívny
+   - Zbytočné CPU/batéria keď užívateľ prepne tab
+   - Po návrate mohol byť slide už 2-3 ďalej
+
+8. Crossfade 2000ms bol pomalý
+   - 'Blednutie' trvalo príliš dlho, vizuálne nepríjemné
+
+9. offsetWidth pre reflow (nespoľahlivý v Safari/Firefox)
+   - Mohol byť cachovaný, reflow sa nevykonal
+   - Ken Burns sa reštartol na 0% alebo vôbec
+
+10. Žiadny prefers-reduced-motion fallback pre Ken Burns
+    - Vypínal animáciu ale scale zostal 1.0
+    - Čierny okraj ak obrázok nevyplnil viewport
+
+11. Animation easing 'linear' nebol vizuálne najlepší
+    - Konštantný zoom rate — front-loaded jump v prvej sekunde
+
+WORK LOG:
+
+A. globals.css — komplet prepísaná Hero Slideshow sekcia:
+   - .hero-slide-image: will-change: transform + backface-visibility + translateZ(0)
+   - .hero-slide: will-change: opacity + backface-visibility (Safari anti-flicker)
+   - 4 nové @keyframes: kenBurns1, kenBurns2, kenBurns3, kenBurns4
+     * scale 1.05-1.08 → 1.18-1.2 (miernejšie zoom)
+     * translate ±3% (bez okrajov)
+     * translate3d pre GPU compositing
+   - prefers-reduced-motion: 3 CSS rules (transform: scale(1.05), animation: none)
+   - Crossfade: 1600ms cubic-bezier(0.4, 0, 0.2, 1)
+   - -webkit-backdrop-filter pre Safari
+   - .hero-slide-loading class (prebudúci preloader state)
+
+B. hero-slideshow.tsx — komplet prepísaný:
+   - KEN_BURNS_VARIANTS = ['kenBurns1','kenBurns2','kenBurns3','kenBurns4']
+   - animName = KEN_BURNS_VARIANTS[index % 4] — striedanie podľa indexu
+   - getBoundingClientRect() namiesto offsetWidth (spoľahlivejší reflow)
+   - cubic-bezier(0.25, 0.1, 0.25, 1) ease-out namiesto linear
+   - Visibility API: pause interval keď document.hidden
+   - Preloader: useEffect s new Image() pre nasledujúci slide
+   - ref na <img> (next/image podporuje forwardRef)
+
+C. Hard reštart dev servera + .next zmazaný kvôli Turbopack cache
+
+VERIFIKÁCIA (agent-browser):
+
+1. SSR: 4 slides rendered s class 'hero-slide' a 'hero-slide-image' ✓
+2. Keyframes načítané: kenBurns1, kenBurns2, kenBurns3, kenBurns4 ✓
+3. Active slide má inline animáciu: 'kenBurns1 7000ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards' ✓
+4. Ken Burns beží (matrix transform sa mení cez čas):
+   - T=0s: scale 1.176, translate +66px
+   - T=2.5s: scale 1.103, translate +25px
+   - T=6s: scale 1.190, translate -38px
+5. Crossfade funguje:
+   - Pred zmenou: index 0 = active (opacity 1, z-index 1)
+   - Počas crossfade (0.5s): index 2 = prev (opacity 0.81, z-index 2),
+     index 3 = active (opacity 0.19, z-index 1)
+6. Ken Burns reštartne po zmene slide (kenBurns1 → kenBurns4) ✓
+7. 4 indikátory + counter '01/04' ✓
+8. prefers-reduced-motion media query (3 rules) ✓
+9. Visibility API pause pri tab hidden ✓
+
+PRODUCTION VERIFIKÁCIA:
+
+Push: a828c04 → 2e5e5fd main -> main
+Vercel auto-deploy: dokončený (x-vercel-id: tjvkn-...)
+Production CSS bundle: _next/static/chunks/5d4aae7131548630.css
+- Obsahuje @keyframes kenBurns1, kenBurns2, kenBurns3, kenBurns4 ✓
+- Staré kenBurns/kenBurnsAlt úplne odstránené ✓
+
+Stage Summary:
+- 11 chýb opravených
+- 2 súbory prepísané (globals.css, hero-slideshow.tsx)
+- 4 nové Ken Burns variácie (miernejší zoom + menší pan)
+- Crossfade 2000ms → 1600ms (plynulejší)
+- GPU optimalizácia: will-change + backface-visibility + translateZ(0)
+- Visibility API pause pre úsporu batérie
+- Preloader pre nasledujúci slide
+- prefers-reduced-motion: scale 1.05 fallback
+- Production: nové keyframes nasadené ✓
+- Lint: 0 errors ✓
