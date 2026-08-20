@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { EmptyState, ErrorState } from "@/components/admin/empty-state";
+import { EmptyState } from "@/components/admin/empty-state";
+import { MediaPickerDialog } from "@/components/admin/media-picker-dialog";
 import {
   Users, Plus, RefreshCw, Pencil, Trash2, ChevronUp, ChevronDown,
   MicVocal, Guitar, Drum, Music2, Save, AlertCircle,
+  ImageIcon, X, ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,10 +33,6 @@ type Member = {
   createdAt: string;
 };
 
-const ROLE_ICONS: Record<string, typeof MicVocal> = {
-  "Vokály": MicVocal, "Gitara": Guitar, "Bicie": Drum, "Basgitara": Music2,
-};
-
 function roleIcon(role: string) {
   const r = role.toLowerCase();
   if (r.includes("spev") || r.includes("vokál") || r.includes("rap")) return MicVocal;
@@ -44,14 +40,6 @@ function roleIcon(role: string) {
   if (r.includes("bas")) return Music2;
   return Guitar;
 }
-
-const PORTRAITS = [
-  "/gallery/portrait/portrait-01.jpg",
-  "/gallery/portrait/portrait-02.jpg",
-  "/gallery/portrait/portrait-03.jpg",
-  "/gallery/portrait/portrait-04.jpg",
-  "/gallery/portrait/portrait-05.jpg",
-];
 
 export function MembersTab() {
   const [items, setItems] = useState<Member[]>([]);
@@ -280,6 +268,7 @@ function MemberFormDialog({ open, onOpenChange, member, onSaved }: {
   const [photo, setPhoto] = useState("");
   const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     if (member) {
@@ -298,7 +287,11 @@ function MemberFormDialog({ open, onOpenChange, member, onSaved }: {
       const data = {
         name, role, roleEn: roleEn || undefined, bio: bio || undefined,
         initials: initials || name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-        since, photo: photo || undefined, active,
+        since,
+        // Photo musí byť vždy string (aj empty), aby PATCH API vedel rozlíšiť
+        // "zmazať photo" (prázdny string) od "neupravovať" (vynechané).
+        photo,
+        active,
       };
       const url = member ? `/api/admin/members/${member.id}` : "/api/admin/members";
       const method = member ? "PATCH" : "POST";
@@ -317,54 +310,135 @@ function MemberFormDialog({ open, onOpenChange, member, onSaved }: {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{member ? "Upraviť člena" : "Nový člen"}</DialogTitle>
-          <DialogDescription>{member ? `Upravuješ: ${member.name}` : "Pridaj nového člena kapely"}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-sm">Meno *</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label className="text-sm">Iniciály</Label><Input value={initials} onChange={e => setInitials(e.target.value)} placeholder="auto" maxLength={3} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-sm">Rola (SK)</Label><Input value={role} onChange={e => setRole(e.target.value)} placeholder="Gitara" /></div>
-            <div><Label className="text-sm">Rola (EN)</Label><Input value={roleEn} onChange={e => setRoleEn(e.target.value)} placeholder="Guitar" /></div>
-          </div>
-          <div><Label className="text-sm">V kapele od</Label><Input value={since} onChange={e => setSince(e.target.value)} placeholder="1996 alebo —" /></div>
-          <div><Label className="text-sm">Bio</Label><Textarea value={bio} onChange={e => setBio(e.target.value)} rows={4} /></div>
-          {/* Photo picker */}
-          <div>
-            <Label className="text-sm">Fotka</Label>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {PORTRAITS.map(p => (
-                <button key={p} onClick={() => setPhoto(p)}
-                  className={`h-16 w-12 overflow-hidden border-2 transition-all ${photo === p ? "border-neon-red" : "border-charcoal hover:border-neon-red/40"}`}>
-                  <img src={p} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
-              <button onClick={() => setPhoto("")}
-                className={`flex h-16 w-12 items-center justify-center border-2 text-xs text-muted-foreground transition-all ${photo === "" ? "border-neon-red bg-neon-red/10" : "border-charcoal hover:border-neon-red/40"}`}>
-                Žiadna
-              </button>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{member ? "Upraviť člena" : "Nový člen"}</DialogTitle>
+            <DialogDescription>{member ? `Upravuješ: ${member.name}` : "Pridaj nového člena kapely"}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-sm">Meno *</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+              <div><Label className="text-sm">Iniciály</Label><Input value={initials} onChange={e => setInitials(e.target.value)} placeholder="auto" maxLength={3} /></div>
             </div>
-            {photo && <Input value={photo} onChange={e => setPhoto(e.target.value)} className="mt-2 text-xs font-mono" />}
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-sm">Rola (SK)</Label><Input value={role} onChange={e => setRole(e.target.value)} placeholder="Gitara" /></div>
+              <div><Label className="text-sm">Rola (EN)</Label><Input value={roleEn} onChange={e => setRoleEn(e.target.value)} placeholder="Guitar" /></div>
+            </div>
+            <div><Label className="text-sm">V kapele od</Label><Input value={since} onChange={e => setSince(e.target.value)} placeholder="1996 alebo —" /></div>
+            <div><Label className="text-sm">Bio</Label><Textarea value={bio} onChange={e => setBio(e.target.value)} rows={4} /></div>
+
+            {/* === Photo picker — nový === */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Fotka člena</Label>
+                <span className="text-[10px] text-muted-foreground">
+                  {photo ? "Vybraná" : "Žiadna"}
+                </span>
+              </div>
+
+              {/* Current photo preview + actions */}
+              <div className="mt-2 flex items-start gap-3">
+                {/* Preview */}
+                <div className="relative h-32 w-24 shrink-0 overflow-hidden border-2 border-charcoal bg-gradient-to-br from-charcoal to-ink">
+                  {photo ? (
+                    <img src={photo} alt={name || "Náhľad"} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <span className="font-display text-3xl font-black text-neon-red/30">
+                        {initials || name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?"}
+                      </span>
+                    </div>
+                  )}
+                  {/* Remove button overlay */}
+                  {photo && (
+                    <button
+                      type="button"
+                      onClick={() => setPhoto("")}
+                      className="absolute top-1 right-1 inline-flex h-5 w-5 items-center justify-center bg-red-500/90 text-white hover:bg-red-600"
+                      title="Odstrániť fotku"
+                      aria-label="Odstrániť fotku"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Action buttons + URL */}
+                <div className="flex-1 space-y-2">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setPickerOpen(true)}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    {photo ? "Zmeniť fotku z galérie" : "Vybrať z galérie"}
+                  </Button>
+                  {photo && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setPhoto("")}
+                    >
+                      <X className="h-4 w-4" />
+                      Odstrániť fotku
+                    </Button>
+                  )}
+                  {/* Custom URL — pokročilé */}
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-off-white select-none">
+                      Vlastná URL (pokročilé)
+                    </summary>
+                    <Input
+                      value={photo}
+                      onChange={e => setPhoto(e.target.value)}
+                      placeholder="/gallery/portrait/..."
+                      className="mt-2 text-xs font-mono h-8"
+                    />
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      Pre externé URL začni <code>https://</code>
+                    </p>
+                  </details>
+                </div>
+              </div>
+
+              {/* Info text */}
+              <p className="mt-2 text-[11px] text-muted-foreground flex items-center gap-1">
+                <ExternalLink className="h-3 w-3" />
+                Výber z {`fotoportfólia — koncertné, portréty, PR materiály`}
+              </p>
+            </div>
+
+            {/* Active toggle */}
+            <div className="flex items-center gap-3">
+              <Switch checked={active} onCheckedChange={setActive} />
+              <Label className="text-sm cursor-pointer" onClick={() => setActive(!active)}>Aktívny (zobrazí sa na webe)</Label>
+            </div>
           </div>
-          {/* Active toggle */}
-          <div className="flex items-center gap-3">
-            <Switch checked={active} onCheckedChange={setActive} />
-            <Label className="text-sm cursor-pointer" onClick={() => setActive(!active)}>Aktívny (zobrazí sa na webe)</Label>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Zrušiť</Button>
-          <Button onClick={handleSave} disabled={saving || !name}>
-            {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {member ? "Uložiť zmeny" : "Pridať člena"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Zrušiť</Button>
+            <Button onClick={handleSave} disabled={saving || !name}>
+              {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {member ? "Uložiť zmeny" : "Pridať člena"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Media picker — otvorí sa nad editorom */}
+      <MediaPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        currentUrl={photo}
+        onSelect={(url) => setPhoto(url)}
+        title="Vybrať fotku člena"
+        description="Vyber fotku z celej galérie — koncertné zábery, portréty, PR materiály."
+      />
+    </>
   );
 }

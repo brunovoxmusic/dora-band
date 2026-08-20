@@ -3281,3 +3281,213 @@ FINAL PROJECT STATE:
 - Fázy dokončené: A (P0), B (P1), C (P2), D (P3) — KOMPLETNÉ
 - Commit history: 60+ commits
 
+
+---
+Task ID: 51 (FOUC Fix — Section Visibility)
+Agent: Main (Z.ai Code)
+Task: Analyzovať a fixnúť všetky miesta spôsobujúce FOUC (Flash of Unstyled Content) pri zobrazovaní a náhlom skrývaní objektov, ktoré sú v administrácii nastavené na "nezobrazovať" (najmä hlavné menu, footer linky ako "Ochrana osobných údajov", a návrat na hlavnú stránku).
+
+ANALÝZA — FOUC zdroje:
+
+Root cause: 4 komponenty (Navbar, Footer, HeroSection, StickyMusicPlayer)
+používali rovnaký anti-pattern:
+  1. useState(serverSections) ako initial state
+  2. useEffect: ak serverSections === null, fetch("/api/sections")
+  3. isVisible() vracia true pre všetko kým sections === null
+
+To znamenalo:
+- Na /privacy page (kde Navbar a Footer nedostali sections prop) sa najprv
+  zobrazili VŠETKY nav linky a partner linky, a po client-side fetch
+  zrazu zmizli tie skryté → FOUC.
+- StickyMusicPlayer v root layout.tsx bol bez sections prop:
+  - Initial render: null (skrytý) — OK
+  - Po fetch (ak music=true): naskočil náhle → FOUC
+  - Po fetch (ak music=false): zostal skrytý — OK
+
+WORK LOG:
+
+1. Vytvorený src/components/site/sections-provider.tsx ("use client"):
+   - SectionsContext — React Context pre section visibility map
+   - SectionsProvider — obaluje strom komponentov
+   - useSections() hook — číta hodnotu z kontextu
+   - isSectionVisible() helper
+
+2. src/lib/settings.ts — React cache() deduplikácia:
+   - getAllSettingsStructured zabalí cache(_getAllSettingsStructured)
+   - layout.tsx + page.tsx volajú tú istú funkciu → DB query len raz
+   - Eliminuje duplicitný SiteContent SELECT
+
+3. src/app/layout.tsx — async server-side fetch:
+   - RootLayout je teraz async function
+   - Skúsi getAllSettingsStructured() v try/catch (fallback = null)
+   - SectionsProvider wrapuje celý body obsah vrátane MusicPlayerProvider
+   - StickyMusicPlayer má prístup ku kontextu cez useSections()
+
+4. src/components/site/navbar.tsx — refaktor:
+   - Odstránený useState<Sections>(serverSections)
+   - Odstránený useEffect fetch("/api/sections")
+   - Pridané: const ctxSections = useSections()
+   - sections = serverSections ?? ctxSections (prop má prioritu)
+   - isVisible() funguje rovnako — ale s SSR-resolved value
+
+5. src/components/site/footer.tsx — refaktor:
+   - Odstránený useState + useEffect (fetch)
+   - Odstránené importy useState, useEffect
+   - Pridané: useSections() hook
+   - partnerLinks filter funguje SSR-friendly
+
+6. src/components/sections/hero-section.tsx — refaktor:
+   - Odstránený useState + useEffect (fetch)
+   - Pridané: useSections() hook
+   - showBooking / showPress podmienené CTA teraz SSR-resolved
+
+7. src/components/site/sticky-music-player.tsx — refaktor:
+   - Odstránený useState<null|boolean>(musicSectionVisible)
+   - Odstránený useEffect fetch("/api/sections") s cancelled flagom
+   - musicSectionVisible je teraz derived value:
+       sections ? sections.music !== false : true
+   - if (!musicSectionVisible) return null — funguje SSR (žiadny null-state)
+
+VERIFIKÁCIA (agent-browser + admin API + curl):
+
+Test setup:
+  - Admin login (admin@dora.band / D0ra2026!Secure) → session cookie
+  - PUT /api/admin/settings: skryté faq, press, music sekcie
+  - GET /api/sections vrátil: music=false, faq=false, press=false
+
+Test 1 — /privacy page (predtým hlavný FOUC zdroj):
+  - agent-browser open "http://localhost:3000/privacy" --reload
+  - Navbar links: ["O kapele", "Členovia", "Fotoportfólio", "Diskografia", "Kontakt"]
+    → ŽIADNE "Hudba" ✓, ŽIADNE "FAQ" ✓ (oba skryté už od SSR)
+  - Footer partner links: ["Diskografia & žánre", "Fotoportfólio", "Merch & Obchod", "Blog & Novinky"]
+    → ŽIADNE "PR materiály" ✓ (press skrytý)
+  - StickyMusicPlayer present? "NO" ✓ (music skrytý — vôbec sa nevykreslí)
+
+Test 2 — Návrat na homepage cez "← Späť na hlavnú stránku":
+  - agent-browser click "a[href='/']"
+  - Navbar nezobrazil Hudba ani FAQ (server-side podmienené)
+  - Bez blikania — všetky sekcie už SSR-resolved
+
+Test 3 — Re-enable všetkých sekcií (default state):
+  - PUT /api/admin/settings: music=true, faq=true, press=true
+  - agent-browser open "http://localhost:3000/" --reload
+  - Navbar links: ["O kapele", "Členovia", "Hudba", "Fotoportfólio", "Diskografia", "FAQ", "Kontakt"]
+  - Všetkých 7 linkov prítomných ✓
+
+Test 4 — Server-rendered HTML overenie:
+  - curl -s http://localhost:3000/ | grep -oE '<a[^>]*href="#(hudba|faq|o-kapele|kontakt)"'
+  - HTML obsahuje všetky 4 linky server-side (žiadny hydration mismatch)
+
+VERIFIED: FOUC úplne odstránený — section-dependent objekty sa už vôbec
+nevykreslia ak sú skryté (ani na krátko), už pri prvom SSR rendri.
+
+Stage Summary:
+- 4 komponenty refaktorované (Navbar, Footer, HeroSection, StickyMusicPlayer)
+- 0 client-side fetch("/api/sections") volania (grep overuje)
+- 1 React Context Provider (SectionsProvider)
+- React cache() deduplikuje getAllSettingsStructured() medzi layout + page
+- Lint: 0 errors ✓
+- /privacy 200 ✓, / 200 ✓
+- StickyMusicPlayer rešpektuje sections.music=false bez blikania
+
+---
+Task ID: 52 (Members admin — Photo Picker z galérie)
+Agent: Main (Z.ai Code)
+Task: V administrácii "Členovia kapely" pridať možnosť editovať profil a meniť fotku výberom z celej galérie fotoportfólia (nielen fixných 5 portrétov).
+
+ANALÝZA PÔVODNÉHO STAVU:
+
+MembersTab (src/components/admin/members-tab.tsx):
+- MemberFormDialog mal photo picker obmedzený na fixné pole 5 portrétov:
+    const PORTRAITS = [
+      "/gallery/portrait/portrait-01.jpg", ..., "/gallery/portrait/portrait-05.jpg"
+    ];
+- Admin mohol kliknúť len na jeden z 5 náhľadov alebo zadať URL manuálne
+- NEEXISTOVALA možnosť vybrať fotku z koncertných fotiek, PR materiálov, alebo
+  akýchkoľvek iných obrázkov v galérii
+
+API stav:
+- /api/admin/media GET už existoval — vrátil 200 items s filter (fileType, category)
+- /api/admin/members/[id] PATCH už podporoval photo field
+- BandMember.photo je String? v schema — null = žiadna fotka
+
+WORK LOG:
+
+1. Vytvorený NOVÝ komponent src/components/admin/media-picker-dialog.tsx:
+   - Reusable modal pre výber média z celej galérie
+   - Fetchuje /api/admin/media?fileType=image (iba obrázky)
+   - Grid 2-5 stĺpcov responsive s náhľadmi (thumbnailUrl alebo url fallback)
+   - Filter podľa kategórie: Všetky / Koncertné / Portréty / PR / Logo / Stage plany / Dokumenty / Iné
+   - Vyhľadávanie v title, altText, caption
+   - Sort: featured prvé, potom order, potom createdAt
+   - Hover overlay s title + kategóriou badge
+   - Selected state: červený border + check ikona
+   - Featured badge (žltá hviezda)
+   - "Odstrániť fotku" button v footeri (ak je currentUrl)
+   - "Zrušiť" button
+   - Current URL zobrazená v footeri s náhľadom
+   - Loading skeleton state + empty/error states
+
+2. Refaktorovaný MemberFormDialog v members-tab.tsx:
+   - Odstránené fixné PORTRAITS pole
+   - Nahradené imports: ScrollArea, Select, ROLE_ICONS (unused), cn, ErrorState (unused)
+   - Pridané imports: MediaPickerDialog, ImageIcon, X, ExternalLink
+   - Nová photo picker sekcia v editore:
+     - Väčší preview (h-32 w-24) s aktuálnou photo alebo initials placeholder
+     - "X" overlay na odstránenie priamo z preview
+     - "Zmeniť fotku z galérie" button (primárna akcia)
+     - "Odstrániť fotku" button (sekundárna, ak photo existuje)
+     - "Vlastná URL (pokročilé)" <details> s inputom pre manuálne zadanie URL
+     - Info text: "Výber z fotoportfólia — koncertné, portréty, PR materiály"
+
+3. BUG FIX v handleSave (members-tab.tsx):
+   - PÔVODNÉ: photo: photo || undefined — ak bola photo "", poslalo sa undefined
+   - API PATCH: if (typeof b.photo === "string") — vynechalo undefined, photo sa NEzmazal
+   - NOVÉ: photo (vždy ako string, aj empty)
+   - PATCH API: b.photo === "" → data.photo = null (správne zmazanie)
+   - Overené: priame API test PATCH {"photo":""} → photo: null ✓
+
+4. Database Prisma fix:
+   - Po server reštarte Prisma Client použil postgres schema (default) aj keď DB je SQLite
+   - Spustený bun run db:generate:dev (--schema=prisma/schema.sqlite.prisma)
+   - Generovaný klient s provider="sqlite"
+   - Server reštartovaný — DB query fungujú
+
+VERIFIKÁCIA (agent-browser + API + DB):
+
+Test 1 — Editor otvorí photo picker:
+  - Login ako admin → /admin → Členovia kapely → Upraviť (Majo Agafon)
+  - Editor otvorí s current photo = /gallery/portrait/portrait-01.jpg ✓
+  - Klik "Zmeniť fotku z galérie" → MediaPickerDialog sa otvorí ✓
+  - Picker zobrazí 21 položiek: "Všetky (21)" + "Koncertné (16)" + "Portréty (5)" ✓
+
+Test 2 — Filter podľa kategórie:
+  - Klik "Portréty (5)" → 5 položiek zobrazených ✓
+  - Klik "Všetky (21)" → 21 položiek ✓
+  - Vyhľadávanie "záchyt 3" → 1 položka (Portrétny záchyt 3) ✓
+
+Test 3 — Výber fotky z galérie:
+  - Klik na "Koncertný záchyt 3" → picker sa zatvorí, editor zobrazí novú URL ✓
+  - Editor input: photo = /gallery/concert/concert-03.jpg ✓
+  - Klik "Uložiť zmeny" → PATCH 200 ✓
+  - DB: Majo Agafon photo = /gallery/concert/concert-03.jpg ✓
+  - Verejná stránka: img alt="Majo Agafon — Vokály / Rap" src=".../concert/concert-03.jpg" ✓
+
+Test 4 — Odstránenie fotky (s bug fixom):
+  - Klik "Odstrániť fotku" v editore → photo = "" ✓
+  - Klik "Uložiť zmeny" → PATCH 200 ✓
+  - DB: Majo Agafon photo = null ✓ (pred fixom zostala stará hodnota)
+  - Member card v zozname zobrazí initials placeholder "MA" ✓
+
+Test 5 — Pôvodný stav obnovený:
+  - PATCH photo=/gallery/portrait/portrait-01.jpg → 200 ✓
+  - DB: všetci 4 členovia majú pôvodné portraits ✓
+
+Stage Summary:
+- 1 nový reusable komponent: MediaPickerDialog (galéria grid 21+ obrázkov)
+- 1 refaktor: MemberFormDialog (odstránené PORTRAITS, pridaný picker)
+- 1 bug fix: photo persistencia pri empty string
+- 1 DB fix: prisma generate s SQLite schema
+- Lint: 0 errors ✓
+- End-to-end test cez agent-browser: všetky 5 testy prešli ✓
+- Photo picker podporuje: 16 koncertných + 5 portréty + 0 PR/Logo/Stage/Dokument (galéria ich zatiaľ neobsahuje, ale UI je pripravené)
