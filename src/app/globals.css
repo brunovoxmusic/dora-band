@@ -374,19 +374,36 @@
 }
 
 /* ===== Hero Slideshow — ALL styles global (no CSS Module, no hashing) =====
-   Crossfade: 2000ms cubic-bezier (clearly visible transition)
-   Ken Burns: 7000ms ease-out — runs for the FULL slide interval so it
-              NEVER freezes. Zoom 1.0 → 1.5 with clear pan = STRONGLY
-              visible motion throughout the entire slide display.
-   Animation restart is handled in JS (hero-slideshow.tsx SlideElement)
-   via ref + forced reflow — NOT via React key remount (which would break
-   the opacity crossfade).
-   IMPORTANT: `.hero-slide` has NO `transform` declaration so the Ken Burns
-   animation (set on `.hero-slide-zoom`) is the ONLY source of transform.
-   This prevents a "snap back to scale(1)" jump when a slide transitions
-   from active → prev (the prev slide keeps its zoom end-state during the
-   crossfade fade-out, no jarring jump).
-*/
+ *
+ * ARCHITECTURE (FIXED — Task 55):
+ * - Wrapper (.hero-slideshow-wrapper): len kontajner, žiadne transformácie.
+ * - Slide (.hero-slide): opacity + z-index layer (crossfade). Overflow hidden
+ *   aby translate vo vnútri nevykukol mimo viewport.
+ * - Image (.hero-slide-image): Ken Burns transformácie (scale + translate).
+ *   Transformácia na <img> (nie na wrappere) zabezpečuje že sa neposúva celý
+ *   panel — scale 1.5 s overflow:hidden = odoberie okraje, nie pridá.
+ *
+ * Ken Burns:
+ * - 4 rôzne variácie (kenBurns1..4) pre pestrosť — nie len zrkadlené 2.
+ * - ease-out (cubic-bezier(0.25, 0.1, 0.25, 1)) — plynulý spomalený zoom.
+ * - Duration 7s = SLIDE_INTERVAL_MS — zoom beží celú dobu, žiadny freeze.
+ * - translate hodnoty ±4% (mierne) — bez viditeľných okrajov aj pri scale 1.05.
+ *
+ * Crossfade:
+ * - 1600ms cubic-bezier(0.4, 0, 0.2, 1) — plynulé prelínanie bez blesku.
+ * - Z-index overlap: prev slide má z-index 2, aktívny 1, ostatné 0.
+ * - Prev si zachováva Ken Burns end-state vďaka `forwards` fill mode.
+ *
+ * GPU optimalizácia:
+ * - will-change: opacity na slajdoch, transform na obrázkoch.
+ * - backface-visibility: hidden pre anti-flicker v Safari.
+ * - transform: translateZ(0) pre GPU layer promotion.
+ *
+ * Prefers-reduced-motion:
+ * - Vypne Ken Burns aj crossfade (200ms lineár).
+ * - Statický scale 1.05 aby obrázok stále vyplnil viewport.
+ */
+
 .hero-slideshow-wrapper {
   position: absolute;
   inset: 0;
@@ -395,17 +412,17 @@
   z-index: 0;
 }
 
+/* Slajd — len opacity + z-index layer. ŽIADNE transformácie tu. */
 .hero-slide {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 2000ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 1600ms cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   will-change: opacity;
-  /* NO transform here — Ken Burns animation is the sole source of transform.
-     Without this, `transform: scale(1)` would override the animation's
-     end-state when the slide loses .hero-slide-zoom class, causing a
-     visible "snap back" jump during crossfade. */
+  /* GPU layer pre plynulejší opacity transition */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .hero-slide-active {
@@ -413,70 +430,79 @@
   z-index: 1;
 }
 
-/* Previous slide keeps fading out (1→0) on top of the new active one
-   for a true crossfade. z-index higher so it covers briefly during the
-   overlap window, then reveals the new slide beneath. */
+/* Previous slide — vyšší z-index pre overlap obdolie crossfade */
 .hero-slide-prev {
   z-index: 2;
   pointer-events: none;
 }
 
-/* Ken Burns zoom — applied to the WRAPPER (.hero-slide), not the img.
-   Animation is set EXCLUSIVELY via INLINE STYLE in SlideElement
-   (hero-slideshow.tsx) when isActive becomes true. NO CSS animation here
-   to avoid double-animation conflicts (CSS would fire on class add,
-   then JS would restart it → visual jank).
-   `.hero-slide-active` here ONLY sets opacity + z-index.
-   `.hero-slide-prev` does NOT get animation — it keeps the inline animation
-   from its active phase (with `forwards` fill mode, so scale stays at 1.5
-   during the crossfade fade-out, no snap-back jump).
-   Ken Burns 7s = SLIDE_INTERVAL_MS, so zoom runs for the ENTIRE slide
-   display (no freeze period at end). Crossfade starts at 7s when slide
-   changes; prev slide keeps scale 1.5 via forwards fill. */
-.hero-slide-active {
-  opacity: 1;
-  z-index: 1;
-}
-
-/* .hero-slide-prev intentionally has NO animation declaration.
-   The prev slide keeps its inline animation (set during active phase)
-   which holds the end state (scale 1.5) thanks to `forwards` fill mode. */
-
+/* Ken Burns aplikovaný na <img> (nie na wrapper) — scale 1.5 s overflow:hidden
+   na rodičovi zabezpečuje orezanie bez posunu celého panelu. */
 .hero-slide-image {
   object-fit: cover;
   object-position: center center;
   /* Disable next/image default fade-in — we handle opacity via wrapper */
   opacity: 1 !important;
   transition: none !important;
-  transform: none !important;
+  /* GPU layer promotion — transform beží na vlastnom compositor layer */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Promote to own layer (Safari, older Chrome) */
+  transform: translateZ(0);
 }
 
-@keyframes kenBurns {
+/* Ken Burns keyframes — 4 variácie pre vizuálnu pestrosť.
+   Každá začína na scale(1.05) (mierne zväčšené aby pri translate nebol okraj)
+   a končí na scale(1.18) alebo 1.2 s miernym pan. */
+
+@keyframes kenBurns1 {
   0% {
-    transform: scale(1) translate(0%, 0%);
+    transform: scale(1.05) translate3d(0%, 0%, 0);
   }
   100% {
-    /* scale up 50% + clear pan to upper-left for dynamic feel */
-    transform: scale(1.5) translate(-6%, -5%);
+    transform: scale(1.2) translate3d(-3%, -2%, 0);
   }
 }
 
-@keyframes kenBurnsAlt {
+@keyframes kenBurns2 {
   0% {
-    transform: scale(1) translate(0%, 0%);
+    transform: scale(1.05) translate3d(0%, 0%, 0);
   }
   100% {
-    /* scale up 50% + pan to lower-right */
-    transform: scale(1.5) translate(6%, 5%);
+    transform: scale(1.18) translate3d(3%, 2%, 0);
   }
 }
 
+@keyframes kenBurns3 {
+  0% {
+    transform: scale(1.08) translate3d(2%, -1%, 0);
+  }
+  100% {
+    transform: scale(1.2) translate3d(-2%, 2%, 0);
+  }
+}
+
+@keyframes kenBurns4 {
+  0% {
+    transform: scale(1.06) translate3d(-1%, 2%, 0);
+  }
+  100% {
+    transform: scale(1.18) translate3d(2%, -2%, 0);
+  }
+}
+
+/* Prefers-reduced-motion: vypni Ken Burns, skráť crossfade.
+   Statický mierne zväčšený scale aby obrázok vyplnil viewport. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide-active {
-    animation: none !important;
-  }
   .hero-slide {
-    transition: opacity 400ms linear !important;
+    transition: opacity 300ms linear !important;
+    will-change: auto;
+  }
+  .hero-slide-image {
+    transform: scale(1.05) !important;
+    will-change: auto;
+    animation: none !important;
   }
 }
 
@@ -493,6 +519,7 @@
   z-index: 30;
   padding: 8px 12px;
   background: rgba(10, 10, 10, 0.6);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(192, 192, 192, 0.15);
   border-radius: 999px;
@@ -534,6 +561,7 @@
   letter-spacing: 0.15em;
   color: rgba(192, 192, 192, 0.7);
   background: rgba(10, 10, 10, 0.6);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   padding: 6px 12px;
   border: 1px solid rgba(192, 192, 192, 0.15);
@@ -569,6 +597,20 @@
 
 .hero-slide-counter.hero-slide-hidden {
   transform: translateY(20px) !important;
+}
+
+/* Loading state pre obrázok ktorý sa ešte nenačítal */
+.hero-slide-loading {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-slide-loading-visible {
+  opacity: 1;
 }
 
 @media (max-width: 640px) {

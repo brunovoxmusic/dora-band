@@ -18,28 +18,45 @@ type Props = {
 /**
  * Hero background slideshow — production-safe & visibly animated.
  *
- * ARCHITECTURE
- * ------------
- * Each slide is rendered by a <SlideElement> subcomponent with:
- *   - STABLE `key={slide.id}` (never remounts → opacity transitions work = crossfade)
- *   - A `ref` to the DOM div
- *   - A `useEffect` that RESTARTS the Ken Burns animation when `isActive` flips
- *     to true, by toggling `style.animation = 'none'` → forced reflow → restore.
+ * ARCHITECTURE (Task 55 — kompletne prepísané):
  *
- * This is the ONLY correct way to get BOTH:
- *   1. Smooth opacity crossfade (requires stable DOM elements)
- *   2. Ken Burns zoom that replays each time a slide becomes active
- *      (requires animation restart)
+ * Vrstvy:
+ *  1. .hero-slideshow-wrapper — kontajner, žiadne transformácie
+ *  2. .hero-slide — opacity + z-index layer (crossfade). Overflow hidden
+ *     aby translate vo vnútri nevykukol mimo viewport.
+ *  3. .hero-slide-image (<img>) — Ken Burns transformácie. Animácia na
+ *     obrázku (nie na wrappere) zabezpečuje že sa neposúva celý panel.
  *
- * The previous implementation used `key={slide.id-active/idle}` which REMOUNTS
- * the div on every active change → opacity jumps instantly (no transition) →
- * NO crossfade visible. Fixed by splitting into a subcomponent.
+ * Ken Burns:
+ *  - 4 rôzne variácie (kenBurns1..4) — striedajú sa podľa indexu slajdu
+ *  - ease-out (cubic-bezier(0.25, 0.1, 0.25, 1)) — plynulý spomalený zoom
+ *  - Duration 7s = SLIDE_INTERVAL_MS — zoom beží celú dobu, žiadny freeze
+ *  - translate ±4% (mierne) — bez viditeľných okrajov aj pri scale 1.05
+ *  - Začínajú na scale 1.05+ (mierne zväčšené) aby pri translate nebol okraj
  *
- * CSS lives in globals.css as PLAIN global classes (no CSS Module hashing).
+ * Crossfade:
+ *  - 1600ms cubic-bezier(0.4, 0, 0.2, 1)
+ *  - Z-index overlap: prev=2, active=1, ostatné=0
+ *  - Prev si zachováva Ken Burns end-state vďaka `forwards` fill mode
+ *
+ * Preloader:
+ *  - next/image priority={true} pre prvý slide
+ *  - Pre ostatné slides beží skrytý <link rel="preload"> cez useEffect
+ *    ktorý prednačíta ďalší obrázok v poradí pred tým ako sa zmení slide
+ *
+ * Browser optimizations:
+ *  - will-change: opacity (.hero-slide) + transform (.hero-slide-image)
+ *  - backface-visibility: hidden (Safari anti-flicker)
+ *  - translate3d pre GPU compositing (Chrome/Firefox)
+ *  - prefers-reduced-motion: vypne Ken Burns, skráti crossfade na 300ms
+ *  - Visibility API: pause interval keď je tab neaktívny (úspora batérie)
  */
 
 const SLIDE_INTERVAL_MS = 7000;
-const CROSSFADE_MS = 2000;
+const CROSSFADE_MS = 1600;
+
+// 4 Ken Burns variácie — striedajú sa podľa indexu
+const KEN_BURNS_VARIANTS = ["kenBurns1", "kenBurns2", "kenBurns3", "kenBurns4"] as const;
 
 export function HeroSlideshow({ slides, staticFallback }: Props) {
   const images = useMemo<Slide[]>(() => {
@@ -55,6 +72,7 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
   const [active, setActive] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [inView, setInView] = useState(true);
+  const [tabVisible, setTabVisible] = useState(true);
   // safeActive guards against slides array shrinking between SSR and hydration.
   const safeActive = active >= images.length ? 0 : active;
   // Track the previously-active slide so it can fade out gracefully on top
@@ -66,7 +84,7 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
     Promise.resolve().then(() => setMounted(true));
   }, []);
 
-  // Hide fixed indicators/counter once the user scrolls past the hero.
+  // IntersectionObserver — hide fixed indicators/counter once the user scrolls past hero.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const wrapper = document.querySelector(".hero-slideshow-wrapper");
@@ -81,9 +99,30 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
     return () => io.disconnect();
   }, []);
 
-  // Slide cycling interval.
+  // Visibility API — pause interval keď je tab neaktívny (úspora batery + CPU)
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  // Preload nasledujúceho obrázka asynchrónne aby crossfade neskákal na bielu
   useEffect(() => {
     if (images.length <= 1) return;
+    const nextIdx = (safeActive + 1) % images.length;
+    const nextUrl = images[nextIdx]?.url;
+    if (!nextUrl) return;
+    // next/image si cachuje obrázky podľa URL. Ak ho pred-načítame cez
+    // new Image(), browser ho stiahne do cache a next/image ho použije okamžite.
+    const img = new window.Image();
+    img.src = nextUrl;
+  }, [safeActive, images]);
+
+  // Slide cycling interval — pauznutý keď je tab hidden alebo mimo view
+  useEffect(() => {
+    if (images.length <= 1) return;
+    if (!tabVisible || !inView) return;
     const id = window.setInterval(() => {
       setActive((prev) => {
         const next = (prev + 1) % images.length;
@@ -92,7 +131,7 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
       });
     }, SLIDE_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [images.length]);
+  }, [images.length, tabVisible, inView]);
 
   // Clear `prevActive` after the crossfade finishes so the prev slide's
   // z-index boost doesn't linger on top of the active slide.
@@ -157,9 +196,9 @@ export function HeroSlideshow({ slides, staticFallback }: Props) {
 }
 
 // ---------------------------------------------------------------------------
-// SlideElement — one per slide. Stable key (from parent) ensures the DOM
-// div persists across active/inactive transitions so opacity crossfade works.
-// Ken Burns is restarted via ref + useEffect when isActive becomes true.
+// SlideElement — jeden na slide. Stable key (z parenta) zabezpečuje že DOM
+// div pretrvá cez active/inactive prechody, takže opacity crossfade funguje.
+// Ken Burns sa reštartne cez ref + useEffect keď isActive nabudze true.
 // ---------------------------------------------------------------------------
 
 type SlideElementProps = {
@@ -171,44 +210,37 @@ type SlideElementProps = {
 };
 
 function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElementProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Restart Ken Burns animation each time this slide becomes active.
-  // Critical: without this restart, the CSS animation only runs ONCE on mount
-  // and never replays when the slide cycles back to active (browser caches
-  // animation state on persistent DOM elements).
-  //
-  // Technique: set inline animation to 'none', force synchronous reflow via
-  // offsetWidth, then set the real animation inline (with per-index name).
-  // Inline style overrides the CSS class declaration, ensuring a fresh start.
+  // Technique: set inline animation to 'none', force reflow via getBoundingClientRect,
+  // then set the real animation inline (with per-index name).
+  // Inline style overrides CSS class, ensuring a fresh start.
   useEffect(() => {
-    const el = ref.current;
+    const el = imgRef.current;
     if (!el || !isActive) return;
-    const animName = index % 2 === 0 ? "kenBurns" : "kenBurnsAlt";
-    // Set transform-origin + will-change BEFORE animation restart so the
-    // browser is ready to composite the transform efficiently.
-    el.style.transformOrigin = "50% 50%";
-    el.style.willChange = "transform";
+
+    // 4 variácie Ken Burns — striedajú sa podľa indexu
+    const animName = KEN_BURNS_VARIANTS[index % KEN_BURNS_VARIANTS.length];
+
     // 1. Kill any running animation.
     el.style.animation = "none";
     // 2. Force synchronous reflow so browser registers the 'none' state.
-    void el.offsetWidth;
-    // 3. Set the full animation shorthand inline. This is the ONLY source
-    //    of Ken Burns animation (CSS class has no animation declaration).
-    //    LINEAR easing = constant zoom rate throughout (no front-loaded jump).
-    //    Duration 7s = SLIDE_INTERVAL_MS, so zoom runs for the ENTIRE slide
-    //    display (no freeze period at end). Scale 1.0 → 1.5 = 7.1% per second.
-    el.style.animation = `${animName} 7000ms linear forwards`;
+    //    getBoundingClientRect je spoľahlivejší ako offsetWidth v Safari/Firefox.
+    void el.getBoundingClientRect();
+    // 3. Set the full animation shorthand inline.
+    //    ease-out (cubic-bezier) pre plynulý spomalený zoom.
+    //    Duration 7s = SLIDE_INTERVAL_MS — zoom beží celú dobu.
+    //    forwards fill mode — po skončení zostane v end-state (scale 1.18-1.2).
+    el.style.animation = `${animName} 7000ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards`;
   }, [isActive, index]);
 
-  // When a slide becomes inactive (not active, not prev), clear the inline
-  // animation so the CSS class declaration takes over (which is 'none' for
-  // inactive slides — they should have no transform, just opacity 0).
+  // Keď slide prestane byť aktívny (a ani prev), vyčist inline animáciu
+  // aby sa vrátila na CSS default (translateZ(0) — GPU layer bez zoom).
   useEffect(() => {
-    const el = ref.current;
+    const el = imgRef.current;
     if (!el) return;
     if (!isActive && !isPrev) {
-      // Inactive slide: remove inline animation so it returns to base state.
       el.style.animation = "";
     }
   }, [isActive, isPrev]);
@@ -221,7 +253,6 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
 
   return (
     <div
-      ref={ref}
       className={classes}
       aria-hidden={!isActive}
       style={{
@@ -229,12 +260,15 @@ function SlideElement({ slide, index, isActive, isPrev, crossfadeMs }: SlideElem
       }}
     >
       <Image
+        ref={imgRef}
         src={slide.url}
         alt={slide.altText || slide.title || "D.O.R.A. naživo na koncertnom pódiu"}
         fill
         priority={index === 0}
         sizes="100vw"
         className="hero-slide-image"
+        // preload ďalších slides — next/image ich stiahne do cache
+        // (ak majú priority=false, stiahnu sa až keď sú vo viewporte)
       />
     </div>
   );
