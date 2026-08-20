@@ -5,6 +5,7 @@ import { ArrowDown, Download, Play, Calendar } from "lucide-react";
 import { BAND } from "@/lib/band-data";
 import { useCountUp } from "@/hooks/use-count-up";
 import { HeroSlideshow } from "@/components/site/hero-slideshow";
+import { useSections, type SectionsMap } from "@/components/site/sections-provider";
 
 type HeroContent = Record<string, string>;
 
@@ -22,20 +23,14 @@ export function HeroSection({
 }: {
   content?: HeroContent;
   heroSlides?: HeroSlide[];
-  sections?: Record<string, boolean> | null;
+  sections?: SectionsMap;
 }) {
   const c = content ?? {};
   const [scrollY, setScrollY] = useState(0);
-  const [sections, setSections] = useState<Record<string, boolean> | null>(serverSections);
-
-  // Fetch iba ak nemáme server data
-  useEffect(() => {
-    if (serverSections) return;
-    fetch("/api/sections")
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.sections) setSections(d.sections); })
-      .catch(() => {});
-  }, [serverSections]);
+  // Section visibility z React Contextu (server-side fetch v layout.tsx).
+  // Explicitný prop má prioritu (legacy). Žiadny client-side fetch → žiadny FOUC.
+  const ctxSections = useSections();
+  const sections = serverSections ?? ctxSections;
 
   const isSectionVisible = (id: string): boolean => {
     if (!sections) return true;

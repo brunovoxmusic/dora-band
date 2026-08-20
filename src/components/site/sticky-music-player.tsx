@@ -8,12 +8,13 @@ import {
 import { useMusicPlayer } from "@/lib/music-player-context";
 import { TRACKS } from "@/lib/band-data";
 import { cn } from "@/lib/utils";
+import { useSections, type SectionsMap } from "@/components/site/sections-provider";
 
 /**
  * StickyMusicPlayer — fixed bottom bar, viditeľný od načítania stránky.
  *
  * FUNKCIE:
- * - Zobrazí sa hneď po načítaní (default visible)
+ * - Zobrazí sa hneď po načítaní (ak je music sekcia viditeľná)
  * - Fixed na spodku viewportu, vždy prístupný počas scrollovania
  * - Zdieľa state s hlavnou MusicSection cez MusicPlayerContext
  * - Na desktope: plný bar s track info + controls + expandovateľný tracklist
@@ -21,39 +22,27 @@ import { cn } from "@/lib/utils";
  * - Auto-hide keď je užívateľ v hlavnej MusicSection (vyhneme sa duplikácii)
  *   — ale len ak je prehrávač prázdny (nehrá). Ak hrá, zostane viditeľný.
  * - Collapsible (užívateľ ho môže zroluovať nahor)
+ *
+ * SECTION VISIBILITY: Pochádza z React Contextu (server-side fetch v
+ * root layout.tsx). Žiadny client-side fetch → žiadny FOUC. Ak je music
+ * sekcia v administrácii skrytá, sticky player sa vôbec nevykreslí
+ * (už pri prvom SSR rendri).
  */
 
-export function StickyMusicPlayer({ sections: serverSections = null }: { sections?: Record<string, boolean> | null }) {
+export function StickyMusicPlayer({ sections: serverSections = null }: { sections?: SectionsMap }) {
   const { activeIdx, activeTrack, playing, select, togglePlay, next, prev } = useMusicPlayer();
   const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [inMusicSection, setInMusicSection] = useState(false);
-  const [musicSectionVisible, setMusicSectionVisible] = useState(
-    serverSections ? serverSections.music !== false : null // null = nevieme ešte, nerenderuj
-  );
-  const prevInMusicSection = useRef(false);
 
-  // Fetch iba ak nemáme server data
-  useEffect(() => {
-    if (serverSections) {
-      return; // už máme data zo servera
-    }
-    let cancelled = false;
-    fetch("/api/sections")
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (cancelled) return;
-        if (d?.sections) {
-          setMusicSectionVisible(d.sections.music !== false);
-        } else {
-          setMusicSectionVisible(true); // fallback: všetky viditeľné
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setMusicSectionVisible(true);
-      });
-    return () => { cancelled = true; };
-  }, [serverSections]);
+  // Section visibility z React Contextu. Explicitný prop má prioritu.
+  const ctxSections = useSections();
+  const sections = serverSections ?? ctxSections;
+  // Ak sections === null (chyba pri fetchovaní na serveri), default = viditeľný.
+  // Ak sections === objekt, respektujeme hodnotu pre "music".
+  const musicSectionVisible = sections ? sections.music !== false : true;
+
+  const prevInMusicSection = useRef(false);
 
   // Sledujeme, či je viditeľná hlavná MusicSection — ak áno a prehrávač
   // nehrá, skryjeme sticky player (vyhneme sa duplikácii).
@@ -117,13 +106,9 @@ export function StickyMusicPlayer({ sections: serverSections = null }: { section
     };
   }, [expanded]);
 
-  // Ak je music sekcia skrytá v admin, nerenderuj sticky player
-  // null = ešte nevieme (čakáme na fetch), nerenderuj aby sme zabránili blikaniu
-  if (musicSectionVisible === false || musicSectionVisible === null) {
-    if (musicSectionVisible === false) return null;
-    // null = prvý render pred fetchom — nerenderuj (zabráni blikaniu)
-    return null;
-  }
+  // Ak je music sekcia skrytá v admin, nerenderuj sticky player vôbec.
+  // SSR-friendly: hodnota je známa už pri prvom rendri (z kontextu).
+  if (!musicSectionVisible) return null;
 
   // Ak je collapsed a nie je v music section, stále ukáž mini-tlačidlo
   if (collapsed) {

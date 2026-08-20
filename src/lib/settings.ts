@@ -4,8 +4,13 @@
  *
  * All values are stored as strings in the SiteContent table (category=settings)
  * and parsed here into typed structures. Defaults live in lib/content.ts.
+ *
+ * NOTE: `cache()` z Reactu deduplikuje volania v rámci jedného requestu —
+ * layout.tsx aj page.tsx (oba server components) volajú tú istú funkciu,
+ * ale DB query sa vykoná iba raz.
  */
 
+import { cache } from "react";
 import { getContentMap, parseBool } from "./content";
 
 // ---------------------------------------------------------------------------
@@ -148,7 +153,7 @@ export type AllSettings = {
 };
 
 /** Load all settings in one DB query and return structured data. */
-export async function getAllSettingsStructured(): Promise<AllSettings> {
+const _getAllSettingsStructured = async (): Promise<AllSettings> => {
   const map = await getContentMap(SETTING_KEYS);
 
   const now = new Date();
@@ -205,7 +210,14 @@ export async function getAllSettingsStructured(): Promise<AllSettings> {
     },
     raw: map,
   };
-}
+};
+
+/**
+ * Cached verzia — React `cache()` deduplikuje volania v rámci jedného
+ * server-side requestu. layout.tsx, page.tsx, aj API routes tak zdieľajú
+ * jeden DB query.
+ */
+export const getAllSettingsStructured = cache(_getAllSettingsStructured);
 
 /** Quick check — should we render the maintenance screen? */
 export async function getMaintenanceMode(): Promise<MaintenanceState> {

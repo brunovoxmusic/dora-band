@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, ChevronRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/band-data";
 import { cn } from "@/lib/utils";
+import { useSections, type SectionsMap } from "@/components/site/sections-provider";
 
 /** Mapovanie NAV_LINKS href na SectionId pre visibility kontrolu */
 const NAV_LINK_SECTION_MAP: Record<string, string> = {
@@ -16,13 +17,14 @@ const NAV_LINK_SECTION_MAP: Record<string, string> = {
   "#kontakt": "contact",
 };
 
-type Sections = Record<string, boolean> | null;
-
-export function Navbar({ bannerOffset = 0, sections: serverSections = null }: { bannerOffset?: number; sections?: Sections }) {
+export function Navbar({ bannerOffset = 0, sections: serverSections = null }: { bannerOffset?: number; sections?: SectionsMap }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  // Použi serverSections ako initial state — zabraní blikaniu
-  const [sections, setSections] = useState<Sections>(serverSections);
+  // Section visibility pochádza z React Contextu (server-side fetch v
+  // root layout.tsx). Ak by bol explicitný prop (legacy), má prioritu.
+  // Žiadny client-side fetch → žiadny FOUC.
+  const ctxSections = useSections();
+  const sections = serverSections ?? ctxSections;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -30,17 +32,6 @@ export function Navbar({ bannerOffset = 0, sections: serverSections = null }: { 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  // Fetch section visibility iba ak nemáme server data (napr. na /privacy page)
-  useEffect(() => {
-    if (serverSections) return; // už máme data zo servera, nepotrebujeme fetch
-    fetch("/api/sections")
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.sections) setSections(d.sections);
-      })
-      .catch(() => {});
-  }, [serverSections]);
 
   /** Skontroluje či je sekcia viditeľná */
   const isVisible = (href: string): boolean => {

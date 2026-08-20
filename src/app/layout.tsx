@@ -6,6 +6,8 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { StructuredData } from "@/components/site/structured-data";
 import { MusicPlayerProvider } from "@/lib/music-player-context";
 import { StickyMusicPlayer } from "@/components/site/sticky-music-player";
+import { SectionsProvider } from "@/components/site/sections-provider";
+import { getAllSettingsStructured } from "@/lib/settings";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -119,21 +121,36 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Server-side fetch všetkých site settings — raz per request (cache())
+  // deduplikuje volania z layout.tsx a page.tsx. Poskytujeme cez React
+  // Context, aby všetci klienti (Navbar, Footer, HeroSection,
+  // StickyMusicPlayer) dostali hodnotu už pri prvom SSR rendri — žiadny
+  // FOUC (Flash of Unstyled Content).
+  let sections: Record<string, boolean> | null = null;
+  try {
+    const settings = await getAllSettingsStructured();
+    sections = settings.sections;
+  } catch (e) {
+    console.warn("[layout] Settings fetch failed, all sections default visible:", e instanceof Error ? e.message : e);
+  }
+
   return (
     <html lang="sk" suppressHydrationWarning className="dark">
       <body
         className={`${montserrat.variable} ${robotoCondensed.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <StructuredData />
-        <MusicPlayerProvider>
-          {children}
-          <StickyMusicPlayer />
-        </MusicPlayerProvider>
+        <SectionsProvider sections={sections}>
+          <MusicPlayerProvider>
+            {children}
+            <StickyMusicPlayer />
+          </MusicPlayerProvider>
+        </SectionsProvider>
         <Toaster />
         <SonnerToaster />
       </body>
