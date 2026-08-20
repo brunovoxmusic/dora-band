@@ -8,19 +8,35 @@ async function guard(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   if (!(await guard(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
-  const { searchParams } = new URL(req.url);
-  const fileType = searchParams.get("fileType");
-  const category = searchParams.get("category");
-  const where: Record<string, unknown> = {};
-  if (fileType && fileType !== "all") where.fileType = fileType;
-  if (category && category !== "all") where.category = category;
-  const items = await db.mediaItem.findMany({ where, orderBy: [{ order: "asc" }, { createdAt: "desc" }], take: 200 });
-  return NextResponse.json({
-    items: items.map(i => ({
-      ...i,
-      linkedSections: typeof i.linkedSections === "string" ? JSON.parse(i.linkedSections || "[]") : i.linkedSections || [],
-    })),
-  });
+  try {
+    const { searchParams } = new URL(req.url);
+    const fileType = searchParams.get("fileType");
+    const category = searchParams.get("category");
+    const where: Record<string, unknown> = {};
+    if (fileType && fileType !== "all") where.fileType = fileType;
+    if (category && category !== "all") where.category = category;
+    const items = await db.mediaItem.findMany({ where, orderBy: [{ order: "asc" }, { createdAt: "desc" }], take: 200 });
+    return NextResponse.json({
+      items: items.map(i => ({
+        ...i,
+        linkedSections: typeof i.linkedSections === "string" ? JSON.parse(i.linkedSections || "[]") : i.linkedSections || [],
+      })),
+    });
+  } catch (err) {
+    console.error("[admin/media GET] error:", err);
+    // Fallback: skús bez nových stĺpcov
+    try {
+      const items = await db.mediaItem.findMany({
+        orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+        take: 200,
+        select: { id: true, title: true, url: true, thumbnailUrl: true, category: true, caption: true, altText: true, credits: true, featured: true, heroBackground: true, order: true, createdAt: true, updatedAt: true },
+      });
+      return NextResponse.json({ items });
+    } catch (err2) {
+      console.error("[admin/media GET] fallback error:", err2);
+      return NextResponse.json({ items: [] });
+    }
+  }
 }
 
 export async function POST(req: NextRequest) {

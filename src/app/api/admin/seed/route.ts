@@ -73,20 +73,24 @@ export async function POST(req: NextRequest) {
       results.push(`• ${mediaCount} media items already exist`);
     }
 
-    // 4. Band members
-    const memberCount = await db.bandMember.count();
-    if (memberCount === 0) {
-      await db.bandMember.createMany({
-        data: [
-          { name: "Majo Agafon", role: "Vokály / Rap", roleEn: "Vocals / Rap", bio: "Prínos crossoverového rapu do zvuku kapely.", initials: "MA", since: "—", photo: "/gallery/portrait/portrait-01.jpg", order: 1, active: true },
-          { name: "Branislav Guzma", role: "Gitara", roleEn: "Guitar", bio: "Zakladajúci člen.", initials: "BG", since: "1996", photo: "/gallery/portrait/portrait-02.jpg", order: 2, active: true },
-          { name: "Matúš Dobeš", role: "Basgitara", roleEn: "Bass", bio: "Pridal sa v roku 2005.", initials: "MD", since: "2005", photo: "/gallery/portrait/portrait-03.jpg", order: 3, active: true },
-          { name: "Július Flimmel", role: "Bicie", roleEn: "Drums", bio: "Zakladajúci bubeník.", initials: "JF", since: "1996", photo: "/gallery/portrait/portrait-04.jpg", order: 4, active: true },
-        ],
-      });
-      results.push("✓ Created 4 band members");
-    } else {
-      results.push(`• ${memberCount} band members already exist`);
+    // 4. Band members — seed if table exists and is empty
+    try {
+      const memberCount = await db.bandMember.count();
+      if (memberCount === 0) {
+        await db.bandMember.createMany({
+          data: [
+            { name: "Majo Agafon", role: "Vokály / Rap", roleEn: "Vocals / Rap", bio: "Prínos crossoverového rapu do zvuku kapely.", initials: "MA", since: "—", photo: "/gallery/portrait/portrait-01.jpg", order: 1, active: true },
+            { name: "Branislav Guzma", role: "Gitara", roleEn: "Guitar", bio: "Zakladajúci člen.", initials: "BG", since: "1996", photo: "/gallery/portrait/portrait-02.jpg", order: 2, active: true },
+            { name: "Matúš Dobeš", role: "Basgitara", roleEn: "Bass", bio: "Pridal sa v roku 2005.", initials: "MD", since: "2005", photo: "/gallery/portrait/portrait-03.jpg", order: 3, active: true },
+            { name: "Július Flimmel", role: "Bicie", roleEn: "Drums", bio: "Zakladajúci bubeník.", initials: "JF", since: "1996", photo: "/gallery/portrait/portrait-04.jpg", order: 4, active: true },
+          ],
+        });
+        results.push("✓ Created 4 band members");
+      } else {
+        results.push(`• ${memberCount} band members already exist`);
+      }
+    } catch (e) {
+      results.push(`⚠ BandMember table error: ${e instanceof Error ? e.message.slice(0, 100) : e}`);
     }
 
     return NextResponse.json({ ok: true, results });
