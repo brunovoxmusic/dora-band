@@ -5,8 +5,14 @@ import { getSession } from "@/lib/auth";
 /** GET /api/admin/members — zoznam všetkých členov */
 export async function GET(req: NextRequest) {
   if (!(await getSession(req))) return NextResponse.json({ error: "Neoprávnený." }, { status: 401 });
-  const items = await db.bandMember.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] });
-  return NextResponse.json({ items });
+  try {
+    const items = await db.bandMember.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] });
+    return NextResponse.json({ items });
+  } catch (err) {
+    console.error("[members GET] error:", err);
+    // Ak BandMember tabuľka neexistuje, vráť prázdne zoznam
+    return NextResponse.json({ items: [], error: "Tabuľka členov neexistuje v databáze. Spustite seed." });
+  }
 }
 
 /** POST /api/admin/members — vytvor nového člena */
@@ -31,6 +37,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, item }, { status: 201 });
   } catch (err) {
     console.error("[members POST]", err);
-    return NextResponse.json({ error: "Vytvorenie zlyhalo." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Vytvorenie zlyhalo. Skúste spustiť seed v admin nastaveniach." },
+      { status: 500 }
+    );
   }
 }

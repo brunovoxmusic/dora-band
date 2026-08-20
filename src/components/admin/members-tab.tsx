@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState, ErrorState } from "@/components/admin/empty-state";
 import {
   Users, Plus, RefreshCw, Pencil, Trash2, ChevronUp, ChevronDown,
-  MicVocal, Guitar, Drum, Music2, Save,
+  MicVocal, Guitar, Drum, Music2, Save, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -65,9 +65,14 @@ export function MembersTab() {
     setError(null);
     try {
       const res = await fetch("/api/admin/members");
-      if (!res.ok) throw new Error("Načítanie zlyhalo");
       const d = await res.json();
-      setItems(d.items || []);
+      if (!res.ok) {
+        setError(d.error || "Načítanie zlyhalo");
+        setItems([]);
+      } else {
+        setItems(d.items || []);
+        if (d.error) setError(d.error);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Neznáma chyba");
     } finally {
@@ -92,7 +97,59 @@ export function MembersTab() {
     void load();
   };
 
-  if (error) return <ErrorState message={error} onRetry={() => void load()} />;
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch("/api/admin/seed", { method: "POST" });
+      const d = await res.json();
+      if (d.ok) {
+        toast.success("Seed dokončený", { description: d.results?.join(", ") });
+        void load();
+      } else {
+        toast.error(d.error || "Seed zlyhal");
+      }
+    } catch {
+      toast.error("Seed zlyhal");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  if (error && !loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-6 w-6 text-neon-red" />
+            Členovia kapely
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Správa profilov členov — mená, roly, fotky, biografie
+          </p>
+        </div>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium text-off-white">{error}</p>
+                <p className="text-sm text-muted-foreground">
+                  Tabuľka členov kapely pravdepodobne neexistuje v databáze.
+                  Kliknite na tlačidlo nižšie pre vytvorenie databázy a naplnenie dátami.
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleSeed} disabled={seeding}>
+              {seeding ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Vytvoriť databázu a naplniť dátami (Seed)
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
