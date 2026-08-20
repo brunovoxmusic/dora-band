@@ -106,6 +106,22 @@ async function main() {
   } else {
     console.log(`• ${mediaCount} media items already exist`);
   }
+
+  // Band members — seed if empty
+  const memberCount = await db.bandMember.count();
+  if (memberCount === 0) {
+    await db.bandMember.createMany({
+      data: [
+        { name: "Majo Agafon", role: "Vokály / Rap", roleEn: "Vocals / Rap", bio: "Prínos crossoverového rapu do zvuku kapely. Prináša hip-hopový element, ktorý D.O.R.A. odlišuje od klasickej punkovej formácie.", initials: "MA", since: "—", photo: "/gallery/portrait/portrait-01.jpg", order: 1, active: true },
+        { name: "Branislav Guzma", role: "Gitara", roleEn: "Guitar", bio: "Zakladajúci člen, ktorý prešiel z basgitary na šesťstrunový nástroj, čím priniesol kapelnému zvuku novú dimenziu a hustotu.", initials: "BG", since: "1996", photo: "/gallery/portrait/portrait-02.jpg", order: 2, active: true },
+        { name: "Matúš Dobeš", role: "Basgitara", roleEn: "Bass", bio: "Pridal sa v roku 2005 a významne prispel k nahrávke TCHO SME NAHLAVU. Stabilná basová linka je základom funky-punkového groovu.", initials: "MD", since: "2005", photo: "/gallery/portrait/portrait-03.jpg", order: 3, active: true },
+        { name: "Július Flimmel", role: "Bicie", roleEn: "Drums", bio: "Zakladajúci bubeník, ktorého energické a presné bicie sú srdcom rytmickej sekcie kapely.", initials: "JF", since: "1996", photo: "/gallery/portrait/portrait-04.jpg", order: 4, active: true },
+      ],
+    });
+    console.log("✓ Seeded 4 band members");
+  } else {
+    console.log(`• ${memberCount} band members already exist`);
+  }
 }
 
 main()
