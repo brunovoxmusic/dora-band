@@ -16,10 +16,13 @@ const NAV_LINK_SECTION_MAP: Record<string, string> = {
   "#kontakt": "contact",
 };
 
-export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
+type Sections = Record<string, boolean> | null;
+
+export function Navbar({ bannerOffset = 0, sections: serverSections = null }: { bannerOffset?: number; sections?: Sections }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [sections, setSections] = useState<Record<string, boolean> | null>(null);
+  // Použi serverSections ako initial state — zabraní blikaniu
+  const [sections, setSections] = useState<Sections>(serverSections);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -28,22 +31,23 @@ export function Navbar({ bannerOffset = 0 }: { bannerOffset?: number }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Fetch section visibility z API (pre skrývanie navbar linkov)
+  // Fetch section visibility iba ak nemáme server data (napr. na /privacy page)
   useEffect(() => {
+    if (serverSections) return; // už máme data zo servera, nepotrebujeme fetch
     fetch("/api/sections")
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d?.sections) setSections(d.sections);
       })
-      .catch(() => {/* fallback: všetky viditeľné */});
-  }, []);
+      .catch(() => {});
+  }, [serverSections]);
 
-  /** Skontroluje či je sekcia viditeľná (ak nie je v response, predpokladáme viditeľnú) */
+  /** Skontroluje či je sekcia viditeľná */
   const isVisible = (href: string): boolean => {
-    if (!sections) return true; // fallback — všetky viditeľné
+    if (!sections) return true;
     const sectionId = NAV_LINK_SECTION_MAP[href];
-    if (!sectionId) return true; // link nie je viazaný na sekciu
-    return sections[sectionId] !== false; // true ak nie je explicitne false
+    if (!sectionId) return true;
+    return sections[sectionId] !== false;
   };
 
   const visibleLinks = NAV_LINKS.filter(link => isVisible(link.href));

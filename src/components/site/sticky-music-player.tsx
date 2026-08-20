@@ -23,25 +23,37 @@ import { cn } from "@/lib/utils";
  * - Collapsible (užívateľ ho môže zroluovať nahor)
  */
 
-export function StickyMusicPlayer() {
+export function StickyMusicPlayer({ sections: serverSections = null }: { sections?: Record<string, boolean> | null }) {
   const { activeIdx, activeTrack, playing, select, togglePlay, next, prev } = useMusicPlayer();
   const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [inMusicSection, setInMusicSection] = useState(false);
-  const [musicSectionVisible, setMusicSectionVisible] = useState(true); // default true
+  const [musicSectionVisible, setMusicSectionVisible] = useState(
+    serverSections ? serverSections.music !== false : null // null = nevieme ešte, nerenderuj
+  );
   const prevInMusicSection = useRef(false);
 
-  // Fetch section visibility — ak je music sekcia skrytá, skry aj sticky player
+  // Fetch iba ak nemáme server data
   useEffect(() => {
+    if (serverSections) {
+      return; // už máme data zo servera
+    }
+    let cancelled = false;
     fetch("/api/sections")
       .then(r => r.ok ? r.json() : null)
       .then(d => {
+        if (cancelled) return;
         if (d?.sections) {
           setMusicSectionVisible(d.sections.music !== false);
+        } else {
+          setMusicSectionVisible(true); // fallback: všetky viditeľné
         }
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => {
+        if (!cancelled) setMusicSectionVisible(true);
+      });
+    return () => { cancelled = true; };
+  }, [serverSections]);
 
   // Sledujeme, či je viditeľná hlavná MusicSection — ak áno a prehrávač
   // nehrá, skryjeme sticky player (vyhneme sa duplikácii).
@@ -105,8 +117,13 @@ export function StickyMusicPlayer() {
     };
   }, [expanded]);
 
-  // Ak je music sekcia skrytá v admin, nerenderuj sticky player vôbec
-  if (!musicSectionVisible) return null;
+  // Ak je music sekcia skrytá v admin, nerenderuj sticky player
+  // null = ešte nevieme (čakáme na fetch), nerenderuj aby sme zabránili blikaniu
+  if (musicSectionVisible === false || musicSectionVisible === null) {
+    if (musicSectionVisible === false) return null;
+    // null = prvý render pred fetchom — nerenderuj (zabráni blikaniu)
+    return null;
+  }
 
   // Ak je collapsed a nie je v music section, stále ukáž mini-tlačidlo
   if (collapsed) {

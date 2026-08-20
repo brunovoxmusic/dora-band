@@ -159,7 +159,7 @@ export default async function HomePage() {
       <SiteBanner banner={banner} />
       {/* Banner is fixed top-0 z-55 (~40px tall when active). When active,
           push the navbar down by 40px so they stack cleanly. */}
-      <Navbar bannerOffset={banner.isActive ? 40 : 0} />
+      <Navbar bannerOffset={banner.isActive ? 40 : 0} sections={vis} />
 
       {/* Admin preview badge while maintenance is on */}
       {showMaintenanceBadge && (
@@ -174,7 +174,7 @@ export default async function HomePage() {
       <main id="hlavny-obsah" className="flex-1">
         {showSection("hero") && (
           <>
-            <HeroSection content={c} heroSlides={heroSlides} />
+            <HeroSection content={c} heroSlides={heroSlides} sections={vis} />
             <SectionDivider />
           </>
         )}
@@ -218,7 +218,7 @@ export default async function HomePage() {
         {showSection("newsletter") && <NewsletterSection />}
         {showSection("contact") && <ContactSection content={c} />}
       </main>
-      <Footer content={c} />
+      <Footer content={c} sections={vis} />
       <BackToTop />
       <CookieConsent />
     </div>

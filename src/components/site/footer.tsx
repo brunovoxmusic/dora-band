@@ -17,7 +17,9 @@ const FOOTER_LINK_SECTION_MAP: Record<string, string> = {
   "#faq": "faq",
 };
 
-export function Footer({ content }: { content?: Record<string, string> }) {
+type Sections = Record<string, boolean> | null;
+
+export function Footer({ content, sections: serverSections = null }: { content?: Record<string, string>; sections?: Sections }) {
   const c = content ?? {};
   const email = c["contact.email"] || BAND.contact.email;
   const phone = c["contact.phone"] || BAND.contact.phone;
@@ -31,16 +33,18 @@ export function Footer({ content }: { content?: Record<string, string> }) {
     spotify: c["social.spotify"] || BAND.social.spotify,
   };
 
-  const [sections, setSections] = useState<Record<string, boolean> | null>(null);
+  // Použi serverSections ako initial state — zabraní blikaniu
+  const [sections, setSections] = useState<Sections>(serverSections);
 
   useEffect(() => {
+    if (serverSections) return; // už máme data zo servera
     fetch("/api/sections")
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d?.sections) setSections(d.sections);
       })
-      .catch(() => {/* fallback: všetky viditeľné */});
-  }, []);
+      .catch(() => {});
+  }, [serverSections]);
 
   /** Skontroluje či je sekcia viditeľná */
   const isVisible = (href: string): boolean => {

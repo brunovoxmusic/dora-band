@@ -18,24 +18,27 @@ type HeroSlide = {
 export function HeroSection({
   content,
   heroSlides = [],
+  sections: serverSections = null,
 }: {
   content?: HeroContent;
   heroSlides?: HeroSlide[];
+  sections?: Record<string, boolean> | null;
 }) {
   const c = content ?? {};
   const [scrollY, setScrollY] = useState(0);
-  const [sections, setSections] = useState<Record<string, boolean> | null>(null);
+  const [sections, setSections] = useState<Record<string, boolean> | null>(serverSections);
 
-  // Fetch section visibility pre podmienené zobrazenie buttonov
+  // Fetch iba ak nemáme server data
   useEffect(() => {
+    if (serverSections) return;
     fetch("/api/sections")
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.sections) setSections(d.sections); })
       .catch(() => {});
-  }, []);
+  }, [serverSections]);
 
   const isSectionVisible = (id: string): boolean => {
-    if (!sections) return true; // fallback — všetky viditeľné
+    if (!sections) return true;
     return sections[id] !== false;
   };
   const showBooking = isSectionVisible("contact");
